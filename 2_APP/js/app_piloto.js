@@ -15,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
         distancia_cambio: document.getElementById('val_distancia_cambio')
     };
 
-    const client = new TelemetryClient('ws://localhost:8000/ws/telemetry');
+    const wsHost = window.location.host || 'localhost:8000';
+    const client = new TelemetryClient(`ws://${wsHost}/ws/telemetry`);
 
     client.onStatusChange((isConnected) => {
         if (isConnected) {

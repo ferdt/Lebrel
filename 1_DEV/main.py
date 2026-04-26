@@ -1,10 +1,11 @@
 import asyncio
 import json
+import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from core.hardware import setup_hardware_readers
 from core.logger import rally_logger
-import os
 
 app = FastAPI(title="Lebrel Backend")
 
@@ -78,6 +79,10 @@ async def update_settings(request: Request):
     new_settings = await request.json()
     save_settings(new_settings)
     return {"status": "ok"}
+
+# Montar frontend para que la Raspberry Pi lo sirva en la misma IP
+app_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "2_APP")
+app.mount("/", StaticFiles(directory=app_dir, html=True), name="static")
 
 
 @app.on_event("startup")

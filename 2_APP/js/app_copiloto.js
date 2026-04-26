@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTableData = null;
     let currentSegment = -1;
 
-    const client = new TelemetryClient('ws://localhost:8000/ws/telemetry');
+    const wsHost = window.location.host || 'localhost:8000';
+    const client = new TelemetryClient(`ws://${wsHost}/ws/telemetry`);
 
     client.onStatusChange((isConnected) => {
         if (isConnected) {
