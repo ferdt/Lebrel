@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lebrel - Copiloto</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        /* Lado izquierdo compacto */
+        .compact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .compact-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compact-card h4 {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .compact-card .value {
+            font-size: 1.5rem;
+        }
+
+        /* Panel de OPeraciones abajo a la izq */
+        .operations-panel {
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <div class="glass-container">
+        <header class="unified-header">
+            <nav class="main-nav">
+                <a href="piloto.html" class="nav-link">Piloto</a>
+                <a href="copiloto.html" class="nav-link active">Copiloto</a>
+                <a href="config.html" class="nav-link">Config</a>
+            </nav>
+            <div class="stage-info">
+                <span id="val_tramo_nombre">TC-0: SIN TRAMO</span>
+                <span class="separator">|</span>
+                <span id="val_hora">00:00:00</span>
+            </div>
+            <div id="status-indicator" class="status disconnected">Desconectado</div>
+        </header>
+
+        <main class="split-layout">
+            <!-- PANEL IZQUIERDO: Dashboard reducido y controles -->
+            <section class="compact-info">
+
+                <div class="compact-card">
+                    <h4>Tiempo</h4>
+                    <div id="val_tiempo_tramo" class="value">00:00:00</div>
+                </div>
+
+                <div class="compact-card"
+                    style="border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.1);">
+                    <h4 style="color: var(--accent-blue);">Odómetro</h4>
+                    <div id="val_distancia" class="value"
+                        style="font-size: 2.5rem; color: var(--accent-blue); font-weight: 800;">0.00 km</div>
+                </div>
+
+                <div class="compact-card">
+                    <h4>Intervalo</h4>
+                    <div id="val_diferencia_ideal" class="value positive">+0.0</div>
+                </div>
+
+                <div class="compact-card">
+                    <h4>Velocidad (Act/Obj)</h4>
+                    <div class="value"><span id="val_velocidad_actual">0.0</span> / <span id="val_velocidad_objetivo"
+                            style="color:var(--text-secondary); font-size:1.2rem;">0.0</span></div>
+                </div>
+
+                <!-- Botones rápidos de Odómetro -->
+                <div class="controls mt-2" style="justify-content:center;">
+                    <button id="btn-odo-plus">+10m</button>
+                    <button id="btn-odo-minus">-10m</button>
+                    <button id="btn-odo-reset" class="danger">RST</button>
+                </div>
+
+                <div class="operations-panel">
+                    <div class="btn-group-vertical">
+                        <button id="btn-calibrar" style="padding:10px;">Calibración</button>
+                        <button id="btn-tramos" style="padding:10px;">Tramos</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL DERECHO: Tabla del tramo -->
+            <section>
+                <div class="card" style="align-items:flex-start; padding:0; overflow:hidden; height:100%;">
+                    <h3
+                        style="padding: 20px 20px 10px 20px; margin:0; border-bottom:1px dashed var(--glass-border); width:100%;">
+                        Libro de Ruta - Medias</h3>
+
+                    <div style="width:100%; overflow-y:auto; flex:1;">
+                        <table class="tramo-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>De (km)</th>
+                                    <th>A (km)</th>
+                                    <th>Media (km/h)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla_cuerpo">
+                                <!-- Filas dinámicas generadas desde app_copiloto.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Cargar JS como module -->
+    <script type="module" src="js/app_copiloto.js"></script>
+</body>
+
+</html>

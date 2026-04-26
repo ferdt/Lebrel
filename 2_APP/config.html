@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lebrel - Configuración</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="glass-container">
+        <header class="unified-header">
+            <nav class="main-nav">
+                <a href="piloto.html" class="nav-link">Piloto</a>
+                <a href="copiloto.html" class="nav-link">Copiloto</a>
+                <a href="config.html" class="nav-link active">Config</a>
+            </nav>
+            <div class="stage-info">
+                <span id="val_tramo_nombre">Configuración</span>
+                <span class="separator">|</span>
+                <span id="val_hora">00:00:00</span>
+            </div>
+            <div id="status-indicator" class="status disconnected">Ajustes Generales</div>
+        </header>
+
+        <main class="dashboard">
+            <div class="card metric" style="align-items: flex-start; width: 100%;">
+                <h3 style="width:100%;">Parámetros de Cálculo</h3>
+                
+                <div class="form-group" style="width:100%;">
+                    <label for="wheel_perimeter_m">Perímetro Rueda (m)</label>
+                    <input type="number" step="0.01" id="wheel_perimeter_m" value="1.95">
+                </div>
+
+                <h3 style="width:100%; margin-top:20px;">Apariencia</h3>
+                <div class="form-group" style="width:100%;">
+                    <label for="theme">Tema</label>
+                    <select id="theme">
+                        <option value="dark">Oscuro (Glassmorphism)</option>
+                        <option value="light">Claro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="width:100%;">
+                    <label for="font_size_offset">Ajuste de Tamaño de Fuente (px)</label>
+                    <input type="number" id="font_size_offset" value="0">
+                </div>
+
+                <div class="controls mt-2" style="width:100%; display: flex; justify-content:flex-end;">
+                    <button id="btn-save" class="positive" style="background: rgba(34, 197, 94, 0.2); border-color: var(--accent-green); color: var(--accent-green);">Guardar Cambios</button>
+                </div>
+                <div id="save-msg" style="color: var(--accent-green); margin-top: 10px; display: none;">Guardado correctamente.</div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="js/config.js"></script>
+</body>
+</html>

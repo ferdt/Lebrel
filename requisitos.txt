@@ -1,0 +1,82 @@
+###############################################################
+Descripción general:
+###############################################################
+Se trata de un sistema para navegación en rallies de regularidad. Todo el sistema se compone de tres partes:
+
+1. Dispositivo
+2. Aplicación copiloto
+3. Aplicación piloto
+
+El Dispositivo es un dispositivo electrónico que se instala en el coche y se encarga de leer las sondas y enviar los datos a la aplicación piloto y copiloto. Es un minipc o microprocesador con capacidad para generar una red wifi con un servidor web a la que se conectan los dispositivos de piloto y copiloto.
+La aplicación del copiloto tiene que poder gestionar los tramos, las medias, los hitos, las tablas, la calibración, la selección de origen del odómetro y la sincronización del reloj.
+La aplicación del piloto tiene que poder mostrar los datos del tramo, las medias, los hitos, las tablas, la calibración, la selección de origen del odómetro y la sincronización del reloj.
+
+Es importante que la latencia sea la menor posible, el refresco de datos elevado (por determinar, pero entorno a 10 Hz) y que la interfaz sea limpia y sencilla. Se deben desactivar funciones como el zoom, el apagado automático de la pantalla, etc.
+
+
+###############################################################
+DISPOSITIVO:
+###############################################################
+
+Lectura de sensores: Los sensores de las ruedas envian pulsos que deben de ser procesados para dar una lectura de distancia. Se debe de poder configurar el número de metros por pulso (calibración). Puede hacerse en el mismo dispositivo o tener otro microprocesador con entradas analógicas y digitales dedicado sólo al procesamiento de los pulsos y qeu se comunique por puerto serie con el dispositivo principal. En ese caso es fundamental asegurar el sincronismo.
+También debe de poder conectar con una antena GPS externa.
+
+Interfaz con botonera: La botonera gestiona el odómetro (sumar y restar metros), el reset del odómetro y el paso por los hitos o referencias externas.
+
+Servidor web: El servidor web debe de ser capaz de gestionar las conexiones de los dispositivos de piloto y copiloto. Se recomienda WebSockets.
+
+Cálculo de la diferencia respecto a tiempo ideal: El dispositivo debe de ser capaz de calcular la diferencia entre el tiempo ideal y el tiempo real. Para ello necesita conocer la velocidad media del tramo y la distancia del tramo. Con estos datos puede calcular el tiempo ideal y compararlo con el tiempo real. 
+
+
+###############################################################
+APLICACIÓN copiloto:
+###############################################################
+
+Desde la pantalla del copiloto se tiene que poder editar los tramos cuando se está en el tramo. Entonces, la información debe de actualizarse en el servidor.
+
+Función calibración: Se recorre un tramo de distancia conocida para determinar el factor de corrección del odómetro. Idea para el futuro: Incluir hitos intermedios, no sólo una distancia final. Con el GPS se puede calcular también la "distancia del rally", es decir, a cuánto equivale 1 km real en la calibración del rally.
+
+Importar tramos: Debe permitir importar tramos de un archivo externo.
+	Excel/csv
+	xml
+
+Editar tramos: Se tiene que poder editar los tramos ya creados, crear nuevos tramos, eliminar tramos y duplicar tramos. Los tramos consisten una tabla con los siguientes campos:
+	Distancia inicio
+	Distancia final
+	Velocidad media
+	Duración
+	Hora de fin
+
+El tramo también tiene que considerar los hitos o referencias externas, así como la hora de salida del tramo. Por tanto en cada subtramo se tiene que poder elegir el tipo de segmento.
+
+Lanzar tramos: Se debe poder lanzar los tramos, es decir, activarlos para calcular la diferencia en función de las velocidades de ese tramo.
+
+Función selección origen odómetro: Cómo se calcula el odómetro. La sonda de una rueda, la otra rueda, las dos ruedas, GPS, etc. Debe ser configurable.
+
+Función sincronización reloj: el reloj del dispositivo principal tiene que poder sincronizarse con otro reloj externo, ya sea de manera manual o por GPS.
+
+Función tablas: Lectura de una tabla con OCR para calcular la velocidad media en función de la distancia.
+
+Función hitos: Lectura de una imagen con OCR y calcular el tiempo entre hitos.
+
+Pantallas
+	Estándar (Odómetro, intervalo, cambio de media, tabla tramo)
+	Hitos
+	Tablas
+	
+	
+###############################################################
+APLICACIÓN piloto:
+###############################################################
+
+En la pantalla del piloto se debe de mostrar la información necesaria para que el piloto pueda ajustar la conducción al tiempo ideal.
+
+Pantallas
+	Estándar (intervalo, odómetro, velocidad, cambio de media)
+	Hitos
+	Tablas
+
+
+
+
+

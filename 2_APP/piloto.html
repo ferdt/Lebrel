@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lebrel - Piloto</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 20px;}
+        .stage-info { display: flex; gap: 20px; font-size: 1.2rem; font-weight: 500; color: var(--text-secondary); text-transform: uppercase;}
+        
+        .grid-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        /* Modifiers for specific cards */
+        .card-delta { grid-column: 1 / 2; }
+        .card-odo { grid-column: 2 / 3; }
+        .card-time { grid-column: 1 / 2; }
+        .card-speed { grid-column: 2 / 3; }
+        .card-media { grid-column: 1 / -1; display:flex; flex-direction:row; justify-content:space-between; align-items:center; }
+        
+        .sub-value { font-size: 1.5rem; color: var(--text-secondary); }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="glass-container">
+        
+        <header class="unified-header">
+            <nav class="main-nav">
+                <a href="piloto.html" class="nav-link active">Piloto</a>
+                <a href="copiloto.html" class="nav-link">Copiloto</a>
+                <a href="config.html" class="nav-link">Config</a>
+            </nav>
+            <div class="stage-info">
+                <span id="val_tramo_nombre">TC-0: SIN TRAMO</span>
+                <span class="separator">|</span>
+                <span id="val_hora">00:00:00</span>
+            </div>
+            <div id="status-indicator" class="status disconnected">Desconectado</div>
+        </header>
+
+        <main class="grid-dashboard">
+            <!-- 1. Delta y Odómetro (Principal) -->
+            <div class="card metric-large card-delta">
+                <h3>Intervalo</h3>
+                <div id="val_diferencia_ideal" class="value positive">+0.0</div>
+            </div>
+            
+            <div class="card metric-large card-odo">
+                <h3>Odómetro Total</h3>
+                <div id="val_distancia" class="value">0.00 km</div>
+            </div>
+
+            <!-- 2. Tiempo Tramo y Velocidades -->
+            <div class="card card-time">
+                <h3>Tiempo Tramo</h3>
+                <div id="val_tiempo_tramo" class="value">00:00:00.0</div>
+            </div>
+
+            <div class="card card-speed">
+                <h3>Velocidad (Act / Obj)</h3>
+                <div style="display:flex; align-items:baseline; gap:10px;">
+                    <div id="val_velocidad_actual" class="value">0.0</div>
+                    <div class="sub-value">/ <span id="val_velocidad_objetivo">0.0</span> km/h</div>
+                </div>
+            </div>
+
+            <!-- 3. Próxima Media -->
+            <div class="card card-media">
+                <div>
+                    <h3>Próximo Cambio de Media</h3>
+                    <div style="display:flex; align-items:baseline; gap: 10px;">
+                        <div id="val_proxima_media" class="value positive">0.0 km/h</div>
+                    </div>
+                </div>
+                <div>
+                    <h3>Distancia hasta cambio</h3>
+                    <div id="val_distancia_cambio" class="value">-- km</div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <!-- Cargar JS como module -->
+    <script type="module" src="js/app_piloto.js"></script>
+</body>
+</html>
