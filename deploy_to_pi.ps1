@@ -38,11 +38,11 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "2. Comprimiendo y enviando archivos (1_DEV y 2_APP)..."
 Set-Location $LOCAL_PATH
 # Usamos tar para comprimir al vuelo y descomprimir en la Pi (excluyendo entornos virtuales)
-tar.exe -c --exclude="1_DEV/venv" --exclude="1_DEV/__pycache__" --exclude=".git" 1_DEV 2_APP | ssh $PI_USER@$PI_HOST "tar -x -C $PI_PATH"
+cmd.exe /c "tar.exe -c --exclude=1_DEV/venv --exclude=1_DEV/__pycache__ --exclude=.git 1_DEV 2_APP | ssh $PI_USER@$PI_HOST `"tar -x -v -C $PI_PATH`""
 
-# 3. Reiniciar el servicio
-Write-Host "3. Reiniciando el servicio lebrel-backend en la Raspberry Pi..."
-ssh -t $PI_USER@$PI_HOST "sudo systemctl daemon-reload; sudo systemctl restart lebrel-backend.service"
+# 3. Arreglar retornos de carro (CRLF de Windows a LF de Linux) y Reiniciar el servicio
+Write-Host "3. Preparando scripts y reiniciando el servicio lebrel-backend en la Raspberry Pi..."
+ssh -t $PI_USER@$PI_HOST "find $PI_PATH -type f -name '*.sh' -exec sed -i 's/\r$//' {} +; chmod +x $PI_PATH/1_DEV/*.sh; sudo systemctl daemon-reload; sudo systemctl restart lebrel-backend.service"
 
 Write-Host "=======================================================" -ForegroundColor Green
 Write-Host "✅ ¡Despliegue completado con éxito!" -ForegroundColor Green

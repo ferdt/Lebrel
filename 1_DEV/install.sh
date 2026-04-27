@@ -9,16 +9,17 @@ echo "Iniciando instalación de Lebrel Backend..."
 # 1. Instalar dependencias del sistema operativo
 echo "Instalando dependencias de Python..."
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip
+sudo apt install -y python3 python3-venv python3-pip python3-pandas python3-numpy
 
 # 2. Configurar permisos de hardware para posibles periféricos
 echo "Añadiendo usuario '$USER' a grupos de hardware (dialout, i2c, spi, gpio, tty)..."
 sudo usermod -a -G dialout,i2c,spi,gpio,tty $USER || true
 
 # 3. Crear entorno virtual
-echo "Configurando entorno virtual Python..."
+echo "Configurando entorno virtual Python (con acceso a paquetes del sistema para Pandas)..."
 cd "$(dirname "$0")"
-python3 -m venv venv
+rm -rf venv
+python3 -m venv --system-site-packages venv
 source venv/bin/activate
 
 # 4. Instalar dependencias de Python

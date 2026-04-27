@@ -80,6 +80,12 @@ async def update_settings(request: Request):
     save_settings(new_settings)
     return {"status": "ok"}
 
+from fastapi.responses import RedirectResponse
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/piloto.html")
+
 # Montar frontend para que la Raspberry Pi lo sirva en la misma IP
 app_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "2_APP")
 app.mount("/", StaticFiles(directory=app_dir, html=True), name="static")
