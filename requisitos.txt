@@ -15,6 +15,15 @@ Es importante que la latencia sea la menor posible, el refresco de datos elevado
 
 
 ###############################################################
+Tecnologías:
+###############################################################
+Backend: FastAPI (Python).
+Frontend (Pantallas): HTML5, CSS y JavaScript Vanilla.
+Comunicación: WebSockets.
+Almacenamiento tramos: SQLite
+
+
+###############################################################
 DISPOSITIVO:
 ###############################################################
 

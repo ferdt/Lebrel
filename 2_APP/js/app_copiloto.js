@@ -1,6 +1,8 @@
 import { TelemetryClient } from './telemetry.js';
+import { initFullscreen } from './fullscreen.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initFullscreen();
     const statusIndicator = document.getElementById('status-indicator');
     
     // UI Elements Izquierda
