@@ -12,8 +12,8 @@ sudo apt update
 sudo apt install -y python3 python3-venv python3-pip
 
 # 2. Configurar permisos de hardware para posibles periféricos
-echo "Añadiendo usuario 'pi' a grupos de hardware (dialout, i2c, spi, gpio, tty)..."
-sudo usermod -a -G dialout,i2c,spi,gpio,tty pi || true
+echo "Añadiendo usuario '$USER' a grupos de hardware (dialout, i2c, spi, gpio, tty)..."
+sudo usermod -a -G dialout,i2c,spi,gpio,tty $USER || true
 
 # 3. Crear entorno virtual
 echo "Configurando entorno virtual Python..."
