@@ -1,0 +1,17 @@
+{
+  "name": "Lebrel Rally Dashboard",
+  "short_name": "Lebrel",
+  "start_url": "/piloto.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

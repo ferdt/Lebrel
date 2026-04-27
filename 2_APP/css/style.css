@@ -25,9 +25,8 @@ body.dark-theme {
     font-family: var(--font-main);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
+    padding: 10px;
+    overflow-y: auto;
 }
 
 /* Glassmorphism Container */
@@ -37,10 +36,11 @@ body.dark-theme {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    padding: 30px;
+    padding: 20px;
     width: 100%;
     max-width: 1200px;
     min-height: 80vh;
+    margin: auto;
     box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
@@ -86,7 +86,7 @@ header h1 {
 .dashboard {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+    gap: 12px;
     flex: 1;
 }
 
@@ -98,8 +98,8 @@ header h1 {
 .card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 24px;
+    border-radius: 12px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -115,21 +115,22 @@ header h1 {
 
 .card h3 {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: clamp(0.9rem, 3.5vmin, 1.2rem);
     font-weight: 500;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 2px;
 }
 
 .value {
-    font-size: 3rem;
+    font-size: clamp(2rem, 8vmin, 3.5rem);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+    line-height: 1.1;
 }
 
 .metric-large .value {
-    font-size: 5rem;
+    font-size: clamp(3rem, 12vmin, 5.5rem);
 }
 
 .value.positive { color: var(--accent-green); }
@@ -190,8 +191,8 @@ button.danger:hover {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 15px;
-    margin-bottom: 25px;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
     width: 100%;
 }
 
@@ -224,7 +225,7 @@ button.danger:hover {
 .stage-info {
     display: flex;
     gap: 15px;
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 3vmin, 1.3rem);
     font-weight: 600;
     color: var(--text-primary);
     text-transform: uppercase;
@@ -288,4 +289,32 @@ button.danger:hover {
 .icon-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
+}
+
+/* Global Responsive Adjustments */
+@media (max-width: 768px) {
+    .glass-container {
+        padding: 15px;
+        border-radius: 12px;
+    }
+    
+    header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .stage-info {
+        justify-content: center;
+    }
+    
+    .unified-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .unified-header > div:last-child {
+        justify-content: center;
+    }
 }

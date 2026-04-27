@@ -3,14 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lebrel - Copiloto</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="css/style.css">
     <style>
         .split-layout {
             display: grid;
             grid-template-columns: 1fr 2fr;
-            gap: 20px;
+            gap: 10px;
             height: 100%;
         }
 
@@ -38,12 +42,23 @@
         }
 
         .compact-card .value {
-            font-size: 1.5rem;
+            font-size: clamp(1.2rem, 5vmin, 1.8rem);
         }
 
         /* Panel de OPeraciones abajo a la izq */
         .operations-panel {
             margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .operations-panel {
+                margin-top: 15px;
+            }
         }
     </style>
 </head>
@@ -52,9 +67,10 @@
     <div class="glass-container">
         <header class="unified-header">
             <nav class="main-nav">
-                <a href="piloto.html" class="nav-link">Piloto</a>
-                <a href="copiloto.html" class="nav-link active">Copiloto</a>
-                <a href="config.html" class="nav-link">Config</a>
+                <a href="#" onclick="window.location.replace('piloto.html'); return false;" class="nav-link">Piloto</a>
+                <a href="#" onclick="window.location.replace('copiloto.html'); return false;"
+                    class="nav-link active">Copiloto</a>
+                <a href="#" onclick="window.location.replace('config.html'); return false;" class="nav-link">Config</a>
             </nav>
             <div class="stage-info">
                 <span id="val_tramo_nombre">TC-0: SIN TRAMO</span>
@@ -63,7 +79,12 @@
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <button id="btn-fullscreen" class="icon-btn" title="Pantalla Completa">
-                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                        </path>
+                    </svg>
                 </button>
                 <div id="status-indicator" class="status disconnected">Desconectado</div>
             </div>
@@ -82,7 +103,8 @@
                     style="border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.1);">
                     <h4 style="color: var(--accent-blue);">Odómetro</h4>
                     <div id="val_distancia" class="value"
-                        style="font-size: 2.5rem; color: var(--accent-blue); font-weight: 800;">0.00 km</div>
+                        style="font-size: clamp(2rem, 8vmin, 3rem); color: var(--accent-blue); font-weight: 800;">0.00
+                        km</div>
                 </div>
 
                 <div class="compact-card">
@@ -93,7 +115,8 @@
                 <div class="compact-card">
                     <h4>Velocidad (Act/Obj)</h4>
                     <div class="value"><span id="val_velocidad_actual">0.0</span> / <span id="val_velocidad_objetivo"
-                            style="color:var(--text-secondary); font-size:1.2rem;">0.0</span></div>
+                            style="color:var(--text-secondary); font-size:clamp(0.9rem, 4vmin, 1.2rem);">0.0</span>
+                    </div>
                 </div>
 
                 <!-- Botones rápidos de Odómetro -->
@@ -116,7 +139,7 @@
                 <div class="card" style="align-items:flex-start; padding:0; overflow:hidden; height:100%;">
                     <h3
                         style="padding: 20px 20px 10px 20px; margin:0; border-bottom:1px dashed var(--glass-border); width:100%;">
-                        Libro de Ruta - Medias</h3>
+                        Tabla de medias</h3>
 
                     <div style="width:100%; overflow-y:auto; flex:1;">
                         <table class="tramo-table">
@@ -140,6 +163,13 @@
 
     <!-- Cargar JS como module -->
     <script type="module" src="js/app_copiloto.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Fail:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>
