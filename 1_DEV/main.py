@@ -1,12 +1,26 @@
 import asyncio
 import json
 import os
+import time
+import base64
+import numpy as np
+import cv2
+from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from core.hardware import setup_hardware_readers
 from core.logger import rally_logger
 from core.rally import tramo_manager
+
+# OCR Engines
+try:
+    from rapidocr_onnxruntime import RapidOCR
+    rapid_ocr_engine = RapidOCR()
+    print("RapidOCR inicializado correctamente.")
+except ImportError:
+    rapid_ocr_engine = None
+    print("ADVERTENCIA: rapidocr_onnxruntime no instalado. El OCR no funcionará.")
 
 app = FastAPI(title="Lebrel Backend")
 
@@ -108,11 +122,121 @@ async def websocket_telemetry(websocket: WebSocket):
 async def get_settings():
     return load_settings()
 
+def sort_boxes(dt_boxes, matched_texts, matched_scores):
+    if dt_boxes is None or len(dt_boxes) == 0:
+        return [], [], []
+    items = []
+    for i in range(len(dt_boxes)):
+        box = np.array(dt_boxes[i], dtype=np.float32).reshape((4, 2))
+        items.append({
+            'box': box,
+            'text': matched_texts[i],
+            'score': matched_scores[i] if matched_scores else 1.0,
+            'y_top': min(box[0][1], box[1][1]),
+            'x_left': min(box[0][0], box[3][0])
+        })
+    items.sort(key=lambda x: x['y_top'])
+    lines = []
+    current_line = []
+    if items:
+        current_line.append(items[0])
+        for i in range(1, len(items)):
+            item = items[i]
+            prev_item = current_line[-1]
+            prev_height = abs(prev_item['box'][2][1] - prev_item['box'][0][1])
+            if abs(item['y_top'] - prev_item['y_top']) < (prev_height * 0.5):
+                current_line.append(item)
+            else:
+                lines.append(current_line); current_line = [item]
+        lines.append(current_line)
+    sorted_texts = []
+    sorted_boxes = []
+    for line in lines:
+        line.sort(key=lambda x: x['x_left'])
+        for it in line:
+            sorted_texts.append(it['text'])
+            sorted_boxes.append(it['box'])
+    return sorted_boxes, sorted_texts, []
+
+@app.post("/ocr")
+async def process_ocr(request: Request):
+    if not rapid_ocr_engine:
+        return {"error": "OCR engine not available on this server"}
+    
+    data = await request.json()
+    image_data = data.get('image', '')
+    if ',' in image_data:
+        image_data = image_data.split(',')[1]
+    
+    image_bytes = base64.b64decode(image_data)
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    if img is None:
+        return {"error": "Failed to decode image"}
+
+    start_time = time.time()
+    result, elapse = rapid_ocr_engine(img)
+    
+    detected_text = ""
+    if result:
+        boxes = [line[0] for line in result]
+        texts = [line[1] for line in result]
+        scores = [line[2] for line in result]
+        _, sorted_texts, _ = sort_boxes(boxes, texts, scores)
+        detected_text = "\n".join(sorted_texts)
+    
+    execution_time = time.time() - start_time
+    
+    # Debug image (opcional, para Tablitos)
+    _, buffer = cv2.imencode('.jpg', img)
+    processed_image_b64 = base64.b64encode(buffer).decode('utf-8')
+
+    return {
+        'text': detected_text,
+        'processed_image': f"data:image/jpeg;base64,{processed_image_b64}",
+        'execution_time': execution_time
+    }
+
 @app.post("/api/settings")
 async def update_settings(request: Request):
     new_settings = await request.json()
     save_settings(new_settings)
     return {"status": "ok"}
+
+@app.post("/api/tramos/import_tablitos")
+async def import_tablitos(request: Request):
+    """
+    Recibe una lista de cambios de velocidad de Tablitos:
+    [{dist_from: 0, dist_to: 1.2, speed: 45}, ...]
+    Y lo convierte en segmentos de un tramo llamado 'Tablas'.
+    """
+    changes = await request.json()
+    tramos = load_tramos()
+    
+    # Buscar o crear el tramo de tablas
+    tramo_tablas = next((t for t in tramos if t["nombre"].upper() == "TABLAS"), None)
+    if not tramo_tablas:
+        tramo_tablas = {
+            "id": "tablas_ocr",
+            "nombre": "Tablas",
+            "hora_inicio": "00:00:00.0",
+            "segmentos": []
+        }
+        tramos.append(tramo_tablas)
+    
+    # Convertir cambios a segmentos
+    new_segments = []
+    for c in changes:
+        new_segments.append({
+            "inicio_m": round(float(c["dist_from"]) * 1000),
+            "fin_m": round(float(c["dist_to"]) * 1000),
+            "media_kmh": float(c["speed"])
+        })
+    
+    tramo_tablas["segmentos"] = new_segments
+    save_tramos(tramos)
+    return {"status": "ok", "count": len(new_segments)}
 
 @app.post("/api/test/speed")
 async def set_test_speed(request: Request):
@@ -163,9 +287,31 @@ from fastapi.responses import RedirectResponse
 async def root():
     return RedirectResponse(url="/piloto.html")
 
-# Montar frontend para que la Raspberry Pi lo sirva en la misma IP
-app_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "2_APP")
-app.mount("/", StaticFiles(directory=app_dir, html=True), name="static")
+from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
+
+# Configurar CORS para permitir peticiones desde el mismo host o Tablitos
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Rutas de frontend
+current_file = Path(__file__).resolve()
+repo_root = current_file.parent.parent.parent # c:\repo
+app_dir = repo_root / "Lebrel" / "2_APP"
+tablitos_dir = repo_root / "Tablitos" / "public"
+
+if tablitos_dir.exists():
+    print(f"Montando Tablitos desde: {tablitos_dir}")
+    app.mount("/tablitos", StaticFiles(directory=str(tablitos_dir), html=True), name="tablitos")
+else:
+    print(f"ERROR: No se encontró Tablitos en {tablitos_dir}")
+
+app.mount("/", StaticFiles(directory=str(app_dir), html=True), name="static")
 
 
 @app.on_event("startup")

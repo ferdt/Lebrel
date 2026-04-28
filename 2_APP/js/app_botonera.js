@@ -53,12 +53,8 @@ if (btnMilestone) {
 
 if (btnOcr) {
     btnOcr.addEventListener('click', () => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send("OCR_TRIGGER");
-            // Visual feedback
-            btnOcr.style.background = "rgba(59, 130, 246, 0.3)";
-            setTimeout(() => btnOcr.style.background = "", 200);
-        }
+        // Redirigir a Tablitos (local)
+        window.location.href = "/tablitos/tablas.html";
     });
 }
 
