@@ -1,8 +1,10 @@
 import { TelemetryClient } from './telemetry.js';
 import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
+import { initRouter } from './router.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initRouter();
     initFullscreen();
     initWakeLock();
     const statusIndicator = document.getElementById('status-indicator');

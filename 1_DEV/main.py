@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from core.hardware import setup_hardware_readers
 from core.logger import rally_logger
+from core.rally import tramo_manager
 
 app = FastAPI(title="Lebrel Backend")
 
@@ -22,6 +23,18 @@ default_settings = {
     "theme": "dark",
     "font_size_offset": 0
 }
+
+TRAMOS_FILE = "tramos.json"
+
+def load_tramos():
+    if os.path.exists(TRAMOS_FILE):
+        with open(TRAMOS_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_tramos(t):
+    with open(TRAMOS_FILE, "w") as f:
+        json.dump(t, f, indent=2)
 
 def load_settings():
     if os.path.exists(SETTINGS_FILE):
@@ -57,6 +70,9 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+# Tramo activo para cálculos en tiempo real
+active_tramo: dict | None = None
+
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
     await manager.connect(websocket)
@@ -80,6 +96,42 @@ async def update_settings(request: Request):
     save_settings(new_settings)
     return {"status": "ok"}
 
+@app.get("/api/tramos/active")
+async def get_active_tramo():
+    if active_tramo is None:
+        return {"id": None}
+    return {"id": active_tramo.get("id")}
+
+@app.post("/api/tramos/active")
+async def set_active_tramo(request: Request):
+    global active_tramo
+    body = await request.json()
+    tramo_id = body.get("id")
+    # Buscar el tramo completo en tramos.json
+    all_tramos = load_tramos()
+    found = next((t for t in all_tramos if t.get("id") == tramo_id), None)
+    if not found:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Tramo no encontrado")
+    active_tramo = found
+    tramo_manager.set_active_tramo(found)  # Sincronizar con el motor de cálculo
+    return {"status": "ok", "nombre": found.get("nombre")}
+
+@app.get("/api/tramos")
+async def get_tramos():
+    return load_tramos()
+
+@app.post("/api/tramos")
+async def update_tramos(request: Request):
+    new_tramos = await request.json()
+    # Ordenar segmentos de cada tramo por inicio_m
+    for tramo in new_tramos:
+        if "segmentos" in tramo:
+            tramo["segmentos"].sort(key=lambda s: s.get("inicio_m", 0))
+    save_tramos(new_tramos)
+    return {"status": "ok", "tramos": len(new_tramos)}
+
+
 from fastapi.responses import RedirectResponse
 
 @app.get("/")
@@ -102,44 +154,43 @@ async def hardware_loop():
     print("Iniciando bucle de telemetría por hardware a 10Hz...")
     setup_hardware_readers()
     rally_logger.start_tramo("test")
-    # Dummy variables for stage simulate
     dist_m = 0.0
     tiempo_tramo_s = 0.0
-    
-    # Mock de un tramo completo
+
+    # Mock de fallback si no hay tramo activo
     tramo_mock = [
-        {"inicio_m": 0, "fin_m": 1500, "media_kmh": 49.9},
-        {"inicio_m": 1500, "fin_m": 3500, "media_kmh": 52.0},
-        {"inicio_m": 3500, "fin_m": 8000, "media_kmh": 45.0},
+        {"inicio_m": 0,    "fin_m": 1500,  "media_kmh": 49.9},
+        {"inicio_m": 1500, "fin_m": 3500,  "media_kmh": 52.0},
+        {"inicio_m": 3500, "fin_m": 8000,  "media_kmh": 45.0},
         {"inicio_m": 8000, "fin_m": 12000, "media_kmh": 60.0}
     ]
-    
+
     while True:
-        # Aquí recogerías los valores reales (odometría, velocidad, tiempo ideal, etc.)
-        dist_m += 10.0 # Más rápido para que se vea cambiar (10m por iteración = rápido)
-        if dist_m > 12000: dist_m = 0.0
-        
-        # Encontrar sector actual
-        segment_idx = 0
-        velocidad_objetivo_kmh = 0.0
-        proxima_media_kmh = 0.0
-        distancia_cambio_m = 0.0
-        
-        for i, sector in enumerate(tramo_mock):
-            if dist_m >= sector["inicio_m"] and dist_m < sector["fin_m"]:
-                segment_idx = i
-                velocidad_objetivo_kmh = sector["media_kmh"]
-                if i + 1 < len(tramo_mock):
-                    proxima_media_kmh = tramo_mock[i+1]["media_kmh"]
-                    distancia_cambio_m = sector["fin_m"] - dist_m
-                break
-                
-        velocidad_kmh = 36.0
-        diferencia_ideal_s = 0.5
+        # Usar segmentos del tramo activo si existe, si no el mock
+        segmentos = active_tramo["segmentos"] if active_tramo and active_tramo.get("segmentos") else tramo_mock
+        tramo_nombre = active_tramo["nombre"] if active_tramo else "TC-DEMO"
+        dist_max = segmentos[-1]["fin_m"] if segmentos else 12000
+
+        # Sincronizar tramo_manager con los segmentos actuales
+        if not tramo_manager.active_tramo or tramo_manager.get_segmentos() != segmentos:
+            tramo_manager.set_active_tramo({"segmentos": segmentos})
+
+        dist_m += 10.0
+        if dist_m > dist_max: dist_m = 0.0
         tiempo_tramo_s += 0.1
-        
+
+        # ---- Cálculos de navegación ----
+        seg_info = tramo_manager.get_current_segment_info(dist_m)
+        diferencia_ideal_s = tramo_manager.calculate_interval(dist_m, tiempo_tramo_s)
+
+        velocidad_kmh          = 36.0  # TODO: reemplazar con lectura real del hardware
+        velocidad_objetivo_kmh = seg_info["velocidad_obj"]
+        proxima_media_kmh      = seg_info["proxima_media"]
+        distancia_cambio_m     = seg_info["distancia_cambio_m"]
+        segment_idx            = seg_info["idx"]
+
         telemetry = {
-            "tramo_nombre": "TC-1: La Puebla",
+            "tramo_nombre": tramo_nombre,
             "distancia_m": dist_m,
             "tiempo_tramo_s": tiempo_tramo_s,
             "velocidad_kmh": velocidad_kmh,
@@ -148,7 +199,7 @@ async def hardware_loop():
             "proxima_media_kmh": proxima_media_kmh,
             "distancia_cambio_m": distancia_cambio_m,
             "segment_idx": segment_idx,
-            "tramo_tabla": tramo_mock, # Puede optimizarse y no enviarse cada frame, sino solo 1 vez
+            "tramo_tabla": segmentos,
         }
         
         rally_logger.log_telemetry(dist_m, diferencia_ideal_s, velocidad_kmh)
