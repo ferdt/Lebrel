@@ -37,8 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateRemoteSpeed(speed) {
         try {
-            const host = window.location.host || 'localhost:8000';
-            await fetch(`http://${host}/api/test/speed`, {
+            await fetch(`/api/test/speed`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ speed: speed })

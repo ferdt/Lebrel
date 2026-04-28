@@ -21,7 +21,9 @@ SETTINGS_FILE = "settings.json"
 default_settings = {
     "wheel_perimeter_m": 1.95,
     "theme": "dark",
-    "font_size_offset": 0
+    "font_size_offset": 0,
+    "neutral_interval_s": 0.1,
+    "odometer_source": "test"
 }
 
 TRAMOS_FILE = "tramos.json"
@@ -43,8 +45,11 @@ def load_settings():
     return default_settings
 
 def save_settings(s):
-    with open(SETTINGS_FILE, "w") as f:
-        json.dump(s, f)
+    try:
+        with open(SETTINGS_FILE, "w") as f:
+            json.dump(s, f, indent=2)
+    except Exception as e:
+        print(f"Error guardando ajustes: {e}")
 
 
 # Maintain a list of active websocket connections
@@ -89,6 +94,13 @@ async def websocket_telemetry(websocket: WebSocket):
             if data == "ODO_RESET":
                 test_dist_m = 0.0
                 rally_logger.log_event("RECALIBRACION_RESET")
+            elif data.startswith("DIST_ADJUST:"):
+                try:
+                    delta = float(data.split(":")[1])
+                    test_dist_m += delta
+                    rally_logger.log_event(f"AJUSTE_DISTANCIA:{delta}")
+                except:
+                    pass
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
@@ -212,24 +224,20 @@ async def hardware_loop():
         seg_info = tramo_manager.get_current_segment_info(dist_m)
         diferencia_ideal_s = tramo_manager.calculate_interval(dist_m, tiempo_tramo_s)
 
-        velocidad_objetivo_kmh = seg_info["velocidad_obj"]
-        proxima_media_kmh      = seg_info["proxima_media"]
-        distancia_cambio_m     = seg_info["distancia_cambio_m"]
-        segment_idx            = seg_info["idx"]
-
         telemetry = {
             "tramo_nombre": tramo_nombre,
             "hora_inicio_tramo": active_tramo.get("hora_inicio", "") if active_tramo else "",
             "distancia_m": dist_m,
             "tiempo_tramo_s": tiempo_tramo_s,
             "velocidad_kmh": velocidad_kmh,
-            "velocidad_objetivo_kmh": velocidad_objetivo_kmh,
+            "velocidad_objetivo_kmh": seg_info["velocidad_obj"],
             "diferencia_ideal_s": diferencia_ideal_s,
-            "proxima_media_kmh": proxima_media_kmh,
-            "distancia_cambio_m": distancia_cambio_m,
-            "segment_idx": segment_idx,
+            "proxima_media_kmh": seg_info["proxima_media"],
+            "distancia_cambio_m": seg_info["distancia_cambio_m"],
+            "segment_idx": seg_info["idx"],
             "tramo_tabla": segmentos,
-            "odo_source": odo_source
+            "odo_source": odo_source,
+            "neutral_interval_s": settings.get("neutral_interval_s", 0.1)
         }
         
         rally_logger.log_telemetry(dist_m, diferencia_ideal_s, velocidad_kmh)

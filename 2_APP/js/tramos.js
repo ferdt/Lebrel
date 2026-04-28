@@ -75,7 +75,7 @@ function getSelected() { return tramos.find(t => t.id === selectedId) ?? null; }
 // ---- DOM refs ----
 const tramosList    = document.getElementById('tramos-list');
 const tramosEmpty   = document.getElementById('tramos-empty');
-const headerNombre  = document.getElementById('header-tramo-nombre');
+const headerNombre  = document.getElementById('val_tramo_nombre');
 const placeholderEl = document.getElementById('placeholder-noselect');
 const segContent    = document.getElementById('seg-content');
 const segTbody      = document.getElementById('seg-tbody');
@@ -466,8 +466,7 @@ if (btnLaunch) {
         if (!tramo) return;
         if (tramo.segmentos.length === 0) { showStatus('El tramo no tiene segmentos definidos', 'err'); return; }
         try {
-            const host = window.location.host || 'localhost:8000';
-            const res  = await fetch(`http://${host}/api/tramos/active`, {
+            const res  = await fetch(`/api/tramos/active`, {
                 method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ id: tramo.id })
             });
@@ -483,8 +482,7 @@ if (btnLaunch) {
 btnSave.addEventListener('click', async () => {
     if (tramos.length === 0) { showStatus('No hay tramos que guardar', 'err'); return; }
     try {
-        const host = window.location.host || 'localhost:8000';
-        const res  = await fetch(`http://${host}/api/tramos`, {
+        const res  = await fetch(`/api/tramos`, {
             method: 'POST', headers: {'Content-Type':'application/json'},
             body: JSON.stringify(tramos)
         });
@@ -520,16 +518,14 @@ modalOverlay.addEventListener('click',  e => { if (e.target === modalOverlay) mo
 // ---- Load from backend ----
 async function loadTramos() {
     try {
-        const host = window.location.host || 'localhost:8000';
-        const res  = await fetch(`http://${host}/api/tramos`);
+        const res  = await fetch(`/api/tramos`);
         if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) { tramos = data; selectedId = tramos[0].id; }
         }
     } catch (_) {}
     try {
-        const host = window.location.host || 'localhost:8000';
-        const res  = await fetch(`http://${host}/api/tramos/active`);
+        const res  = await fetch(`/api/tramos/active`);
         if (res.ok) { const d = await res.json(); activeTramoId = d.id ?? null; }
     } catch (_) {}
     renderTramosList();

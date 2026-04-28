@@ -69,6 +69,7 @@
             <nav class="main-nav">
                 <a href="#" onclick="window.navigateSPA('piloto.html'); return false;" class="nav-link">Piloto</a>
                 <a href="#" onclick="window.navigateSPA('copiloto.html'); return false;" class="nav-link active">Copiloto</a>
+                <a href="#" onclick="window.navigateSPA('botonera.html'); return false;" class="nav-link">Botonera</a>
                 <a href="#" onclick="window.navigateSPA('config.html'); return false;" class="nav-link">Config</a>
                 <a href="#" onclick="window.navigateSPA('tramos.html'); return false;" class="nav-link">Tramos</a>
                 <a href="#" onclick="window.navigateSPA('test.html'); return false;" class="nav-link">Test</a>
@@ -78,7 +79,7 @@
                 <span class="separator">|</span>
                 <span id="val_hora">00:00:00</span>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
                 <button id="btn-fullscreen" class="icon-btn" title="Pantalla Completa">
                     <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -87,7 +88,7 @@
                         </path>
                     </svg>
                 </button>
-                <div id="status-indicator" class="status disconnected">Desconectado</div>
+                <div id="status-indicator" class="status disconnected">OFFLINE</div>
             </div>
         </header>
 

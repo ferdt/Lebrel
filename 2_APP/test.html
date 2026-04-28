@@ -117,16 +117,27 @@
             <nav class="main-nav">
                 <a href="#" onclick="window.navigateSPA('piloto.html'); return false;" class="nav-link">Piloto</a>
                 <a href="#" onclick="window.navigateSPA('copiloto.html'); return false;" class="nav-link">Copiloto</a>
+                <a href="#" onclick="window.navigateSPA('botonera.html'); return false;" class="nav-link">Botonera</a>
                 <a href="#" onclick="window.navigateSPA('config.html'); return false;" class="nav-link">Config</a>
                 <a href="#" onclick="window.navigateSPA('tramos.html'); return false;" class="nav-link">Tramos</a>
                 <a href="#" onclick="window.navigateSPA('test.html'); return false;" class="nav-link active">Test</a>
             </nav>
             <div class="stage-info">
-                <span>SIMULADOR</span>
+                <span id="val_tramo_nombre">MODO TEST</span>
                 <span class="separator">|</span>
-                <span id="val_distancia">0.00 km</span>
+                <span id="val_hora">00:00:00</span>
             </div>
-            <div id="status-indicator" class="status disconnected">OFFLINE</div>
+            <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
+                <button id="btn-fullscreen" class="icon-btn" title="Pantalla Completa">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                        </path>
+                    </svg>
+                </button>
+                <div id="status-indicator" class="status disconnected">OFFLINE</div>
+            </div>
         </header>
 
         <main class="test-grid">
@@ -158,7 +169,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/app_test.js"></script>
+    <script type="module" src="js/app_test.js?v=2"></script>
     <script>
         // Funciones globales para los botones de velocidad
         window.setSpeed = function(s) {

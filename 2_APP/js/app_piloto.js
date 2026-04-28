@@ -44,9 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.distancia_m !== undefined && ui.distancia) ui.distancia.textContent = (data.distancia_m / 1000).toFixed(3) + ' km';
         if (data.diferencia_ideal_s !== undefined && ui.diferencia_ideal) {
             const diff = data.diferencia_ideal_s;
-            const label = diff > 0.1 ? ' ACELERA' : (diff < -0.1 ? ' FRENA' : '');
+            const threshold = data.neutral_interval_s || 0.1;
+            const label = diff > threshold ? ' ACELERA' : (diff < -threshold ? ' FRENA' : '');
             ui.diferencia_ideal.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + label;
-            ui.diferencia_ideal.className = 'value ' + (diff > 0.1 ? 'positive' : (diff < -0.1 ? 'negative' : ''));
+            ui.diferencia_ideal.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
         }
         if (data.tiempo_tramo_s !== undefined && ui.tiempo_tramo) {
             const secs = data.tiempo_tramo_s;

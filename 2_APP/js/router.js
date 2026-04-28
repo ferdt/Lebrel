@@ -23,10 +23,10 @@ export function initRouter() {
             const curMain = document.querySelector('main');
             if (newMain && curMain) curMain.replaceWith(newMain);
 
-            // Reemplazar <nav class="main-nav"> (para actualizar la clase 'active')
-            const newNav = doc.querySelector('.main-nav');
-            const curNav = document.querySelector('.main-nav');
-            if (newNav && curNav) curNav.replaceWith(newNav);
+            // Reemplazar header (para actualizar info de tramo, reloj, etc)
+            const newHeader = doc.querySelector('.unified-header');
+            const curHeader = document.querySelector('.unified-header');
+            if (newHeader && curHeader) curHeader.replaceWith(newHeader);
 
             // Actualizar URL sin recargar
             window.history.pushState({}, '', url);

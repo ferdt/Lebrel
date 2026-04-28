@@ -25,7 +25,7 @@ body.dark-theme {
     font-family: var(--font-main);
     min-height: 100vh;
     display: flex;
-    padding: 10px;
+    padding: 0;
     overflow-y: auto;
 }
 
@@ -34,14 +34,14 @@ body.dark-theme {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    padding: 20px;
+    border: none;
+    border-radius: 0;
+    padding: 8px 12px;
     width: 100%;
-    max-width: 1200px;
-    min-height: 80vh;
-    margin: auto;
-    box-shadow: var(--glass-shadow);
+    max-width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
 }
@@ -51,8 +51,8 @@ header {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 20px;
-    margin-bottom: 30px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 header h1 {
@@ -191,8 +191,8 @@ button.danger:hover {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
     width: 100%;
 }
 

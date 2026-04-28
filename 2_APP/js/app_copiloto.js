@@ -113,9 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.distancia_m !== undefined && valDistancia) valDistancia.textContent = (data.distancia_m / 1000).toFixed(3) + ' km';
         if (data.diferencia_ideal_s !== undefined && valDiferencia) {
             const diff = data.diferencia_ideal_s;
-            const label = diff > 0.1 ? ' ACELERA' : (diff < -0.1 ? ' FRENA' : '');
+            const threshold = data.neutral_interval_s || 0.1;
+            const label = diff > threshold ? ' ACELERA' : (diff < -threshold ? ' FRENA' : '');
             valDiferencia.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + label;
-            valDiferencia.className = 'value ' + (diff > 0.1 ? 'positive' : (diff < -0.1 ? 'negative' : ''));
+            valDiferencia.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
         }
         if (data.tiempo_tramo_s !== undefined && valTiempo) valTiempo.textContent = formatTime(data.tiempo_tramo_s);
         if (data.velocidad_kmh !== undefined && valVelocidadAct) valVelocidadAct.textContent = data.velocidad_kmh.toFixed(1);
