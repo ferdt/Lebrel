@@ -29,25 +29,36 @@
     <div class="glass-container">
         <header class="unified-header">
             <nav class="main-nav">
-                <a href="piloto.html" class="nav-link">Piloto</a>
-                <a href="copiloto.html" class="nav-link">Copiloto</a>
-                <a href="config.html" class="nav-link active">Config</a>
+                <a href="#" onclick="window.navigateSPA('piloto.html'); return false;" class="nav-link">Piloto</a>
+                <a href="#" onclick="window.navigateSPA('copiloto.html'); return false;" class="nav-link">Copiloto</a>
+                <a href="#" onclick="window.navigateSPA('config.html'); return false;" class="nav-link active">Config</a>
+                <a href="#" onclick="window.navigateSPA('tramos.html'); return false;" class="nav-link">Tramos</a>
+                <a href="#" onclick="window.navigateSPA('test.html'); return false;" class="nav-link">Test</a>
             </nav>
             <div class="stage-info">
                 <span id="val_tramo_nombre">Configuración</span>
                 <span class="separator">|</span>
                 <span id="val_hora">00:00:00</span>
             </div>
-            <div id="status-indicator" class="status disconnected">Ajustes Generales</div>
+            <div id="status-indicator" class="status connected">Ajustes Generales</div>
         </header>
 
         <main class="dashboard">
             <div class="card metric" style="align-items: flex-start; width: 100%;">
-                <h3 style="width:100%;">Parámetros de Cálculo</h3>
+                <h3 style="width:100%;">Hardware y Cálculo</h3>
                 
                 <div class="form-group" style="width:100%;">
+                    <label for="odometer_source">Fuente del Odómetro</label>
+                    <select id="odometer_source">
+                        <option value="test">Simulador (Test Control)</option>
+                        <option value="wheel">Ruedas (Sensor Hardware)</option>
+                        <option value="gps">GPS</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="width:100%;">
                     <label for="wheel_perimeter_m">Perímetro Rueda (m)</label>
-                    <input type="number" step="0.01" id="wheel_perimeter_m" value="1.95">
+                    <input type="number" step="0.001" id="wheel_perimeter_m" value="1.950">
                 </div>
 
                 <h3 style="width:100%; margin-top:20px;">Apariencia</h3>

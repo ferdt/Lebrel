@@ -73,8 +73,13 @@ manager = ConnectionManager()
 # Tramo activo para cálculos en tiempo real
 active_tramo: dict | None = None
 
+# Variables para el simulador de test
+test_speed_kmh = 0.0
+test_dist_m = 0.0
+
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
+    global test_dist_m
     await manager.connect(websocket)
     try:
         while True:
@@ -82,6 +87,7 @@ async def websocket_telemetry(websocket: WebSocket):
             data = await websocket.receive_text()
             print(f"Received: {data}")
             if data == "ODO_RESET":
+                test_dist_m = 0.0
                 rally_logger.log_event("RECALIBRACION_RESET")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
@@ -95,6 +101,13 @@ async def update_settings(request: Request):
     new_settings = await request.json()
     save_settings(new_settings)
     return {"status": "ok"}
+
+@app.post("/api/test/speed")
+async def set_test_speed(request: Request):
+    global test_speed_kmh
+    body = await request.json()
+    test_speed_kmh = float(body.get("speed", 0.0))
+    return {"status": "ok", "speed": test_speed_kmh}
 
 @app.get("/api/tramos/active")
 async def get_active_tramo():
@@ -150,10 +163,13 @@ async def startup_event():
     asyncio.create_task(hardware_loop())
 
 async def hardware_loop():
+    global test_dist_m
     # 10 Hz telemetry loop (0.1s interval)
     print("Iniciando bucle de telemetría por hardware a 10Hz...")
     setup_hardware_readers()
     rally_logger.start_tramo("test")
+    
+    # distance and time for the actual calculation
     dist_m = 0.0
     tiempo_tramo_s = 0.0
 
@@ -166,6 +182,9 @@ async def hardware_loop():
     ]
 
     while True:
+        settings = load_settings()
+        odo_source = settings.get("odometer_source", "test") # default test for convenience
+
         # Usar segmentos del tramo activo si existe, si no el mock
         segmentos = active_tramo["segmentos"] if active_tramo and active_tramo.get("segmentos") else tramo_mock
         tramo_nombre = active_tramo["nombre"] if active_tramo else "TC-DEMO"
@@ -175,15 +194,24 @@ async def hardware_loop():
         if not tramo_manager.active_tramo or tramo_manager.get_segmentos() != segmentos:
             tramo_manager.set_active_tramo({"segmentos": segmentos})
 
-        dist_m += 10.0
-        if dist_m > dist_max: dist_m = 0.0
+        if odo_source == "test":
+            # Incremento basado en velocidad de test (km/h -> m/s * 0.1s)
+            delta_dist = (test_speed_kmh / 3.6) * 0.1
+            test_dist_m += delta_dist
+            dist_m = test_dist_m
+            velocidad_kmh = test_speed_kmh
+        else:
+            # Mock de hardware real (o GPS/Ruedas)
+            dist_m += 10.0
+            if dist_m > dist_max: dist_m = 0.0
+            velocidad_kmh = 36.0 # Mock
+
         tiempo_tramo_s += 0.1
 
         # ---- Cálculos de navegación ----
         seg_info = tramo_manager.get_current_segment_info(dist_m)
         diferencia_ideal_s = tramo_manager.calculate_interval(dist_m, tiempo_tramo_s)
 
-        velocidad_kmh          = 36.0  # TODO: reemplazar con lectura real del hardware
         velocidad_objetivo_kmh = seg_info["velocidad_obj"]
         proxima_media_kmh      = seg_info["proxima_media"]
         distancia_cambio_m     = seg_info["distancia_cambio_m"]
@@ -201,6 +229,7 @@ async def hardware_loop():
             "distancia_cambio_m": distancia_cambio_m,
             "segment_idx": segment_idx,
             "tramo_tabla": segmentos,
+            "odo_source": odo_source
         }
         
         rally_logger.log_telemetry(dist_m, diferencia_ideal_s, velocidad_kmh)

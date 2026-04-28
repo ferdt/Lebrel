@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnSave = document.getElementById('btn-save');
     const msg = document.getElementById('save-msg');
 
+    const inputOdo = document.getElementById('odometer_source');
     const inputWheel = document.getElementById('wheel_perimeter_m');
     const inputTheme = document.getElementById('theme');
     const inputFont = document.getElementById('font_size_offset');
@@ -14,14 +15,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 1000);
 
-    // Cambiar por la IP real en producción
-    const API_URL = 'http://localhost:8000/api/settings';
+    const host = window.location.host || 'localhost:8000';
+    const API_URL = `http://${host}/api/settings`;
 
     // Cargar config
     try {
         const res = await fetch(API_URL);
         if (res.ok) {
             const data = await res.json();
+            if(inputOdo) inputOdo.value = data.odometer_source || 'test';
             inputWheel.value = data.wheel_perimeter_m || 1.95;
             inputTheme.value = data.theme || 'dark';
             inputFont.value = data.font_size_offset || 0;
@@ -33,6 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Guardar config
     btnSave.addEventListener('click', async () => {
         const payload = {
+            odometer_source: inputOdo ? inputOdo.value : 'test',
             wheel_perimeter_m: parseFloat(inputWheel.value),
             theme: inputTheme.value,
             font_size_offset: parseInt(inputFont.value, 10)

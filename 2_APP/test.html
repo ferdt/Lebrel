@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lebrel - Test Control</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .speed-control {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .speed-display {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--accent-blue);
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .speed-slider {
+            width: 100%;
+            height: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 20px 0;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--accent-blue);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-speed {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-speed:active {
+            background: var(--accent-blue);
+            transform: scale(0.95);
+        }
+
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .status-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <div class="glass-container">
+
+        <header class="unified-header">
+            <nav class="main-nav">
+                <a href="#" onclick="window.navigateSPA('piloto.html'); return false;" class="nav-link">Piloto</a>
+                <a href="#" onclick="window.navigateSPA('copiloto.html'); return false;" class="nav-link">Copiloto</a>
+                <a href="#" onclick="window.navigateSPA('config.html'); return false;" class="nav-link">Config</a>
+                <a href="#" onclick="window.navigateSPA('tramos.html'); return false;" class="nav-link">Tramos</a>
+                <a href="#" onclick="window.navigateSPA('test.html'); return false;" class="nav-link active">Test</a>
+            </nav>
+            <div class="stage-info">
+                <span>SIMULADOR</span>
+                <span class="separator">|</span>
+                <span id="val_distancia">0.00 km</span>
+            </div>
+            <div id="status-indicator" class="status disconnected">OFFLINE</div>
+        </header>
+
+        <main class="test-grid">
+            <div class="card speed-control">
+                <h3>Velocidad Simulada</h3>
+                <div class="speed-display"><span id="speed-val">0</span> km/h</div>
+                <input type="range" min="0" max="180" value="0" class="speed-slider" id="speed-slider">
+                
+                <div class="btn-grid">
+                    <button class="btn-speed" onclick="setSpeed(0)">STOP</button>
+                    <button class="btn-speed" onclick="setSpeed(30)">30</button>
+                    <button class="btn-speed" onclick="setSpeed(45)">45</button>
+                    <button class="btn-speed" onclick="setSpeed(50)">50</button>
+                    <button class="btn-speed" onclick="setSpeed(60)">60</button>
+                    <button class="btn-speed" onclick="setSpeed(90)">90</button>
+                </div>
+
+                <button class="btn-reset" id="btn-reset-odo">RESET ODÓMETRO</button>
+            </div>
+
+            <div class="status-card">
+                <span class="status-label">Modo Odo</span>
+                <span class="status-value" id="val_odo_source">---</span>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.8rem; text-align: center; padding: 10px;">
+                Nota: Para que esto funcione, en Configuración debe estar seleccionado "Simulador" como fuente del odómetro.
+            </p>
+        </main>
+    </div>
+
+    <script type="module" src="js/app_test.js"></script>
+    <script>
+        // Funciones globales para los botones de velocidad
+        window.setSpeed = function(s) {
+            const slider = document.getElementById('speed-slider');
+            slider.value = s;
+            slider.dispatchEvent(new Event('input'));
+        }
+    </script>
+</body>
+
+</html>
