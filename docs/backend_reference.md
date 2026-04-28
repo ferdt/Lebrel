@@ -85,8 +85,8 @@ diferencia_ideal_s = tiempo_tramo_s - tiempo_ideal
 
 | Valor | Significado | Color en UI |
 |---|---|---|
-| `> 0` | El coche va **tarde** (más lento de lo requerido) | 🔴 Rojo |
-| `< 0` | El coche va **adelantado** (más rápido de lo requerido) | 🟢 Verde |
+| `> 0` | El coche va **tarde** (más lento de lo requerido) | 🟢 Verde |
+| `< 0` | El coche va **adelantado** (más rápido de lo requerido) |🔴 Rojo  |
 | `= 0` | Perfecto, en el tiempo exacto | — |
 
 **Unidad:** segundos (float, redondeado a 2 decimales)

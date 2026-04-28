@@ -191,6 +191,7 @@ async def hardware_loop():
 
         telemetry = {
             "tramo_nombre": tramo_nombre,
+            "hora_inicio_tramo": active_tramo.get("hora_inicio", "") if active_tramo else "",
             "distancia_m": dist_m,
             "tiempo_tramo_s": tiempo_tramo_s,
             "velocidad_kmh": velocidad_kmh,

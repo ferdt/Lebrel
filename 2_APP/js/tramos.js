@@ -8,8 +8,8 @@ import { initRouter } from './router.js';
 //   segmento = { inicio_m, fin_m, media_kmh }
 // ============================================================
 
-let tramos = [];
-let selectedId = null;
+let tramos       = [];
+let selectedId   = null;
 let activeTramoId = null; // El tramo actualmente lanzado para cálculos
 
 // ---- Time helpers ----
@@ -30,29 +30,75 @@ function parseTime(str) {
  */
 function formatTime(secs) {
     if (secs == null || isNaN(secs)) return '--:--:--.--';
-    const h  = Math.floor(secs / 3600);
-    const m  = Math.floor((secs % 3600) / 60);
-    const s  = Math.floor(secs % 60);
-    const d  = Math.floor((secs % 1) * 10);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = Math.floor(secs % 60);
+    const d = Math.floor((secs % 1) * 10);
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
 }
 
 /**
- * Calculates hora_inicio / hora_fin for each segment given the tramo start time.
- * hora_inicio of segment[i+1] = hora_fin of segment[i].
- * Time to travel a segment = (distance_km / media_kmh) * 3600 seconds.
+ * Parses a duration string "MM:SS.d", "HH:MM:SS.d" or plain seconds -> total seconds.
+ * Returns null if invalid.
  */
-function calcHoras(segmentos, horaInicioStr) {
-    const horaBase = parseTime(horaInicioStr);
-    if (horaBase == null) return segmentos.map(() => ({ hora_inicio: null, hora_fin: null }));
+function parseDuration(str) {
+    if (!str) return null;
+    str = str.trim();
+    // HH:MM:SS.d
+    let m = str.match(/^(\d{1,2}):(\d{2}):(\d{2})(?:[.,](\d))?$/);
+    if (m) return parseInt(m[1])*3600 + parseInt(m[2])*60 + parseInt(m[3]) + (m[4] ? parseInt(m[4])*0.1 : 0);
+    // MM:SS.d
+    m = str.match(/^(\d{1,2}):(\d{2})(?:[.,](\d))?$/);
+    if (m) return parseInt(m[1])*60 + parseInt(m[2]) + (m[3] ? parseInt(m[3])*0.1 : 0);
+    // plain seconds
+    const n = parseFloat(str);
+    return isNaN(n) ? null : n;
+}
 
-    let cursor = horaBase;
-    return segmentos.map(seg => {
+/**
+ * Formats seconds as MM:SS.d (or HH:MM:SS.d if >= 1 hour)
+ */
+function formatDuration(secs) {
+    if (secs == null || isNaN(secs)) return '--:--.-';
+    secs = Math.abs(secs);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = Math.floor(secs % 60);
+    const d = Math.floor((secs % 1) * 10);
+    if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
+}
+
+/**
+ * Recalculates times for all segments using stored media_kmh values.
+ * Optionally overrides duration or hora_fin for the segment at `fromIdx`,
+ * updating its media_kmh in the data model before cascading.
+ * Pass fromIdx = -1 for a pure read-only recalc (no model mutation).
+ * Returns array of { hora_inicio, hora_fin, dur_secs } for every segment.
+ */
+function recalcFrom(tramo, fromIdx, _unused, overrideDurSecs, overrideHoraFin) {
+    const segs     = tramo.segmentos;
+    const horaBase = parseTime(tramo.hora_inicio);
+    let cursor     = horaBase ?? 0;
+
+    return segs.map((seg, i) => {
         const distKm = (seg.fin_m - seg.inicio_m) / 1000;
-        const durSecs = (distKm / seg.media_kmh) * 3600;
+        let durSecs;
+
+        if (i === fromIdx && overrideHoraFin != null) {
+            const hIni = cursor;
+            durSecs = overrideHoraFin - hIni;
+            if (durSecs > 0 && distKm > 0) seg.media_kmh = (distKm / durSecs) * 3600;
+        } else if (i === fromIdx && overrideDurSecs != null) {
+            durSecs = overrideDurSecs;
+            if (durSecs > 0 && distKm > 0) seg.media_kmh = (distKm / durSecs) * 3600;
+        } else {
+            durSecs = distKm > 0 && seg.media_kmh > 0 ? (distKm / seg.media_kmh) * 3600 : 0;
+        }
+
         const h_ini = cursor;
         cursor += durSecs;
-        return { hora_inicio: h_ini, hora_fin: cursor };
+        return { hora_inicio: h_ini, hora_fin: cursor, dur_secs: durSecs };
     });
 }
 
@@ -67,42 +113,40 @@ function getSelected() {
 }
 
 // ---- DOM refs ----
-const tramosList      = document.getElementById('tramos-list');
-const tramosEmpty     = document.getElementById('tramos-empty');
-const headerNombre    = document.getElementById('header-tramo-nombre');
-const placeholderEl   = document.getElementById('placeholder-noselect');
-const segContent      = document.getElementById('seg-content');
-const segTbody        = document.getElementById('seg-tbody');
-const segEmpty        = document.getElementById('seg-empty');
-const segCount        = document.getElementById('seg-count');
-const segInicio       = document.getElementById('seg-inicio');
-const segFin          = document.getElementById('seg-fin');
-const segMedia        = document.getElementById('seg-media');
-const btnAddSeg       = document.getElementById('btn-add-seg');
-const btnSave         = document.getElementById('btn-save');
-const btnLaunch       = document.getElementById('btn-launch');
-const btnClearSegs    = document.getElementById('btn-clear-segs');
-const saveStatus      = document.getElementById('save-status');
-const modalOverlay    = document.getElementById('modal-nuevo-tramo');
-const modalNombre     = document.getElementById('modal-nombre');
-const modalHora       = document.getElementById('modal-hora');
-const modalCancel     = document.getElementById('modal-cancel');
-const modalOk         = document.getElementById('modal-ok');
-const btnNuevoTramo   = document.getElementById('btn-nuevo-tramo');
+const tramosList    = document.getElementById('tramos-list');
+const tramosEmpty   = document.getElementById('tramos-empty');
+const headerNombre  = document.getElementById('header-tramo-nombre');
+const placeholderEl = document.getElementById('placeholder-noselect');
+const segContent    = document.getElementById('seg-content');
+const segTbody      = document.getElementById('seg-tbody');
+const segEmpty      = document.getElementById('seg-empty');
+const segCount      = document.getElementById('seg-count');
+const segInicio     = document.getElementById('seg-inicio');
+const segFin        = document.getElementById('seg-fin');
+const segMedia      = document.getElementById('seg-media');
+const btnAddSeg     = document.getElementById('btn-add-seg');
+const btnSave       = document.getElementById('btn-save');
+const btnLaunch     = document.getElementById('btn-launch');
+const btnClearSegs  = document.getElementById('btn-clear-segs');
+const saveStatus    = document.getElementById('save-status');
+const modalOverlay  = document.getElementById('modal-nuevo-tramo');
+const modalNombre   = document.getElementById('modal-nombre');
+const modalHora     = document.getElementById('modal-hora');
+const modalCancel   = document.getElementById('modal-cancel');
+const modalOk       = document.getElementById('modal-ok');
+const btnNuevoTramo = document.getElementById('btn-nuevo-tramo');
 
 // ---- Status messages ----
 function showStatus(msg, type = 'ok') {
     saveStatus.textContent = msg;
-    saveStatus.className = `save-msg ${type}`;
+    saveStatus.className   = `save-msg ${type}`;
     clearTimeout(showStatus._t);
     showStatus._t = setTimeout(() => { saveStatus.className = 'save-msg'; }, 3500);
 }
 
 // ---- Render tramos list ----
 function renderTramosList() {
-    // Clear dynamic items (keep empty placeholder)
     [...tramosList.querySelectorAll('.tramo-item')].forEach(el => el.remove());
-
     tramosEmpty.style.display = tramos.length === 0 ? 'block' : 'none';
 
     tramos.forEach(tramo => {
@@ -126,7 +170,6 @@ function renderTramosList() {
 // ---- Render segmentos table ----
 function renderSegmentos() {
     const tramo = getSelected();
-
     if (!tramo) {
         placeholderEl.style.display = 'flex';
         segContent.style.display    = 'none';
@@ -138,36 +181,163 @@ function renderSegmentos() {
     segContent.style.display    = 'flex';
     headerNombre.textContent    = tramo.nombre;
 
-    // Botón lanzar: indica visualmente si este tramo ya está activo
     if (btnLaunch) {
         const isActive = tramo.id === activeTramoId;
         btnLaunch.classList.toggle('active-tramo', isActive);
         btnLaunch.textContent = isActive ? '✅ En curso' : '▶ Lanzar Tramo';
     }
 
-    const segs = tramo.segmentos;
-    const horas = calcHoras(segs, tramo.hora_inicio);
+    const segs     = tramo.segmentos;
+    const computed = recalcFrom(tramo, -1, [], null, null);
 
-    segEmpty.style.display  = segs.length === 0 ? 'block' : 'none';
-    segCount.textContent    = `${segs.length} seg.`;
+    segEmpty.style.display = segs.length === 0 ? 'block' : 'none';
+    segCount.textContent   = `${segs.length} seg.`;
+    segTbody.innerHTML     = '';
 
-    segTbody.innerHTML = '';
     segs.forEach((seg, i) => {
-        const distKm = ((seg.fin_m - seg.inicio_m) / 1000).toFixed(3);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="seg-num">${i + 1}</td>
-            <td>${(seg.inicio_m / 1000).toFixed(3)}</td>
-            <td>${(seg.fin_m   / 1000).toFixed(3)}</td>
-            <td><span class="media-badge">${seg.media_kmh.toFixed(1)}</span></td>
-            <td class="hora-cell">${formatTime(horas[i].hora_inicio)}</td>
-            <td class="hora-cell">${formatTime(horas[i].hora_fin)}</td>
-            <td><button class="btn-del-seg" data-idx="${i}" title="Eliminar">✕</button></td>
-        `;
+        const info = computed[i];
+        const tr   = document.createElement('tr');
+        tr.dataset.idx = i;
+
+        // Factory: creates a contentEditable td
+        const makeTd = (displayText, type) => {
+            const td           = document.createElement('td');
+            td.className       = 'td-editable hora-cell';
+            td.textContent     = displayText;
+            td.contentEditable = 'true';
+            td.spellcheck      = false;
+            td.dataset.type    = type;
+            td.dataset.idx     = i;
+            return td;
+        };
+
+        // Row number (read-only)
+        const tdNum = document.createElement('td');
+        tdNum.className   = 'seg-num';
+        tdNum.textContent = i + 1;
+
+        // Editable data cells
+        const tdIni   = makeTd((seg.inicio_m / 1000).toFixed(3), 'ini');
+        const tdFin   = makeTd((seg.fin_m    / 1000).toFixed(3), 'fin');
+        const tdDur   = makeTd(formatDuration(info.dur_secs),     'dur');
+        const tdHIni  = makeTd(formatTime(info.hora_inicio),      'h_ini');
+        const tdHFin  = makeTd(formatTime(info.hora_fin),         'h_fin');
+
+        // Media: badge in display mode, raw number while editing
+        const tdMedia = makeTd('', 'media');
+        tdMedia.innerHTML = `<span class="media-badge">${seg.media_kmh.toFixed(1)}</span>`;
+
+        // Delete button (not editable)
+        const tdDel  = document.createElement('td');
+        const btnDel = document.createElement('button');
+        btnDel.className   = 'btn-del-seg';
+        btnDel.dataset.idx = i;
+        btnDel.title       = 'Eliminar';
+        btnDel.textContent = '✕';
+        tdDel.appendChild(btnDel);
+
+        [tdNum, tdIni, tdFin, tdMedia, tdDur, tdHIni, tdHFin, tdDel].forEach(td => tr.appendChild(td));
         segTbody.appendChild(tr);
+
+        // ---- Inline-edit event handlers (closure captures i, seg, info) ----
+        [tdIni, tdFin, tdMedia, tdDur, tdHIni, tdHFin].forEach(td => {
+
+            // Focus: swap badge/formatted value for the raw editable number
+            td.addEventListener('focus', () => {
+                const s = tramo.segmentos[i];
+                const c = recalcFrom(tramo, -1, [], null, null)[i];
+                switch (td.dataset.type) {
+                    case 'ini':   td.textContent = (s.inicio_m / 1000).toFixed(3); break;
+                    case 'fin':   td.textContent = (s.fin_m    / 1000).toFixed(3); break;
+                    case 'media': td.textContent = s.media_kmh.toFixed(1);          break;
+                    case 'dur':   td.textContent = formatDuration(c.dur_secs);       break;
+                    case 'h_ini': td.textContent = formatTime(c.hora_inicio);        break;
+                    case 'h_fin': td.textContent = formatTime(c.hora_fin);           break;
+                }
+                const range = document.createRange();
+                range.selectNodeContents(td);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            });
+
+            // Enter = confirm (blur); Escape = discard
+            td.addEventListener('keydown', e => {
+                if (e.key === 'Enter')  { e.preventDefault(); td.blur(); }
+                if (e.key === 'Escape') { e.preventDefault(); renderSegmentos(); }
+            });
+
+            // Blur: validate, update model, cascade, re-render
+            td.addEventListener('blur', () => {
+                const s   = tramo.segmentos[i];
+                const raw = td.textContent.trim();
+
+                switch (td.dataset.type) {
+
+                    case 'ini': {
+                        const val = parseFloat(raw);
+                        // Must stay below fin and be non-negative
+                        if (!isNaN(val) && val >= 0 && Math.round(val * 1000) < s.fin_m) {
+                            s.inicio_m = Math.round(val * 1000);
+                        }
+                        break;
+                    }
+
+                    case 'fin': {
+                        const val = parseFloat(raw);
+                        if (!isNaN(val) && Math.round(val * 1000) > s.inicio_m) {
+                            const oldFin = s.fin_m;
+                            s.fin_m = Math.round(val * 1000);
+                            // Keep chain: if next segment started at old fin, move it too
+                            const next = tramo.segmentos[i + 1];
+                            if (next && next.inicio_m === oldFin) next.inicio_m = s.fin_m;
+                        }
+                        break;
+                    }
+
+                    case 'media': {
+                        const val = parseFloat(raw);
+                        if (!isNaN(val) && val > 0 && val <= 250) s.media_kmh = val;
+                        break;
+                    }
+
+                    case 'dur': {
+                        const d      = parseDuration(raw);
+                        const distKm = (s.fin_m - s.inicio_m) / 1000;
+                        if (d != null && d > 0 && distKm > 0) {
+                            // Updates media_kmh in model and cascades horas
+                            recalcFrom(tramo, i, [], d, null);
+                        }
+                        break;
+                    }
+
+                    case 'h_ini': {
+                        const t = parseTime(raw);
+                        if (t != null) {
+                            if (i === 0) {
+                                // First segment: changing H.Inicio = changing tramo start
+                                tramo.hora_inicio = formatTime(t);
+                            } else {
+                                // Other segments: H.Inicio[i] = H.Fin[i-1]
+                                recalcFrom(tramo, i - 1, [], null, t);
+                            }
+                        }
+                        break;
+                    }
+
+                    case 'h_fin': {
+                        const t = parseTime(raw);
+                        if (t != null) recalcFrom(tramo, i, [], null, t);
+                        break;
+                    }
+                }
+
+                renderSegmentos();
+            });
+        });
     });
 
-    // Auto-fill inicio for next segment
+    // Auto-fill inicio field for next segment to be added
     if (segs.length > 0) {
         segInicio.value = (segs[segs.length - 1].fin_m / 1000).toFixed(3);
     }
@@ -302,7 +472,6 @@ btnSave.addEventListener('click', async () => {
 // ---- Modal: nuevo tramo ----
 btnNuevoTramo.addEventListener('click', () => {
     modalNombre.value = '';
-    // Pre-fill with current time
     const now = new Date();
     modalHora.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}.0`;
     modalOverlay.classList.add('open');
@@ -321,7 +490,6 @@ modalOk.addEventListener('click', () => {
     modalOverlay.classList.remove('open');
     selectTramo(t.id);
     renderTramosList();
-    // Clear seg inputs for fresh tramo
     segInicio.value = '0.000';
     segFin.value    = '';
     segMedia.value  = '';
@@ -339,12 +507,11 @@ async function loadTramos() {
         if (!res.ok) return;
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-            tramos = data;
+            tramos     = data;
             selectedId = tramos[0].id;
         }
     } catch (_) { /* sin backend = silencioso */ }
 
-    // Cargar tramo activo
     try {
         const host = window.location.host || 'localhost:8000';
         const res  = await fetch(`http://${host}/api/tramos/active`);
