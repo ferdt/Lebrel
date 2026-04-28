@@ -162,81 +162,68 @@
             min-height: 0;
         }
 
-        .seg-form-card {
+        /* ---- Tramo info card ---- */
+        .tramo-info-card {
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 14px;
+            padding: 14px 16px;
             flex-shrink: 0;
-        }
-
-        .seg-form-card h3 {
-            color: var(--text-secondary);
-            font-size: clamp(0.75rem, 2.5vmin, 0.9rem);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 12px;
-        }
-
-        .seg-form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            align-items: end;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 20px;
+            align-items: start;
         }
 
-        @media (max-width: 900px) {
-            .seg-form-grid { grid-template-columns: 1fr 1fr; }
-        }
-
-        .form-group {
+        .tramo-info-item {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 3px;
         }
 
-        .form-group label {
+        .tramo-info-label {
             color: var(--text-secondary);
-            font-size: clamp(0.65rem, 2vmin, 0.8rem);
+            font-size: 0.68rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
-        .form-group input {
-            width: 100%;
-            padding: 9px 10px;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-            font-size: clamp(0.95rem, 3.5vmin, 1.15rem);
+        .tramo-info-value {
+            font-size: clamp(0.95rem, 3vmin, 1.1rem);
             font-weight: 700;
             font-variant-numeric: tabular-nums;
-            text-align: center;
-            transition: border-color 0.2s;
+            color: var(--text-primary);
         }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.08);
+        .tramo-info-value.editable {
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 5px;
+            transition: background 0.15s;
+            display: inline-block;
         }
 
-        .btn-add-seg {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid var(--accent-green);
+        .tramo-info-value.editable:hover {
+            background: rgba(59,130,246,0.12);
+        }
+
+        /* ---- Add segment button (below table) ---- */
+        .btn-add-seg-row {
+            width: 100%;
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px dashed rgba(34, 197, 94, 0.4);
             color: var(--accent-green);
             font-weight: 700;
-            font-size: clamp(0.85rem, 3vmin, 1rem);
-            padding: 9px 16px;
-            border-radius: 8px;
+            font-size: clamp(0.82rem, 3vmin, 0.95rem);
+            padding: 10px;
+            border-radius: 0 0 10px 10px;
             cursor: pointer;
             transition: all 0.2s;
-            white-space: nowrap;
+            letter-spacing: 0.5px;
         }
 
-        .btn-add-seg:hover { background: rgba(34, 197, 94, 0.3); }
-        .btn-add-seg:active { transform: scale(0.97); }
+        .btn-add-seg-row:hover  { background: rgba(34, 197, 94, 0.2); border-style: solid; }
+        .btn-add-seg-row:active { transform: scale(0.98); }
 
         /* Action bar */
         .action-bar {
@@ -399,39 +386,132 @@
 
         .hora-cell { color: var(--text-secondary); font-size: 0.82rem; }
 
-        .btn-del-seg {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-secondary);
-            padding: 4px 7px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.15s;
+        /* Row action buttons */
+        .row-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-items: center;
         }
 
+        .btn-del-seg, .btn-ins-seg {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 3px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+
+        .btn-del-seg { color: var(--text-secondary); }
         .btn-del-seg:hover {
             background: rgba(239,68,68,0.15);
             border-color: var(--accent-red);
             color: var(--accent-red);
         }
 
-        /* Editable cells in the segments table */
+        .btn-ins-seg { color: var(--text-secondary); }
+        .btn-ins-seg:hover {
+            background: rgba(34,197,94,0.15);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        /* Tappable cells in the segments table */
         .td-editable {
-            cursor: text;
+            cursor: pointer;
             border-radius: 5px;
-            transition: background 0.15s, box-shadow 0.15s;
+            transition: background 0.15s;
         }
 
-        .td-editable:hover {
-            background: rgba(59, 130, 246, 0.08) !important;
+        .td-editable:hover,
+        .td-editable.editing {
+            background: rgba(59, 130, 246, 0.12) !important;
         }
 
-        .td-editable:focus {
-            background: rgba(59, 130, 246, 0.15) !important;
-            box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.6);
+        /* ---- Bottom-bar cell editor ---- */
+        .cell-edit-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 600;
+            background: #1e293b;
+            border-top: 2px solid rgba(59,130,246,0.5);
+            padding: 12px 14px 16px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+            transform: translateY(100%);
+            transition: transform 0.2s ease;
+        }
+
+        .cell-edit-bar.open {
+            display: flex;
+            transform: translateY(0);
+        }
+
+        .cell-edit-bar-label {
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .cell-edit-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .cell-edit-input {
+            flex: 1;
+            background: rgba(0,0,0,0.45);
+            border: 1.5px solid rgba(59,130,246,0.6);
+            border-radius: 10px;
+            color: #fff;
+            font-size: clamp(1.2rem, 5vmin, 1.6rem);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            padding: 10px 14px;
+            text-align: center;
             outline: none;
+            transition: border-color 0.15s;
         }
+
+        .cell-edit-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .cell-edit-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .cell-edit-ok {
+            background: rgba(34,197,94,0.2);
+            border: 1.5px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .cell-edit-ok:hover  { background: rgba(34,197,94,0.4); }
+
+        .cell-edit-cancel {
+            background: rgba(239,68,68,0.12);
+            border: 1.5px solid rgba(239,68,68,0.4);
+            color: var(--accent-red);
+        }
+
+        .cell-edit-cancel:hover { background: rgba(239,68,68,0.28); }
 
         /* Empty / placeholder states */
         .empty-state {
@@ -604,32 +684,34 @@
                 <!-- Contenido activo (oculto hasta selección) -->
                 <div id="seg-content" style="display:none; flex-direction:column; gap:10px; flex:1; min-height:0;">
 
-                    <!-- Formulario añadir segmento -->
-                    <div class="seg-form-card">
-                        <h3>Añadir Segmento</h3>
-                        <div class="seg-form-grid">
-                            <div class="form-group">
-                                <label for="seg-inicio">Inicio (km)</label>
-                                <input id="seg-inicio" type="number" step="0.001" min="0" placeholder="0.000">
-                            </div>
-                            <div class="form-group">
-                                <label for="seg-fin">Fin (km)</label>
-                                <input id="seg-fin" type="number" step="0.001" min="0" placeholder="1.500">
-                            </div>
-                            <div class="form-group">
-                                <label for="seg-media">Media (km/h)</label>
-                                <input id="seg-media" type="number" step="0.1" min="1" max="250" placeholder="50.0">
-                            </div>
-                            <div class="form-group" style="align-self:flex-end; grid-column: 1 / -1;">
-                                <button class="btn-add-seg" id="btn-add-seg">+ Añadir Segmento</button>
-                            </div>
+                    <!-- Info del tramo -->
+                    <div class="tramo-info-card" id="tramo-info-card">
+                        <div class="tramo-info-item" style="grid-column: 1 / -1;">
+                            <span class="tramo-info-label">Tramo</span>
+                            <span class="tramo-info-value" id="info-nombre">—</span>
+                        </div>
+                        <div class="tramo-info-item">
+                            <span class="tramo-info-label">Hora Inicio</span>
+                            <span class="tramo-info-value editable" id="info-hora-inicio" title="Tocar para editar">—</span>
+                        </div>
+                        <div class="tramo-info-item">
+                            <span class="tramo-info-label">Hora Fin</span>
+                            <span class="tramo-info-value" id="info-hora-fin">—</span>
+                        </div>
+                        <div class="tramo-info-item">
+                            <span class="tramo-info-label">Dist. Total</span>
+                            <span class="tramo-info-value" id="info-dist-total">—</span>
+                        </div>
+                        <div class="tramo-info-item">
+                            <span class="tramo-info-label">Dur. Total</span>
+                            <span class="tramo-info-value" id="info-dur-total">—</span>
                         </div>
                     </div>
 
                     <!-- Action bar -->
                     <div class="action-bar">
                         <button class="btn-launch" id="btn-launch">▶ Lanzar Tramo</button>
-                        <button class="btn-save" id="btn-save">💾 Guardar</button>
+                        <button class="btn-save"   id="btn-save">💾 Guardar</button>
                         <button class="btn-clear-segs" id="btn-clear-segs">🗑 Limpiar</button>
                     </div>
 
@@ -656,14 +738,28 @@
                                 <tbody id="seg-tbody"></tbody>
                             </table>
                             <div class="empty-state" id="seg-empty">
-                                Sin segmentos. Usa el formulario de arriba para añadir el primero.
+                                Sin segmentos.<br>Pulsa <strong>+ Añadir segmento</strong> para crear el primero.
                             </div>
                         </div>
+                        <!-- Add segment button below table -->
+                        <button class="btn-add-seg-row" id="btn-add-seg">+ Añadir segmento</button>
                     </div>
                 </div>
 
             </section>
         </main>
+    </div>
+
+    <!-- Cell editor bottom bar -->
+    <div class="cell-edit-bar" id="cell-edit-bar">
+        <span class="cell-edit-bar-label" id="cell-edit-label">Valor</span>
+        <div class="cell-edit-row">
+            <input id="cell-edit-input" class="cell-edit-input" type="text"
+                   inputmode="decimal" autocomplete="off" autocorrect="off"
+                   autocapitalize="off" spellcheck="false">
+            <button class="cell-edit-btn cell-edit-ok"     id="cell-edit-ok">✓</button>
+            <button class="cell-edit-btn cell-edit-cancel" id="cell-edit-cancel">✗</button>
+        </div>
     </div>
 
     <script type="module" src="js/tramos.js"></script>
