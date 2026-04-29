@@ -652,10 +652,15 @@
             <nav class="main-nav">
                 <a href="#" onclick="window.navigateSPA('piloto.html'); return false;" class="nav-link">Piloto</a>
                 <a href="#" onclick="window.navigateSPA('copiloto.html'); return false;" class="nav-link">Copiloto</a>
-                <a href="#" onclick="window.navigateSPA('botonera.html'); return false;" class="nav-link">Botonera</a>
-                <a href="#" onclick="window.navigateSPA('config.html'); return false;" class="nav-link">Config</a>
-                <a href="#" onclick="window.navigateSPA('tramos.html'); return false;" class="nav-link active">Tramos</a>
-                <a href="#" onclick="window.navigateSPA('test.html'); return false;" class="nav-link">Test</a>
+                <div class="nav-dropdown">
+                    <button class="btn-more">•••</button>
+                    <div class="dropdown-content">
+                        <a href="#" onclick="window.navigateSPA('botonera.html'); return false;">Botonera</a>
+                        <a href="#" onclick="window.navigateSPA('config.html'); return false;">Config</a>
+                        <a href="#" onclick="window.navigateSPA('tramos.html'); return false;" class="active">Tramos</a>
+                        <a href="#" onclick="window.navigateSPA('test.html'); return false;">Test</a>
+                    </div>
+                </div>
             </nav>
             <div class="stage-info">
                 <span id="val_tramo_nombre">Editor de Tramos</span>

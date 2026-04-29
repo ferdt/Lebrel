@@ -11,21 +11,19 @@ export function initRotation() {
     applyRotation(rotation);
 
     btn.addEventListener('click', () => {
-        // Ciclo de 90 grados
-        rotation = (rotation + 90) % 360;
+        // Alternar solo entre 0 y 90
+        rotation = (rotation === 0) ? 90 : 0;
         localStorage.setItem('lebrel_rotation', rotation);
         applyRotation(rotation);
     });
 }
 
 function applyRotation(deg) {
-    // Eliminar clases previas
-    document.body.classList.remove('rotate-90', 'rotate-180', 'rotate-270');
-    
-    // Aplicar clase según grados
-    if (deg === 90) document.body.classList.add('rotate-90');
-    else if (deg === 180) document.body.classList.add('rotate-180');
-    else if (deg === 270) document.body.classList.add('rotate-270');
-    
-    console.log(`Rotación aplicada: ${deg}deg`);
+    // Solo manejamos 0 y 90
+    if (deg === 90) {
+        document.body.classList.add('rotate-90');
+    } else {
+        document.body.classList.remove('rotate-90');
+    }
+    console.log(`Rotación: ${deg === 90 ? 'Vertical' : 'Horizontal'}`);
 }
