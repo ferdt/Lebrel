@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3">
     <style>
         .split-layout {
             display: grid;
@@ -128,14 +128,30 @@
                     </div>
                 </div>
 
-                <!-- Botones rápidos de Odómetro -->
-                <div class="controls mt-2" style="justify-content:center;">
-                    <button id="btn-odo-plus">+10m</button>
-                    <button id="btn-odo-minus">-10m</button>
-                    <button id="btn-odo-reset" class="danger">RST</button>
+                <!-- Botonera Integrada -->
+                <div class="botonera-mini-grid">
+                    <button class="btn-mini plus" id="btn-odo-plus">
+                        <span>+10m</span>
+                    </button>
+                    <button class="btn-mini minus" id="btn-odo-minus">
+                        <span>-10m</span>
+                    </button>
+                    <button class="btn-mini plus" id="btn-odo-plus1">
+                        <span>+1m</span>
+                    </button>
+                    <button class="btn-mini minus" id="btn-odo-minus1">
+                        <span>-1m</span>
+                    </button>
+                    <button class="btn-mini action" id="btn-milestone">
+                        <span>HITOS</span>
+                    </button>
+                    <button class="btn-mini action" id="btn-ocr">
+                        <span>OCR</span>
+                    </button>
                 </div>
 
                 <div class="operations-panel">
+                    <button id="btn-odo-reset" class="danger" style="width:100%; padding:8px; margin-bottom:10px; font-size:0.8rem;">RESET ODO</button>
                     <div class="btn-group-vertical">
                         <button id="btn-calibrar" style="padding:10px;">Calibración</button>
                         <button id="btn-tramos" style="padding:10px;">Tramos</button>
@@ -170,10 +186,28 @@
                 </div>
             </section>
         </main>
+
+        <!-- Modal de Recalibración -->
+        <div class="modal-overlay" id="modal-recalibrar">
+            <div class="modal-box">
+                <h3>Recalibrar Odómetro</h3>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">
+                    Distancia capturada al pulsar: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: bold;">0.000</span> km
+                </p>
+                <div class="form-group">
+                    <label for="input-roadbook">Distancia Roadbook (km)</label>
+                    <input id="input-roadbook" type="number" step="0.001" placeholder="Ej: 12.450" inputmode="decimal">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-modal-cancel" id="btn-recal-cancel">Cancelar</button>
+                    <button class="btn-modal-ok" id="btn-recal-ok">Aplicar Ajuste</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Cargar JS como module -->
-    <script type="module" src="js/app_copiloto.js"></script>
+    <script type="module" src="js/app_copiloto.js?v=3"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

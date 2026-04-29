@@ -342,3 +342,31 @@ body.rotate-270 {
     top: 0;
     left: 0;
 }
+
+/* --- Mini Botonera en Copiloto --- */
+.botonera-mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.btn-mini {
+    padding: 12px 5px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-mini:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.15); }
+.btn-mini.plus { border-color: var(--accent-green); color: var(--accent-green); }
+.btn-mini.minus { border-color: var(--accent-red); color: var(--accent-red); }
+.btn-mini.action { border-color: var(--accent-blue); color: var(--accent-blue); }

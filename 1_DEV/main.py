@@ -259,6 +259,8 @@ async def websocket_telemetry(websocket: WebSocket):
             if data == "ODO_RESET":
                 test_dist_m = 0.0
                 rally_logger.log_event("RECALIBRACION_RESET")
+            elif data == "MILESTONE":
+                rally_logger.log_event("HITO_MANUAL")
             elif data.startswith("DIST_ADJUST:"):
                 try:
                     delta = float(data.split(":")[1])

@@ -134,10 +134,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btnPlus = document.getElementById('btn-odo-plus');
     const btnMinus = document.getElementById('btn-odo-minus');
+    const btnPlus1 = document.getElementById('btn-odo-plus1');
+    const btnMinus1 = document.getElementById('btn-odo-minus1');
+    const btnMilestone = document.getElementById('btn-milestone');
+    const btnOcr = document.getElementById('btn-ocr');
     const btnReset = document.getElementById('btn-odo-reset');
 
-    if(btnPlus) btnPlus.addEventListener('click', () => client.sendCommand('ODO_PLUS_10m'));
-    if(btnMinus) btnMinus.addEventListener('click', () => client.sendCommand('ODO_MINUS_10m'));
+    if(btnPlus) btnPlus.addEventListener('click', () => client.sendCommand('DIST_ADJUST:10'));
+    if(btnMinus) btnMinus.addEventListener('click', () => client.sendCommand('DIST_ADJUST:-10'));
+    if(btnPlus1) btnPlus1.addEventListener('click', () => client.sendCommand('DIST_ADJUST:1'));
+    if(btnMinus1) btnMinus1.addEventListener('click', () => client.sendCommand('DIST_ADJUST:-1'));
+    
+    if(btnMilestone) {
+        btnMilestone.addEventListener('click', () => {
+            client.sendCommand('MILESTONE');
+            btnMilestone.style.background = "rgba(59, 130, 246, 0.3)";
+            setTimeout(() => btnMilestone.style.background = "", 200);
+        });
+    }
+
+    if(btnOcr) {
+        btnOcr.addEventListener('click', () => {
+            window.location.href = "/tablitos/tablas.html";
+        });
+    }
+
     if(btnReset) btnReset.addEventListener('click', () => {
         if (confirm('¿Resetear odómetro a 0?')) client.sendCommand('ODO_RESET');
     });
