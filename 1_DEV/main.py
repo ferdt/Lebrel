@@ -21,6 +21,8 @@ try:
     import numpy as np
     import cv2
     import pytesseract
+    # Ruta explícita para asegurar que lo encuentre en Raspberry Pi
+    pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
     
     # Verificar binario de tesseract
     try:

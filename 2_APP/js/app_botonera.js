@@ -1,5 +1,6 @@
 import { initFullscreen } from './fullscreen.js';
 import { initRouter } from './router.js';
+import { initRotation } from './rotation.js';
 
 let socket = null;
 const host = window.location.host || 'localhost:8000';
@@ -61,6 +62,7 @@ if (btnOcr) {
 document.addEventListener('DOMContentLoaded', () => {
     initRouter();
     initFullscreen();
+    initRotation();
     connect();
 });
 

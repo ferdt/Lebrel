@@ -1,6 +1,7 @@
 import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
 import { initRouter } from './router.js';
+import { initRotation } from './rotation.js';
 
 let tramos        = [];
 let selectedId    = null;
@@ -534,7 +535,7 @@ async function loadTramos() {
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
-    initRouter(); initFullscreen(); initWakeLock(); loadTramos();
+    initRouter(); initFullscreen(); initWakeLock(); initRotation(); loadTramos();
 });
 window.addEventListener('spa-navigated', () => {
     initFullscreen(); renderTramosList(); renderSegmentos();

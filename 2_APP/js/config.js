@@ -1,4 +1,11 @@
+import { initFullscreen } from './fullscreen.js';
+import { initRouter } from './router.js';
+import { initRotation } from './rotation.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
+    initRouter();
+    initFullscreen();
+    initRotation();
     const btnSave = document.getElementById('btn-save');
     const msg = document.getElementById('save-msg');
 

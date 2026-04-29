@@ -318,3 +318,27 @@ button.danger:hover {
         justify-content: center;
     }
 }
+/* Screen Rotation */
+body.rotate-90 {
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
+    width: 100vh !important;
+    height: 100vw !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+body.rotate-180 {
+    transform: rotate(180deg);
+}
+
+body.rotate-270 {
+    transform: rotate(270deg) translateX(-100%);
+    transform-origin: top left;
+    width: 100vh !important;
+    height: 100vw !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
