@@ -82,18 +82,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     };
 
-    const renderTable = (tabla, activeIdx, horaInicioStr) => {
+    const renderTable = (tabla, activeIdx) => {
         if(!tablaCuerpo) return;
         tablaCuerpo.innerHTML = '';
 
-        // Calcular cursor de tiempo acumulado desde hora_inicio del tramo
-        let cursor = parseTimeStr(horaInicioStr); // null si no hay hora definida
+        // Ahora el tiempo es relativo al inicio del tramo (00:00.0)
+        let cursorRelativo = 0; 
 
         tabla.forEach((row, ix) => {
             const distKm   = (row.fin_m - row.inicio_m) / 1000;
             const durSecs  = (distKm / row.media_kmh) * 3600;
-            const horaFin  = (cursor != null) ? cursor + durSecs : null;
-            if (cursor != null) cursor += durSecs;
+            const tiempoFin = cursorRelativo + durSecs;
+            cursorRelativo += durSecs;
 
             const tr = document.createElement('tr');
             if (ix === activeIdx)      tr.className = 'active-row';
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${(row.fin_m    / 1000).toFixed(3)}</td>
                 <td style="font-weight:bold;">${row.media_kmh.toFixed(1)}</td>
                 <td style="color:var(--text-secondary); font-size:0.85em;">${formatDuration(durSecs)}</td>
-                <td style="color:var(--text-secondary); font-size:0.85em; font-variant-numeric:tabular-nums;">${formatTimeFull(horaFin)}</td>
+                <td style="color:var(--text-secondary); font-size:0.85em; font-variant-numeric:tabular-nums;">${formatTimeFull(tiempoFin)}</td>
             `;
             tablaCuerpo.appendChild(tr);
         });
@@ -124,11 +124,27 @@ document.addEventListener('DOMContentLoaded', () => {
         valDistancia.addEventListener('click', () => {
             snappedDistanceM = currentDistM;
             snapDistDisplay.textContent = (snappedDistanceM / 1000).toFixed(3);
-            inputRoadbook.value = '';
+            inputRoadbook.value = (snappedDistanceM / 1000).toFixed(3); // Sugerir el valor actual
             modalRecal.classList.add('open');
             setTimeout(() => inputRoadbook.focus(), 100);
         });
     }
+
+    window.adjustModalVal = (val) => {
+        if (!inputRoadbook) return;
+        if (val === 'zero') {
+            inputRoadbook.value = (0).toFixed(3);
+        } else {
+            let current = parseFloat(inputRoadbook.value) || 0;
+            inputRoadbook.value = (current + val).toFixed(3);
+        }
+    };
+
+    inputRoadbook.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            btnRecalOk.click();
+        }
+    });
 
     btnRecalCancel.addEventListener('click', () => modalRecal.classList.remove('open'));
     btnRecalOk.addEventListener('click', () => {

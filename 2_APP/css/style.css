@@ -450,3 +450,26 @@ body.rotate-270 {
     color: white;
     font-size: 1.2rem;
 }
+
+/* --- Quick Adjust en Modal --- */
+.modal-quick-adjust {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.btn-quick {
+    padding: 15px 5px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-quick.plus { border-color: var(--accent-green); color: var(--accent-green); }
+.btn-quick.minus { border-color: var(--accent-red); color: var(--accent-red); }
+.btn-quick.zero { border-color: var(--text-secondary); color: var(--text-secondary); opacity: 0.8; }
+.btn-quick:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }

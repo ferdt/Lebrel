@@ -171,7 +171,7 @@
                                     <th>A (km)</th>
                                     <th>Media</th>
                                     <th>Duración</th>
-                                    <th>H. Fin</th>
+                                    <th>T. Fin</th>
                                 </tr>
                             </thead>
                             <tbody id="tabla_cuerpo">
@@ -186,17 +186,28 @@
         <!-- Modal de Recalibración -->
         <div class="modal-overlay" id="modal-recalibrar">
             <div class="modal-box">
-                <h3>Recalibrar Odómetro</h3>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">
-                    Distancia capturada al pulsar: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: bold;">0.000</span> km
+                <h3>Ajuste Roadbook</h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">
+                    Captura: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: bold; font-size: 1.2rem;">0.000</span> km
                 </p>
+                
                 <div class="form-group">
-                    <label for="input-roadbook">Distancia Roadbook (km)</label>
-                    <input id="input-roadbook" type="number" step="0.001" placeholder="Ej: 12.450" inputmode="decimal">
+                    <input id="input-roadbook" type="number" step="0.001" placeholder="0.000" inputmode="decimal" 
+                           style="font-size: 2.5rem; text-align: center; font-weight: 800; height: 80px;">
                 </div>
-                <div class="modal-actions">
-                    <button class="btn-modal-cancel" id="btn-recal-cancel">Cancelar</button>
-                    <button class="btn-modal-ok" id="btn-recal-ok">Aplicar Ajuste</button>
+
+                <!-- Botones de ajuste rápido dentro del modal -->
+                <div class="modal-quick-adjust">
+                    <button class="btn-quick plus" onclick="adjustModalVal(0.010)">+10m</button>
+                    <button class="btn-quick plus" onclick="adjustModalVal(0.001)">+1m</button>
+                    <button class="btn-quick minus" onclick="adjustModalVal(-0.001)">-1m</button>
+                    <button class="btn-quick minus" onclick="adjustModalVal(-0.010)">-10m</button>
+                    <button class="btn-quick zero" onclick="adjustModalVal('zero')" style="grid-column: span 4; margin-top: 5px;">Poner a Cero</button>
+                </div>
+
+                <div class="modal-actions" style="margin-top: 20px;">
+                    <button class="btn-modal-cancel" id="btn-recal-cancel" style="flex:1; padding: 15px;">CANCELAR</button>
+                    <button class="btn-modal-ok" id="btn-recal-ok" style="flex:2; padding: 15px; font-size: 1.2rem;">APLICAR</button>
                 </div>
             </div>
         </div>

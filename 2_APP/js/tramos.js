@@ -325,6 +325,7 @@ function renderSegmentos() {
 
     const segs     = tramo.segmentos;
     const computed = recalcFrom(tramo, -1, [], null, null);
+    const startSecs = parseTime(tramo.hora_inicio) || 0;
 
     // ---- Info card ----
     infoNombre.textContent = escHtml(tramo.nombre);
@@ -369,14 +370,17 @@ function renderSegmentos() {
         const tdIni   = makeTd((seg.inicio_m/1000).toFixed(3), 'ini');
         const tdFin   = makeTd((seg.fin_m/1000).toFixed(3),    'fin');
         const tdDur   = makeTd(formatDuration(info.dur_secs),   'dur');
-        const tdHIni  = makeTd(formatTime(info.hora_inicio),    'h_ini');
-        const tdHFin  = makeTd(formatTime(info.hora_fin),       'h_fin');
+        
+        // Tiempos relativos al inicio (00:00.0)
+        const relIni = info.hora_inicio - startSecs;
+        const relFin = info.hora_fin - startSecs;
+        const tdTIni = makeTd(formatTime(relIni), 'h_ini');
+        const tdTFin = makeTd(formatTime(relFin), 'h_fin');
 
         const tdMedia = makeTd('', 'media');
         tdMedia.innerHTML = `<span class="media-badge">${seg.media_kmh.toFixed(1)}</span>`;
         tdMedia.addEventListener('click', () => openCellEditor(tdMedia, tramo));
 
-        // Actions column: insert-above + delete
         const tdAct = document.createElement('td');
         tdAct.innerHTML = `
             <div class="row-actions">
@@ -385,7 +389,7 @@ function renderSegmentos() {
             </div>
         `;
 
-        [tdNum, tdIni, tdFin, tdMedia, tdDur, tdHIni, tdHFin, tdAct].forEach(td => tr.appendChild(td));
+        [tdNum, tdIni, tdFin, tdMedia, tdDur, tdTIni, tdTFin, tdAct].forEach(td => tr.appendChild(td));
         segTbody.appendChild(tr);
     });
 }
