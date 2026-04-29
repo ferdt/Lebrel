@@ -357,7 +357,8 @@ async def hardware_loop():
             "tramo_tabla": segmentos,
             "segment_idx": seg_info["idx"],
             "hora_inicio_tramo": active_tramo.get("hora_inicio", "00:00:00.0") if active_tramo else "00:00:00.0",
-            "system_time": now.strftime("%H:%M:%S")
+            "system_time": now.strftime("%H:%M:%S"),
+            "tramo_id": active_tramo.get("id") if active_tramo else None
         }
         
         await manager.broadcast(telemetry)

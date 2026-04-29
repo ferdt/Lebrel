@@ -82,11 +82,86 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     };
 
+    const CELL_LABELS = {
+        ini: 'Inicio (km)', fin: 'Fin (km)', media: 'Media (km/h)',
+        dur: 'Duración (MM:SS.d)', h_fin: 'T. Fin (MM:SS.d)'
+    };
+
+    let _editCell = null, _activeTramoId = null;
+
+    const openCellEditor = (td, type, idx) => {
+        _editCell = { td, type, idx };
+        const label = CELL_LABELS[type] || type;
+        const val = td.textContent.split(' ')[0];
+        
+        document.getElementById('cell-edit-label').textContent = label;
+        document.getElementById('cell-edit-input').value = val;
+        document.getElementById('cell-edit-bar').classList.add('open');
+        setTimeout(() => document.getElementById('cell-edit-input').focus(), 100);
+    };
+
+    const closeCellEditor = () => {
+        document.getElementById('cell-edit-bar').classList.remove('open');
+        _editCell = null;
+    };
+
+    const getRelStartTime = (idx) => {
+        let t = 0;
+        for (let i = 0; i < idx; i++) {
+            const s = currentTableData[i];
+            t += ((s.fin_m - s.inicio_m) / 1000) / s.media_kmh * 3600;
+        }
+        return t;
+    };
+
+    const parseDuration = (str) => {
+        const parts = str.split(':');
+        if (parts.length === 2) return parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+        if (parts.length === 3) return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(parts[2]);
+        return parseFloat(str);
+    };
+
+    document.getElementById('cell-edit-cancel').addEventListener('click', closeCellEditor);
+    document.getElementById('cell-edit-ok').addEventListener('click', async () => {
+        if (!_editCell || !currentTableData || !_activeTramoId) return;
+        
+        const newVal = document.getElementById('cell-edit-input').value.replace(',', '.');
+        const { type, idx } = _editCell;
+        const seg = currentTableData[idx];
+
+        if (type === 'ini') seg.inicio_m = parseFloat(newVal) * 1000;
+        else if (type === 'fin') seg.fin_m = parseFloat(newVal) * 1000;
+        else if (type === 'media') seg.media_kmh = parseFloat(newVal);
+        else if (type === 'dur' || type === 'h_fin') {
+            const secs = parseDuration(newVal);
+            if (secs !== null) {
+                const distKm = (seg.fin_m - seg.inicio_m) / 1000;
+                if (distKm > 0) {
+                    const targetSecs = (type === 'dur') ? secs : (secs - (getRelStartTime(idx)));
+                    seg.media_kmh = (distKm / targetSecs) * 3600;
+                }
+            }
+        }
+
+        try {
+            const resp = await fetch('/api/tramos');
+            const allTramos = await resp.json();
+            const tIdx = allTramos.findIndex(t => t.id === _activeTramoId);
+            if (tIdx !== -1) {
+                allTramos[tIdx].segmentos = currentTableData;
+                await fetch('/api/tramos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(allTramos)
+                });
+                closeCellEditor();
+            }
+        } catch (e) { console.error("Error saving:", e); }
+    });
+
     const renderTable = (tabla, activeIdx) => {
         if(!tablaCuerpo) return;
         tablaCuerpo.innerHTML = '';
-
-        // Ahora el tiempo es relativo al inicio del tramo (00:00.0)
         let cursorRelativo = 0; 
 
         tabla.forEach((row, ix) => {
@@ -98,17 +173,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             if (ix === activeIdx)      tr.className = 'active-row';
             else if (ix < activeIdx)   tr.className = 'passed-row';
+            
             tr.innerHTML = `
                 <td>${ix + 1}</td>
-                <td>${(row.inicio_m / 1000).toFixed(3)}</td>
-                <td>${(row.fin_m    / 1000).toFixed(3)}</td>
-                <td style="font-weight:bold;">${row.media_kmh.toFixed(1)}</td>
-                <td style="color:var(--text-secondary); font-size:0.85em;">${formatDuration(durSecs)}</td>
-                <td style="color:var(--text-secondary); font-size:0.85em; font-variant-numeric:tabular-nums;">${formatTimeFull(tiempoFin)}</td>
+                <td class="td-editable" onclick="editCell(this, 'ini', ${ix})">${(row.inicio_m / 1000).toFixed(3)}</td>
+                <td class="td-editable" onclick="editCell(this, 'fin', ${ix})">${(row.fin_m    / 1000).toFixed(3)}</td>
+                <td class="td-editable" onclick="editCell(this, 'media', ${ix})" style="font-weight:bold;">${row.media_kmh.toFixed(1)}</td>
+                <td class="td-editable" onclick="editCell(this, 'dur', ${ix})" style="color:var(--text-secondary); font-size:0.85em;">${formatDuration(durSecs)}</td>
+                <td class="td-editable" onclick="editCell(this, 'h_fin', ${ix})" style="color:var(--text-secondary); font-size:0.85em; font-variant-numeric:tabular-nums;">${formatTimeFull(tiempoFin)}</td>
             `;
             tablaCuerpo.appendChild(tr);
         });
     };
+    
+    window.editCell = (td, type, idx) => openCellEditor(td, type, idx);
 
     // --- Recalibración al paso ---
     let snappedDistanceM = 0;
@@ -163,6 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (valDistancia) valDistancia.textContent = (data.distancia_m / 1000).toFixed(3) + ' km';
         }
         if (data.tramo_nombre !== undefined && valTramo) valTramo.textContent = data.tramo_nombre;
+        if (data.tramo_id !== undefined) _activeTramoId = data.tramo_id;
+
         if (data.diferencia_ideal_s !== undefined && valDiferencia) {
             const diff = data.diferencia_ideal_s;
             const threshold = data.neutral_interval_s || 0.1;
@@ -175,10 +255,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.velocidad_objetivo_kmh !== undefined && valVelocidadObj) valVelocidadObj.textContent = data.velocidad_objetivo_kmh.toFixed(1);
 
         if (data.hora_inicio_tramo !== undefined) currentHoraInicioTramo = data.hora_inicio_tramo;
-        if (data.tramo_tabla) currentTableData = data.tramo_tabla;
+        
+        // NO actualizar la tabla si estamos editando una celda para evitar sobrescrituras
+        if (data.tramo_tabla && !_editCell) {
+            currentTableData = data.tramo_tabla;
+        }
+
         if (data.segment_idx !== undefined && currentTableData) {
             currentSegment = data.segment_idx;
-            renderTable(currentTableData, currentSegment, currentHoraInicioTramo);
+            // Solo redibujar si no estamos editando
+            if (!_editCell) {
+                renderTable(currentTableData, currentSegment);
+            }
         }
         if (data.system_time && valHora) valHora.textContent = data.system_time;
     });

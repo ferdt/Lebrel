@@ -213,8 +213,20 @@
         </div>
     </div>
 
+    <!-- Barra de edición rápida de celdas (oculta por defecto) -->
+    <div id="cell-edit-bar" class="cell-edit-bar">
+        <div class="edit-inner">
+            <span id="cell-edit-label">Editar:</span>
+            <input type="text" id="cell-edit-input" inputmode="decimal">
+            <div class="edit-actions">
+                <button id="cell-edit-cancel" class="btn-cancel">✕</button>
+                <button id="cell-edit-ok" class="btn-ok">✓ GUARDAR</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Cargar JS como module -->
-    <script type="module" src="js/app_copiloto.js?v=3"></script>
+    <script type="module" src="js/app_copiloto.js?v=4"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
