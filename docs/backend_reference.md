@@ -23,70 +23,55 @@ Array de tramos. Cada tramo contiene una lista de segmentos de velocidad y una h
 ]
 ```
 
-| Campo | Tipo | Descripción |
-|---|---|---|
-| `id` | `string` | Identificador único (timestamp + random). |
-| `nombre` | `string` | Nombre del tramo. |
-| `hora_inicio` | `string` | Hora de salida programada (`HH:MM:SS.d`). |
-| `segmentos` | `array` | Segmentos de velocidad media, ordenados por distancia. |
+---
+
+## 2. Gestión de Datos (CSV)
+
+Lebrel utiliza **CSV** como formato preferido para la importación y exportación de tramos, facilitando el uso de Excel o Google Sheets.
+
+### 2.1 Formato de Archivo
+Las columnas requeridas son: `Tramo, Hora Inicio, KM Inicio, KM Fin, Media`.
+
+### 2.2 Inteligencia de Importación
+- **Auto-Delimitador**: El sistema detecta automáticamente si el archivo usa comas (`,`) o puntos y coma (`;`).
+- **Agrupación**: Las filas se agrupan por el nombre del tramo.
+- **Herencia de Hora**: Si solo la primera fila de un tramo tiene hora de inicio, el sistema la aplica a todos los segmentos de ese tramo.
+- **Validación**: Si se detectan horas de inicio distintas para el mismo tramo, el sistema lanza un aviso (Warning) antes de proceder.
 
 ---
 
-## 2. Telemetría en Tiempo Real (10Hz)
+## 3. Telemetría en Tiempo Real (10Hz)
 
-El backend emite un JSON a través de WebSockets (`/ws/telemetry`) con los siguientes campos:
+El backend emite un JSON a través de WebSockets (`/ws/telemetry`) con los siguientes campos clave:
 
 | Variable | Unidad | Descripción |
 | :--- | :--- | :--- |
-| `distancia_m` | metros | Distancia actual del odómetro (incluyendo recalibraciones). |
+| `distancia_m` | metros | Distancia actual del odómetro. |
 | `velocidad_kmh` | km/h | Velocidad instantánea del vehículo. |
-| `tiempo_tramo_s` | segundos | Tiempo transcurrido desde la salida. Negativo si falta para la salida. |
-| `diferencia_ideal_s` | segundos | Intervalo (Regularidad). Positivo = tarde, Negativo = adelantado. |
-| `velocidad_objetivo_kmh` | km/h | Media requerida en el segmento actual. |
-| `tramo_nombre` | string | Nombre del tramo activo. |
-| `tramo_id` | string | ID del tramo para sincronización y edición remota. |
-| `tramo_tabla` | array | Lista de segmentos activa (para renderizar tablas en el cliente). |
-| `segment_idx` | int | Índice del segmento en el que se encuentra el vehículo. |
-| `system_time` | HH:MM:SS | Hora oficial de la Raspberry Pi (Fuente de Verdad). |
+| `tiempo_tramo_s` | segundos | Tiempo transcurrido desde la salida. |
+| `diferencia_ideal_s` | segundos | Intervalo de regularidad (Delta). |
+| `velocidad_objetivo_kmh` | km/h | Media requerida actualmente. |
+| `system_time` | HH:MM:SS | Hora oficial de la Raspberry Pi. |
 
 ---
 
-## 3. Sincronización Horaria y Lógica de Carrera
+## 4. Interfaz y Experiencia de Usuario (UX)
 
-Lebrel utiliza un enfoque de **Reloj de Pared (Wall Clock)** para garantizar precisión profesional:
+### 4.1 Modos de Pantalla
+- **Piloto**: Prioriza la tarjeta de **Instrucciones de Conducción** (ACELERA / FRENA / OK) en tamaño gigante para lectura periférica.
+- **Copiloto**: Proporciona la cifra de intervalo pura y herramientas de recalibración del odómetro.
 
-1.  **Sincronización**: La Raspberry Pi actúa como servidor de tiempo maestro. Todos los clientes (Pilot/Copilot) sincronizan sus relojes internos con el campo `system_time` recibido.
-2.  **Tiempo de Tramo**: No es un cronómetro relativo. Se calcula como:
-    `tiempo_tramo = hora_actual_pi - hora_inicio_tramo`
-3.  **Cuenta Atrás**: Si la hora actual es menor que la de inicio, el tiempo se muestra en negativo, indicando cuánto falta para la salida.
-4.  **Reactividad Total**: El backend detecta cambios en el archivo `tramos.json`. Si el copiloto edita una media o la hora de inicio, el motor de navegación recalcula todo instantáneamente sin detener el tramo.
+### 4.2 Control de Rotación
+El sistema permite alternar exclusivamente entre modo **Horizontal (0°)** y **Vertical (90°)** mediante un conmutador binario, optimizando el montaje en el salpicadero.
 
----
-
-## 4. Recalibración del Odómetro
-
-Para corregir errores del sensor o diferencias con el Roadbook oficial:
-
-- **Captura (Snap)**: Al tocar el odómetro, el sistema guarda la distancia actual exacta ($D_{captura}$).
-- **Ajuste**: El copiloto introduce la cifra del Roadbook ($D_{real}$).
-- **Offset**: El sistema calcula un $\Delta = D_{real} - D_{captura}$.
-- **Aplicación**: Este $\Delta$ se aplica a todas las lecturas futuras de distancia, permitiendo "clavar" el odómetro con las referencias externas.
+### 4.3 Navegación
+Las funciones secundarias se agrupan en un menú desplegable (`•••`) en el cabecero para maximizar el espacio útil en pantallas verticales.
 
 ---
 
-## 5. API REST
+## 5. Sincronización Horaria
 
-| Método | Ruta | Acción |
-|---|---|---|
-| `GET` | `/api/tramos` | Obtener todos los tramos. |
-| `POST` | `/api/tramos` | Guardar/Actualizar tramos (detona recalculo en vivo). |
-| `POST` | `/api/tramos/active` | Lanzar un tramo específico por su ID. |
-| `GET` | `/api/settings` | Obtener configuración del sistema (perímetros, etc). |
-
----
-
-## 6. Arquitectura de Hardware
-
-- **Raspberry Pi**: Ejecuta `main.py` (FastAPI + WebSockets).
-- **Sensor**: Sensor inductivo en la rueda conectado a GPIO (vía `hardware.py`).
-- **Clientes**: Tablets/Móviles conectados vía WiFi al AP de la Raspberry Pi.
+Lebrel utiliza un enfoque de **Reloj de Pared (Wall Clock)**:
+1.  La Raspberry Pi es la fuente de verdad horaria.
+2.  Los clientes sincronizan sus relojes internos con el campo `system_time`.
+3.  El tiempo de tramo se calcula como: `T = Hora_Actual - Hora_Inicio`.

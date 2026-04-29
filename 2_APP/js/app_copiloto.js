@@ -3,8 +3,10 @@ import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
+import { initHeader } from './header.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initHeader('copiloto');
     initRouter();
     initFullscreen();
     initWakeLock();
@@ -309,9 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (data.diferencia_ideal_s !== undefined && valDiferencia) {
             const diff = data.diferencia_ideal_s;
-            const threshold = data.neutral_interval_s || 0.1;
-            const label = diff > threshold ? ' ACELERA' : (diff < -threshold ? ' FRENA' : '');
-            valDiferencia.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + label;
+            const threshold = 0.1;
+            valDiferencia.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1);
             valDiferencia.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
         }
         if (data.tiempo_tramo_s !== undefined && valTiempo) valTiempo.innerHTML = formatTime(data.tiempo_tramo_s);

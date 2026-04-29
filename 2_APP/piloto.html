@@ -92,52 +92,18 @@
 
 <body class="dark-theme">
     <div class="glass-container">
-
-        <header class="unified-header">
-            <nav class="main-nav">
-                <a href="piloto.html" class="nav-link active">Piloto</a>
-                <a href="copiloto.html" class="nav-link">Copiloto</a>
-                <div class="nav-dropdown">
-                    <button class="btn-more">•••</button>
-                    <div class="dropdown-content">
-                        <a href="botonera.html">Botonera</a>
-                        <a href="config.html">Configuración</a>
-                        <a href="tramos.html">Editor Tramos</a>
-                        <a href="test.html">Test Sistema</a>
-                    </div>
-                </div>
-            </nav>
-            <div class="stage-info">
-                <span id="val_tramo_nombre">TC-0: SIN TRAMO</span>
-                <span class="separator">|</span>
-                <span id="val_hora">00:00:00</span>
-            </div>
-            <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
-                <button id="btn-rotate" class="icon-btn" title="Girar Pantalla">
-                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M23 4v6h-6"></path>
-                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                    </svg>
-                </button>
-                <button id="btn-fullscreen" class="icon-btn" title="Pantalla Completa">
-                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
-                        </path>
-                    </svg>
-                </button>
-                <div id="status-indicator" class="status disconnected">OFFLINE</div>
-            </div>
-        </header>
+        <div id="header-container"></div>
 
         <main class="grid-dashboard">
             <!-- 1. Delta y Odómetro (Principal) -->
-            <div class="card metric-large card-delta">
-                <h3>Intervalo</h3>
-                <div id="val_diferencia_ideal" class="value positive">+0.0</div>
-            </div>
+                <div class="card" style="grid-column: span 2; background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.05); justify-content: center;">
+                    <div id="val_instruccion" style="font-size: 5rem; font-weight: 900; letter-spacing: 5px; text-align: center;">--</div>
+                </div>
+
+                <div class="card">
+                    <h4>Intervalo</h4>
+                    <div id="val_diferencia_ideal" class="value positive">+0.0</div>
+                </div>
 
             <div class="card metric-large card-odo">
                 <h3>Odómetro Total</h3>

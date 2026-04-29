@@ -2,6 +2,10 @@ import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
+import { initHeader } from './header.js';
+
+initHeader('tramos');
+initRouter();
 
 let tramos        = [];
 let selectedId    = null;

@@ -3,8 +3,10 @@ import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
+import { initHeader } from './header.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initHeader('piloto');
     initRouter();
     initFullscreen();
     initWakeLock();
@@ -20,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
         velocidad_actual: document.getElementById('val_velocidad_actual'),
         velocidad_objetivo: document.getElementById('val_velocidad_objetivo'),
         proxima_media: document.getElementById('val_proxima_media'),
-        distancia_cambio: document.getElementById('val_distancia_cambio')
+        distancia_cambio: document.getElementById('val_distancia_cambio'),
+        instruccion: document.getElementById('val_instruccion')
     };
 
     const wsHost = window.location.host || 'localhost:8000';
@@ -43,10 +46,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.distancia_m !== undefined && ui.distancia) ui.distancia.textContent = (data.distancia_m / 1000).toFixed(3) + ' km';
         if (data.diferencia_ideal_s !== undefined && ui.diferencia_ideal) {
             const diff = data.diferencia_ideal_s;
-            const threshold = data.neutral_interval_s || 0.1;
-            const label = diff > threshold ? ' ACELERA' : (diff < -threshold ? ' FRENA' : '');
-            ui.diferencia_ideal.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + label;
+            const threshold = 0.1; // Umbral para OK
+            
+            // 1. Actualizar cifra
+            ui.diferencia_ideal.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1);
             ui.diferencia_ideal.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
+            
+            // 2. Actualizar Instrucción Gigante
+            if (ui.instruccion) {
+                if (diff > threshold) {
+                    ui.instruccion.textContent = 'ACELERA';
+                    ui.instruccion.style.color = 'var(--accent-green)';
+                } else if (diff < -threshold) {
+                    ui.instruccion.textContent = 'FRENA';
+                    ui.instruccion.style.color = 'var(--accent-red)';
+                } else {
+                    ui.instruccion.textContent = 'OK';
+                    ui.instruccion.style.color = 'var(--text-secondary)';
+                }
+            }
         }
         if (data.tiempo_tramo_s !== undefined && ui.tiempo_tramo) {
             const secs = data.tiempo_tramo_s;
