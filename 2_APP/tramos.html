@@ -94,6 +94,24 @@
 
         .btn-icon-blue:hover { background: rgba(59, 130, 246, 0.35); }
 
+        .btn-icon-red {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            font-size: 1rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-icon-red:hover { background: rgba(239, 68, 68, 0.35); }
+
         .tramos-list {
             overflow-y: auto;
             flex: 1;
@@ -698,6 +716,7 @@
                             <button class="btn-icon-blue" id="btn-export" title="Exportar CSV">📤</button>
                             <button class="btn-icon-blue" id="btn-import-trigger" title="Importar CSV">📥</button>
                             <input type="file" id="import-file" accept=".csv" style="display:none;">
+                            <button class="btn-icon-red" id="btn-delete-all" title="Borrar todos los tramos">🗑️</button>
                             <button class="btn-icon-green" id="btn-nuevo-tramo" title="Nuevo tramo">+</button>
                         </div>
                     </div>

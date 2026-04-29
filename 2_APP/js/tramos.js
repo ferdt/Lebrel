@@ -127,6 +127,20 @@ window.saveAllTramos = saveAllTramos; // Asegurar disponibilidad global
 const btnExport = document.getElementById('btn-export');
 const btnImportTrigger = document.getElementById('btn-import-trigger');
 const importFile = document.getElementById('import-file');
+const btnDeleteAll = document.getElementById('btn-delete-all');
+
+btnDeleteAll.addEventListener('click', async () => {
+    if (tramos.length === 0) return;
+    if (!confirm('¿BORRAR TODOS LOS TRAMOS? Esta acción no se puede deshacer.')) return;
+    if (!confirm('¿ESTÁS COMPLETAMENTE SEGURO? Se eliminarán todos los datos de rally.')) return;
+    
+    tramos = [];
+    selectedId = null;
+    await saveAllTramos();
+    renderTramosList();
+    renderSegmentos();
+    alert("Todos los tramos han sido eliminados.");
+});
 
 btnExport.addEventListener('click', () => {
     let csv = "Tramo,Hora Inicio,KM Inicio,KM Fin,Media\n";
@@ -158,9 +172,17 @@ importFile.addEventListener('change', (e) => {
             const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
             if (lines.length < 2) throw new Error("Archivo vacío o sin datos.");
 
+            // Detección automática de delimitador (, o ;)
+            const firstLine = lines[0];
+            const commas = (firstLine.match(/,/g) || []).length;
+            const semicolons = (firstLine.match(/;/g) || []).length;
+            const delimiter = semicolons > commas ? ';' : ',';
+            console.log(`Delimitador detectado: "${delimiter}"`);
+
             const rows = lines.slice(1).map(l => {
-                // Parser simple de CSV (considerando comas y posibles comillas)
-                const parts = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
+                // Parser que respeta el delimitador detectado y comillas
+                const regex = new RegExp(`${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
+                const parts = l.split(regex).map(p => p.replace(/^"|"$/g, '').trim());
                 return { tramo: parts[0], hora: parts[1], ini: parseFloat(parts[2]), fin: parseFloat(parts[3]), media: parseFloat(parts[4]) };
             });
 
