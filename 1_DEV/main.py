@@ -16,25 +16,53 @@ from core.hardware import setup_hardware_readers
 from core.logger import rally_logger
 from core.rally import tramo_manager
 
-# --- OCR ENGINE (Tesseract - Estable) ---
+# --- OCR ENGINE (RapidOCR - IA) ---
 try:
     import numpy as np
     import cv2
-    import pytesseract
-    # Ruta explícita para asegurar que lo encuentre en Raspberry Pi
-    pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
-    
-    # Verificar binario de tesseract
-    try:
-        tess_version = subprocess.check_output(["tesseract", "--version"]).decode()
-        print(f"✅ Tesseract detectado: {tess_version.splitlines()[0]}", flush=True)
-    except Exception:
-        print("⚠️ AVISO: pytesseract cargado pero NO se encontró el binario 'tesseract' en el sistema.", flush=True)
-    
-    print("✅ Motor de OCR (Tesseract) y OpenCV listos.", flush=True)
-except ImportError as e:
-    pytesseract = None
-    print(f"❌ Error al cargar librerías de OCR: {e}", flush=True)
+    from rapidocr_onnxruntime import RapidOCR
+    rapid_ocr_engine = RapidOCR()
+    print("✅ RapidOCR (AI) y OpenCV inicializados correctamente.", flush=True)
+except Exception as e:
+    rapid_ocr_engine = None
+    print(f"⚠️ Error al cargar RapidOCR: {e}", flush=True)
+
+# --- UTILIDADES OCR ---
+def sort_boxes(dt_boxes, matched_texts, matched_scores):
+    if dt_boxes is None or len(dt_boxes) == 0:
+        return [], [], []
+    items = []
+    for i in range(len(dt_boxes)):
+        box = np.array(dt_boxes[i], dtype=np.float32).reshape((4, 2))
+        items.append({
+            'box': box,
+            'text': matched_texts[i],
+            'score': matched_scores[i] if matched_scores else 1.0,
+            'y_top': min(box[0][1], box[1][1]),
+            'x_left': min(box[0][0], box[3][0])
+        })
+    items.sort(key=lambda x: x['y_top'])
+    lines = []
+    current_line = []
+    if items:
+        current_line.append(items[0])
+        for i in range(1, len(items)):
+            item = items[i]
+            prev_item = current_line[-1]
+            prev_height = abs(prev_item['box'][2][1] - prev_item['box'][0][1])
+            if abs(item['y_top'] - prev_item['y_top']) < (prev_height * 0.5):
+                current_line.append(item)
+            else:
+                lines.append(current_line); current_line = [item]
+        lines.append(current_line)
+    sorted_texts = []
+    sorted_boxes = []
+    for line in lines:
+        line.sort(key=lambda x: x['x_left'])
+        for it in line:
+            sorted_texts.append(it['text'])
+            sorted_boxes.append(it['box'])
+    return sorted_boxes, sorted_texts, []
 
 # --- APP FASTAPI ---
 app = FastAPI(title="Lebrel Backend")
@@ -183,8 +211,8 @@ async def set_test_speed(request: Request):
 
 @app.post("/ocr")
 async def process_ocr(request: Request):
-    if not pytesseract:
-        return {"error": "OCR engine (Tesseract) not available [v5-ESTABLE]"}
+    if not rapid_ocr_engine:
+        return {"error": "RapidOCR AI engine not available [v6-AI]"}
     
     try:
         data = await request.json()
@@ -200,8 +228,15 @@ async def process_ocr(request: Request):
             return {"error": "Failed to decode image"}
 
         start_time = time.time()
-        custom_config = r'--oem 3 --psm 6'
-        detected_text = pytesseract.image_to_string(img, lang='spa', config=custom_config)
+        result, elapse = rapid_ocr_engine(img)
+        
+        detected_text = ""
+        if result:
+            boxes = [line[0] for line in result]
+            texts = [line[1] for line in result]
+            scores = [line[2] for line in result]
+            _, sorted_texts, _ = sort_boxes(boxes, texts, scores)
+            detected_text = "\n".join(sorted_texts)
         
         _, buffer = cv2.imencode('.jpg', img)
         processed_image_b64 = base64.b64encode(buffer).decode('utf-8')

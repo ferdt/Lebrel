@@ -9,7 +9,7 @@ echo "Iniciando instalación de Lebrel Backend..."
 # 1. Instalar dependencias del sistema operativo
 echo "Instalando dependencias de sistema (Python, Venv, OpenCV libs)..."
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip python3-pandas python3-numpy libgl1 libglib2.0-0t64 tesseract-ocr tesseract-ocr-spa || sudo apt install -y python3 python3-venv python3-pip python3-pandas python3-numpy libgl1 libglib2.0-0 tesseract-ocr tesseract-ocr-spa
+sudo apt install -y python3 python3-venv python3-pip python3-pandas python3-numpy libgl1 libglib2.0-0t64
 
 # 2. Configurar permisos de hardware para posibles periféricos
 echo "Añadiendo usuario '$USER' a grupos de hardware..."
