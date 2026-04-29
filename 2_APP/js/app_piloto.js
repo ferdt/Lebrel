@@ -36,10 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    setInterval(() => {
-        const now = new Date();
-        if(ui.hora) ui.hora.textContent = now.toLocaleTimeString('es-ES', { hour12: false });
-    }, 1000);
+    // El reloj se sincroniza con la Pi vía telemetría
 
     client.onMessage((data) => {
         if (data.tramo_nombre !== undefined && ui.tramo_nombre) ui.tramo_nombre.textContent = data.tramo_nombre;
@@ -53,14 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (data.tiempo_tramo_s !== undefined && ui.tiempo_tramo) {
             const secs = data.tiempo_tramo_s;
-            const h = Math.floor(secs / 3600);
-            const m = Math.floor((secs % 3600) / 60);
-            const s = Math.floor(secs % 60);
-            const ms = Math.floor((secs % 1) * 10);
-            ui.tiempo_tramo.textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${ms}`;
+            const isNeg = secs < 0;
+            const absSecs = Math.abs(secs);
+            const h = Math.floor(absSecs / 3600);
+            const m = Math.floor((absSecs % 3600) / 60);
+            const s = Math.floor(absSecs % 60);
+            const ms = Math.floor((absSecs % 1) * 10);
+            const sign = isNeg ? '-' : '';
+            ui.tiempo_tramo.innerHTML = `${sign}${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}<span class="tenths">.${ms}</span>`;
         }
         if (data.velocidad_kmh !== undefined && ui.velocidad_actual) ui.velocidad_actual.textContent = data.velocidad_kmh.toFixed(1);
         if (data.velocidad_objetivo_kmh !== undefined && ui.velocidad_objetivo) ui.velocidad_objetivo.textContent = data.velocidad_objetivo_kmh.toFixed(1);
+        if (data.system_time && ui.hora) ui.hora.textContent = data.system_time;
         if (data.proxima_media_kmh !== undefined && ui.proxima_media) ui.proxima_media.textContent = data.proxima_media_kmh.toFixed(1) + ' km/h';
         if (data.distancia_cambio_m !== undefined && ui.distancia_cambio) ui.distancia_cambio.textContent = (data.distancia_cambio_m / 1000).toFixed(3) + ' km';
     });

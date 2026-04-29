@@ -23,6 +23,21 @@ class TramoManager:
         segs = self.active_tramo.get("segmentos", [])
         return sorted(segs, key=lambda s: s.get("inicio_m", 0))
 
+    def parse_time_to_seconds(self, time_str: str) -> float:
+        """Convierte 'HH:MM:SS.d' a segundos totales desde el inicio del día."""
+        if not time_str:
+            return 0.0
+        try:
+            parts = time_str.replace(',', '.').split(':')
+            h = int(parts[0])
+            m = int(parts[1])
+            s_parts = parts[2].split('.')
+            s = int(s_parts[0])
+            ms = float('0.' + s_parts[1]) if len(s_parts) > 1 else 0.0
+            return h * 3600 + m * 60 + s + ms
+        except:
+            return 0.0
+
     def calculate_ideal_time(self, dist_m: float) -> float:
         """
         Calcula el tiempo ideal (en segundos) para haber recorrido dist_m metros,
@@ -69,19 +84,20 @@ class TramoManager:
 
         return tiempo_ideal
 
-    def calculate_interval(self, dist_m: float, tiempo_tramo_s: float) -> float:
+    def calculate_interval(self, dist_m: float, wall_time_s: float, start_time_str: str) -> float:
         """
-        Calcula el intervalo respecto al tiempo ideal.
-
-        intervalo = tiempo_real - tiempo_ideal
-          > 0  → vas TARDE  (más lento de lo necesario)
-          < 0  → vas ADELANTADO (más rápido de lo necesario)
-          = 0  → perfecto
-
-        Returns: diferencia en segundos (float)
+        Calcula el intervalo comparando la HORA ACTUAL (wall_time_s) 
+        con la HORA IDEAL (hora_inicio + tiempo_ideal_elapsado).
         """
-        tiempo_ideal = self.calculate_ideal_time(dist_m)
-        return round(tiempo_tramo_s - tiempo_ideal, 2)
+        start_seconds = self.parse_time_to_seconds(start_time_str)
+        ideal_elapsed = self.calculate_ideal_time(dist_m)
+        
+        # El tiempo transcurrido REAL desde nuestra hora de salida teórica
+        # Nota: wall_time_s debe ser segundos desde inicio del día.
+        real_elapsed = wall_time_s - start_seconds
+        
+        # Retraso/Adelanto = Lo que llevamos realmente - Lo que deberíamos llevar
+        return round(real_elapsed - ideal_elapsed, 2)
 
     def get_current_segment_info(self, dist_m: float) -> dict:
         """

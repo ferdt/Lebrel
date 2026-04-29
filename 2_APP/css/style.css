@@ -370,3 +370,83 @@ body.rotate-270 {
 .btn-mini.plus { border-color: var(--accent-green); color: var(--accent-green); }
 .btn-mini.minus { border-color: var(--accent-red); color: var(--accent-red); }
 .btn-mini.action { border-color: var(--accent-blue); color: var(--accent-blue); }
+
+.tenths {
+    font-size: 0.7em;
+    opacity: 0.6;
+    margin-left: 2px;
+}
+
+/* --- Modales --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+    background: #1e293b;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px;
+    width: min(400px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.modal-box h3 { margin: 0; color: var(--text-primary); }
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.btn-modal-cancel, .btn-modal-ok {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-modal-cancel {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+}
+
+.btn-modal-ok {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.btn-modal-ok:hover { background: rgba(59, 130, 246, 0.4); }
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: white;
+    font-size: 1.2rem;
+}

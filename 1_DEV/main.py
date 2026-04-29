@@ -158,11 +158,20 @@ async def get_tramos():
 
 @app.post("/api/tramos")
 async def update_tramos(request: Request):
+    global active_tramo
     new_tramos = await request.json()
     for tramo in new_tramos:
         if "segmentos" in tramo:
             tramo["segmentos"].sort(key=lambda s: s.get("inicio_m", 0))
     save_tramos(new_tramos)
+    
+    # Si el tramo que acabamos de guardar es el que está activo, refrescarlo
+    if active_tramo:
+        refreshed = next((t for t in new_tramos if t.get("id") == active_tramo.get("id")), None)
+        if refreshed:
+            active_tramo = refreshed
+            tramo_manager.set_active_tramo(refreshed)
+            
     return {"status": "ok"}
 
 @app.get("/api/tramos/active")
@@ -200,6 +209,12 @@ async def import_tablitos(request: Request):
         })
     tramo_tablas["segmentos"] = new_segments
     save_tramos(tramos)
+
+    # Si estamos en el tramo de "Tablas", refrescar el motor activo
+    if active_tramo and active_tramo.get("nombre").upper() == "TABLAS":
+        active_tramo = tramo_tablas
+        tramo_manager.set_active_tramo(tramo_tablas)
+
     return {"status": "ok", "count": len(new_segments)}
 
 @app.post("/api/test/speed")
@@ -298,26 +313,35 @@ async def hardware_loop():
     tramo_mock = [{"inicio_m": 0, "fin_m": 12000, "media_kmh": 45.0}]
 
     while True:
+        # 1. Obtener Hora Actual del Sistema (segundos desde medianoche)
+        now = datetime.now()
+        wall_time_s = now.hour * 3600 + now.minute * 60 + now.second + now.microsecond / 1_000_000
+
         settings = load_settings()
         odo_source = settings.get("odometer_source", "test")
         
         segmentos = active_tramo["segmentos"] if active_tramo and active_tramo.get("segmentos") else tramo_mock
         tramo_nombre = active_tramo["nombre"] if active_tramo else "TC-DEMO"
+        hora_inicio_str = active_tramo.get("hora_inicio", "00:00:00.0") if active_tramo else "00:00:00.0"
         
         if not tramo_manager.active_tramo or tramo_manager.get_segmentos() != segmentos:
             tramo_manager.set_active_tramo({"segmentos": segmentos})
 
+        # 2. Calcular Distancia y Tiempo elapsado real
         if odo_source == "test":
             test_dist_m += (test_speed_kmh / 3.6) * 0.1
             dist_m = test_dist_m
             velocidad_kmh = test_speed_kmh
         else:
-            dist_m += 1.0
+            dist_m += 1.0  # Simulación hardware real
             velocidad_kmh = 36.0
 
-        tiempo_tramo_s += 0.1
+        # El tiempo elapsado ahora es dinámico respecto a la salida
+        start_seconds = tramo_manager.parse_time_to_seconds(hora_inicio_str)
+        tiempo_tramo_s = wall_time_s - start_seconds
+
         seg_info = tramo_manager.get_current_segment_info(dist_m)
-        diff_s = tramo_manager.calculate_interval(dist_m, tiempo_tramo_s)
+        diff_s = tramo_manager.calculate_interval(dist_m, wall_time_s, hora_inicio_str)
 
         telemetry = {
             "tramo_nombre": tramo_nombre,
@@ -329,7 +353,11 @@ async def hardware_loop():
             "proxima_media_kmh": seg_info["proxima_media"],
             "distancia_cambio_m": seg_info["distancia_cambio_m"],
             "odo_source": odo_source,
-            "neutral_interval_s": settings.get("neutral_interval_s", 0.1)
+            "neutral_interval_s": settings.get("neutral_interval_s", 0.1),
+            "tramo_tabla": segmentos,
+            "segment_idx": seg_info["idx"],
+            "hora_inicio_tramo": active_tramo.get("hora_inicio", "00:00:00.0") if active_tramo else "00:00:00.0",
+            "system_time": now.strftime("%H:%M:%S")
         }
         
         await manager.broadcast(telemetry)

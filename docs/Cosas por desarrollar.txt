@@ -1,0 +1,3 @@
+-Importar/exportar tramos y/o rally
+-Calibración
+-Sincronización del reloj

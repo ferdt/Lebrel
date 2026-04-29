@@ -40,18 +40,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    setInterval(() => {
-        if(valHora) {
-            const now = new Date();
-            valHora.textContent = now.toLocaleTimeString('es-ES', { hour12: false });
-        }
-    }, 1000);
+    // El reloj se actualizará desde la telemetría para estar sincronizado con la Pi
 
     const formatTime = (secs) => {
-        const h = Math.floor(secs / 3600);
-        const m = Math.floor((secs % 3600) / 60);
-        const s = Math.floor(secs % 60);
-        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        const isNeg = secs < 0;
+        const absSecs = Math.abs(secs);
+        const h = Math.floor(absSecs / 3600);
+        const m = Math.floor((absSecs % 3600) / 60);
+        const s = Math.floor(absSecs % 60);
+        const ms = Math.floor((absSecs % 1) * 10);
+        const sign = isNeg ? '-' : '';
+        const timePart = `${sign}${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        return `${timePart}<span class="tenths">.${ms}</span>`;
     };
 
     /** Parsea "HH:MM:SS.d" a segundos totales. Devuelve null si inválido. */
@@ -110,9 +110,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // --- Recalibración al paso ---
+    let snappedDistanceM = 0;
+    const modalRecal = document.getElementById('modal-recalibrar');
+    const inputRoadbook = document.getElementById('input-roadbook');
+    const snapDistDisplay = document.getElementById('snap-dist-val');
+    const btnRecalOk = document.getElementById('btn-recal-ok');
+    const btnRecalCancel = document.getElementById('btn-recal-cancel');
+    let currentDistM = 0; // Guardará el último valor recibido
+
+    if (valDistancia) {
+        valDistancia.style.cursor = 'pointer';
+        valDistancia.addEventListener('click', () => {
+            snappedDistanceM = currentDistM;
+            snapDistDisplay.textContent = (snappedDistanceM / 1000).toFixed(3);
+            inputRoadbook.value = '';
+            modalRecal.classList.add('open');
+            setTimeout(() => inputRoadbook.focus(), 100);
+        });
+    }
+
+    btnRecalCancel.addEventListener('click', () => modalRecal.classList.remove('open'));
+    btnRecalOk.addEventListener('click', () => {
+        const roadbookKm = parseFloat(inputRoadbook.value);
+        if (!isNaN(roadbookKm)) {
+            const roadbookM = roadbookKm * 1000;
+            const diffM = roadbookM - snappedDistanceM;
+            client.sendCommand(`DIST_ADJUST:${diffM}`);
+            modalRecal.classList.remove('open');
+        }
+    });
+
     client.onMessage((data) => {
+        if (data.distancia_m !== undefined) {
+            currentDistM = data.distancia_m;
+            if (valDistancia) valDistancia.textContent = (data.distancia_m / 1000).toFixed(3) + ' km';
+        }
         if (data.tramo_nombre !== undefined && valTramo) valTramo.textContent = data.tramo_nombre;
-        if (data.distancia_m !== undefined && valDistancia) valDistancia.textContent = (data.distancia_m / 1000).toFixed(3) + ' km';
         if (data.diferencia_ideal_s !== undefined && valDiferencia) {
             const diff = data.diferencia_ideal_s;
             const threshold = data.neutral_interval_s || 0.1;
@@ -120,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             valDiferencia.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1) + label;
             valDiferencia.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
         }
-        if (data.tiempo_tramo_s !== undefined && valTiempo) valTiempo.textContent = formatTime(data.tiempo_tramo_s);
+        if (data.tiempo_tramo_s !== undefined && valTiempo) valTiempo.innerHTML = formatTime(data.tiempo_tramo_s);
         if (data.velocidad_kmh !== undefined && valVelocidadAct) valVelocidadAct.textContent = data.velocidad_kmh.toFixed(1);
         if (data.velocidad_objetivo_kmh !== undefined && valVelocidadObj) valVelocidadObj.textContent = data.velocidad_objetivo_kmh.toFixed(1);
 
@@ -130,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSegment = data.segment_idx;
             renderTable(currentTableData, currentSegment, currentHoraInicioTramo);
         }
+        if (data.system_time && valHora) valHora.textContent = data.system_time;
     });
 
     const btnPlus = document.getElementById('btn-odo-plus');
