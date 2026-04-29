@@ -100,6 +100,122 @@ const infoHoraFin   = document.getElementById('info-hora-fin');
 const infoDistTotal = document.getElementById('info-dist-total');
 const infoDurTotal  = document.getElementById('info-dur-total');
 
+// ---- Save All Logic ----
+async function saveAllTramos() {
+    if (tramos.length === 0) {
+        if (typeof showStatus === 'function') showStatus('No hay tramos que guardar', 'err');
+        return;
+    }
+    try {
+        const res = await fetch(`/api/tramos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tramos)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (typeof showStatus === 'function') showStatus('✓ Guardado correctamente', 'ok');
+        return true;
+    } catch (err) {
+        console.error("Error saving:", err);
+        if (typeof showStatus === 'function') showStatus('Error al guardar: ' + err.message, 'err');
+        return false;
+    }
+}
+window.saveAllTramos = saveAllTramos; // Asegurar disponibilidad global
+
+// Import/Export (CSV)
+const btnExport = document.getElementById('btn-export');
+const btnImportTrigger = document.getElementById('btn-import-trigger');
+const importFile = document.getElementById('import-file');
+
+btnExport.addEventListener('click', () => {
+    let csv = "Tramo,Hora Inicio,KM Inicio,KM Fin,Media\n";
+    tramos.forEach(t => {
+        t.segmentos.forEach(s => {
+            csv += `"${t.nombre}","${t.hora_inicio}",${(s.inicio_m/1000).toFixed(3)},${(s.fin_m/1000).toFixed(3)},${s.media_kmh.toFixed(1)}\n`;
+        });
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "lebrel_tramos.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
+btnImportTrigger.addEventListener('click', () => importFile.click());
+
+importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            const text = event.target.result;
+            const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+            if (lines.length < 2) throw new Error("Archivo vacío o sin datos.");
+
+            const rows = lines.slice(1).map(l => {
+                // Parser simple de CSV (considerando comas y posibles comillas)
+                const parts = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
+                return { tramo: parts[0], hora: parts[1], ini: parseFloat(parts[2]), fin: parseFloat(parts[3]), media: parseFloat(parts[4]) };
+            });
+
+            // Agrupar por nombre de tramo
+            const groups = {};
+            rows.forEach(r => {
+                if (!groups[r.tramo]) groups[r.tramo] = { rows: [], horas: new Set() };
+                groups[r.tramo].rows.push(r);
+                if (r.hora) groups[r.tramo].horas.add(r.hora);
+            });
+
+            const newTramos = [];
+            const warnings = [];
+
+            for (const name in groups) {
+                const g = groups[name];
+                const distinctHoras = Array.from(g.horas);
+                
+                if (distinctHoras.length > 1) {
+                    warnings.push(`Tramo "${name}" tiene múltiples horas de inicio: ${distinctHoras.join(", ")}. Usando la primera.`);
+                }
+                
+                const horaFinal = distinctHoras[0] || "00:00:00.0";
+                
+                newTramos.push({
+                    id: uid(),
+                    nombre: name,
+                    hora_inicio: horaFinal,
+                    segmentos: g.rows.map(r => ({
+                        inicio_m: (r.ini || 0) * 1000,
+                        fin_m: (r.fin || 0) * 1000,
+                        media_kmh: r.media || 0
+                    })).sort((a,b) => a.inicio_m - b.inicio_m)
+                });
+            }
+
+            if (warnings.length > 0) {
+                alert("AVISO:\n" + warnings.join("\n"));
+            }
+
+            if (!confirm(`¿Importar ${newTramos.length} tramos desde CSV? Se sobrescribirá la lista actual.`)) return;
+            
+            tramos = newTramos;
+            await saveAllTramos();
+            renderTramosList();
+            renderSegmentos();
+            alert("Tramos importados correctamente.");
+        } catch (err) {
+            alert("Error al importar CSV: " + err.message);
+        }
+        importFile.value = '';
+    };
+    reader.readAsText(file);
+});
+
 // ---- Cell editor bar ----
 const cellEditBar   = document.getElementById('cell-edit-bar');
 const cellEditLabel = document.getElementById('cell-edit-label');
@@ -483,18 +599,7 @@ if (btnLaunch) {
     });
 }
 
-// ---- Save ----
-btnSave.addEventListener('click', async () => {
-    if (tramos.length === 0) { showStatus('No hay tramos que guardar', 'err'); return; }
-    try {
-        const res  = await fetch(`/api/tramos`, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(tramos)
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        showStatus('✓ Guardado correctamente', 'ok');
-    } catch (err) { showStatus('Error al guardar: ' + err.message, 'err'); }
-});
+btnSave.addEventListener('click', saveAllTramos);
 
 // ---- Modal: nuevo tramo ----
 btnNuevoTramo.addEventListener('click', () => {
