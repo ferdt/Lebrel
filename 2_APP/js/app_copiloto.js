@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dur: 'Duración (MM:SS.d)', h_fin: 'T. Fin (MM:SS.d)'
     };
 
-    let _editCell = null, _activeTramoId = null;
+    let _editCell = null, _activeTramoId = null, _isFirstKey = false;
 
     const openCellEditor = (td, type, idx) => {
         _editCell = { td, type, idx };
@@ -95,13 +95,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = td.textContent.split(' ')[0];
         
         document.getElementById('cell-edit-label').textContent = label;
-        document.getElementById('cell-edit-input').value = val;
+        const input = document.getElementById('cell-edit-input');
+        input.value = val;
+        _isFirstKey = true;
+        input.classList.add('selected-highlight');
+        
+        modalRecal.classList.remove('open');
         document.getElementById('cell-edit-bar').classList.add('open');
-        setTimeout(() => document.getElementById('cell-edit-input').focus(), 100);
     };
 
     const closeCellEditor = () => {
         document.getElementById('cell-edit-bar').classList.remove('open');
+        document.getElementById('cell-edit-input').classList.remove('selected-highlight');
         _editCell = null;
     };
 
@@ -197,16 +202,75 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRecalCancel = document.getElementById('btn-recal-cancel');
     let currentDistM = 0; // Guardará el último valor recibido
 
+    window.pressKeyOdo = (key) => {
+        const input = document.getElementById('input-roadbook');
+        if (!input) return;
+        if (key === 'back') {
+            input.value = input.value.slice(0, -1);
+        } else {
+            input.value += key;
+        }
+    };
+
+    window.adjustOdoVal = (val) => {
+        const input = document.getElementById('input-roadbook');
+        if (!input) return;
+        _isFirstKey = false; // Al ajustar manualmente, ya no sobrescribimos
+        input.classList.remove('selected-highlight');
+        if (val === 'zero') {
+            input.value = (0).toFixed(3);
+        } else {
+            let current = parseFloat(input.value) || 0;
+            input.value = (current + val).toFixed(3);
+        }
+    };
+
     if (valDistancia) {
         valDistancia.style.cursor = 'pointer';
         valDistancia.addEventListener('click', () => {
             snappedDistanceM = currentDistM;
             snapDistDisplay.textContent = (snappedDistanceM / 1000).toFixed(3);
-            inputRoadbook.value = (snappedDistanceM / 1000).toFixed(3); // Sugerir el valor actual
+            inputRoadbook.value = (snappedDistanceM / 1000).toFixed(3);
+            _isFirstKey = true; // También para odo
+            inputRoadbook.classList.add('selected-highlight');
+            closeCellEditor(); // Cerrar el otro si está abierto
             modalRecal.classList.add('open');
-            setTimeout(() => inputRoadbook.focus(), 100);
         });
     }
+
+    window.pressKey = (key) => {
+        const input = document.getElementById('cell-edit-input');
+        if (!input) return;
+        if (_isFirstKey && key !== 'back') {
+            input.value = '';
+            _isFirstKey = false;
+            input.classList.remove('selected-highlight');
+        }
+        if (key === 'back') {
+            input.value = input.value.slice(0, -1);
+            _isFirstKey = false;
+            input.classList.remove('selected-highlight');
+        } else {
+            input.value += key;
+        }
+    };
+
+    window.pressKeyOdo = (key) => {
+        const input = document.getElementById('input-roadbook');
+        if (!input) return;
+        if (_isFirstKey && key !== 'back') {
+            input.value = '';
+            _isFirstKey = false;
+            input.classList.remove('selected-highlight');
+        }
+        if (key === 'back') {
+            input.value = input.value.slice(0, -1);
+            _isFirstKey = false;
+            input.classList.remove('selected-highlight');
+        } else {
+            input.value += key;
+        }
+    };
 
     window.adjustModalVal = (val) => {
         if (!inputRoadbook) return;

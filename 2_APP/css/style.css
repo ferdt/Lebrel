@@ -441,14 +441,87 @@ body.rotate-270 {
     font-size: 0.9rem;
 }
 
-.form-group input {
+/* --- Teclado Numérico y Editor --- */
+.cell-edit-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    padding: 12px;
+    background: #0f172a;
+    border-top: 1px solid var(--glass-border);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 3000;
+}
+
+.cell-edit-bar.open { transform: translateY(0); }
+
+.edit-container-full {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 30px;
+    align-items: center;
+}
+
+.edit-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#cell-edit-label { font-size: 1.1rem; color: var(--text-secondary); font-weight: bold; }
+
+#cell-edit-input {
+    width: 100%;
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--glass-border);
-    border-radius: 8px;
+    border-radius: 12px;
     color: white;
-    font-size: 1.2rem;
+    font-size: 2.8rem;
+    padding: 15px;
+    text-align: center;
+    font-weight: 800;
+}
+
+.edit-actions-main { display: flex; gap: 15px; }
+.edit-actions-main button { flex: 1; padding: 20px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid var(--glass-border); }
+
+.btn-cancel { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); }
+.btn-ok { background: rgba(34, 197, 94, 0.1); color: var(--accent-green); font-size: 1.2rem; }
+
+.edit-keypad {
+    display: grid;
+    grid-template-columns: repeat(4, 80px);
+    grid-template-rows: repeat(4, 70px);
+    gap: 10px;
+}
+
+.btn-key {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: white;
+    font-size: 1.6rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-key:active { background: var(--accent-blue); transform: scale(0.95); }
+.btn-key.special { color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
+.btn-key.action { color: var(--accent-red); font-size: 1.2rem; }
+.btn-key.action-ok { grid-column: span 3; background: var(--accent-blue); color: white; }
+.btn-key.zero-wide { grid-column: span 1; }
+
+.selected-highlight {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
 }
 
 /* --- Quick Adjust en Modal --- */

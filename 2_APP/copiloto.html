@@ -183,44 +183,84 @@
             </section>
         </main>
 
-        <!-- Modal de Recalibración -->
-        <div class="modal-overlay" id="modal-recalibrar">
-            <div class="modal-box">
-                <h3>Ajuste Roadbook</h3>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">
-                    Captura: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: bold; font-size: 1.2rem;">0.000</span> km
+    <!-- Ajuste de Odómetro (Recalibración) como BARRA INFERIOR -->
+    <div id="modal-recalibrar" class="cell-edit-bar">
+        <div class="edit-container-full" style="gap: 20px;">
+            <!-- 1. IZQUIERDA: Ajuste e Info -->
+            <div class="edit-left" style="flex: 1.2;">
+                <span id="recal-label">Ajuste Roadbook</span>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin:0;">
+                    Captura: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: 800; font-size: 1.6rem;">0.000</span> km
                 </p>
+                <input type="text" id="input-roadbook" readonly style="font-size: 3rem; text-align: center; font-weight: 800; height: 80px; margin: 10px 0;">
+                <div class="edit-actions-main">
+                    <button id="btn-recal-cancel" class="btn-cancel">CANCELAR</button>
+                    <button id="btn-recal-ok" class="btn-ok">APLICAR</button>
+                </div>
+            </div>
+
+            <!-- 2. CENTRO: Botones de ajuste rápido -->
+            <div class="edit-middle-adjust" style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn-key plus"  onclick="adjustOdoVal(0.010)"  style="height:55px; width:80px;">+10m</button>
+                <button class="btn-key plus"  onclick="adjustOdoVal(0.001)"  style="height:55px; width:80px;">+1m</button>
+                <button class="btn-key action" onclick="adjustOdoVal('zero')" style="height:55px; width:80px; color:var(--accent-red); font-size: 1rem;">CERO</button>
+                <button class="btn-key minus" onclick="adjustOdoVal(-0.001)" style="height:55px; width:80px;">-1m</button>
+                <button class="btn-key minus" onclick="adjustOdoVal(-0.010)" style="height:55px; width:80px;">-10m</button>
+            </div>
+
+            <!-- 3. DERECHA: Teclado Numérico -->
+            <div class="edit-keypad" style="grid-template-columns: repeat(3, 75px); grid-template-rows: repeat(4, 60px);">
+                <button class="btn-key" onclick="pressKeyOdo('7')">7</button>
+                <button class="btn-key" onclick="pressKeyOdo('8')">8</button>
+                <button class="btn-key" onclick="pressKeyOdo('9')">9</button>
                 
-                <div class="form-group">
-                    <input id="input-roadbook" type="number" step="0.001" placeholder="0.000" inputmode="decimal" 
-                           style="font-size: 2.5rem; text-align: center; font-weight: 800; height: 80px;">
-                </div>
-
-                <!-- Botones de ajuste rápido dentro del modal -->
-                <div class="modal-quick-adjust">
-                    <button class="btn-quick plus" onclick="adjustModalVal(0.010)">+10m</button>
-                    <button class="btn-quick plus" onclick="adjustModalVal(0.001)">+1m</button>
-                    <button class="btn-quick minus" onclick="adjustModalVal(-0.001)">-1m</button>
-                    <button class="btn-quick minus" onclick="adjustModalVal(-0.010)">-10m</button>
-                    <button class="btn-quick zero" onclick="adjustModalVal('zero')" style="grid-column: span 4; margin-top: 5px;">Poner a Cero</button>
-                </div>
-
-                <div class="modal-actions" style="margin-top: 20px;">
-                    <button class="btn-modal-cancel" id="btn-recal-cancel" style="flex:1; padding: 15px;">CANCELAR</button>
-                    <button class="btn-modal-ok" id="btn-recal-ok" style="flex:2; padding: 15px; font-size: 1.2rem;">APLICAR</button>
-                </div>
+                <button class="btn-key" onclick="pressKeyOdo('4')">4</button>
+                <button class="btn-key" onclick="pressKeyOdo('5')">5</button>
+                <button class="btn-key" onclick="pressKeyOdo('6')">6</button>
+                
+                <button class="btn-key" onclick="pressKeyOdo('1')">1</button>
+                <button class="btn-key" onclick="pressKeyOdo('2')">2</button>
+                <button class="btn-key" onclick="pressKeyOdo('3')">3</button>
+                
+                <button class="btn-key special" onclick="pressKeyOdo('.')">.</button>
+                <button class="btn-key" onclick="pressKeyOdo('0')">0</button>
+                <button class="btn-key action" onclick="pressKeyOdo('back')">⌫</button>
             </div>
         </div>
     </div>
+    </div>
 
-    <!-- Barra de edición rápida de celdas (oculta por defecto) -->
+    <!-- Barra de edición rápida con TECLADO NUMÉRICO integrado -->
     <div id="cell-edit-bar" class="cell-edit-bar">
-        <div class="edit-inner">
-            <span id="cell-edit-label">Editar:</span>
-            <input type="text" id="cell-edit-input" inputmode="decimal">
-            <div class="edit-actions">
-                <button id="cell-edit-cancel" class="btn-cancel">✕</button>
-                <button id="cell-edit-ok" class="btn-ok">✓ GUARDAR</button>
+        <div class="edit-container-full">
+            <!-- Izquierda: Info y Input -->
+            <div class="edit-left">
+                <span id="cell-edit-label">Editar:</span>
+                <input type="text" id="cell-edit-input" readonly>
+                <div class="edit-actions-main">
+                    <button id="cell-edit-cancel" class="btn-cancel">CANCELAR</button>
+                    <button id="cell-edit-ok" class="btn-ok">✓ GUARDAR</button>
+                </div>
+            </div>
+
+            <!-- Derecha: Teclado Numérico -->
+            <div class="edit-keypad">
+                <button class="btn-key" onclick="pressKey('7')">7</button>
+                <button class="btn-key" onclick="pressKey('8')">8</button>
+                <button class="btn-key" onclick="pressKey('9')">9</button>
+                <button class="btn-key action" onclick="pressKey('back')">⌫</button>
+                
+                <button class="btn-key" onclick="pressKey('4')">4</button>
+                <button class="btn-key" onclick="pressKey('5')">5</button>
+                <button class="btn-key" onclick="pressKey('6')">6</button>
+                <button class="btn-key special" onclick="pressKey(':')">:</button>
+                
+                <button class="btn-key" onclick="pressKey('1')">1</button>
+                <button class="btn-key" onclick="pressKey('2')">2</button>
+                <button class="btn-key" onclick="pressKey('3')">3</button>
+                <button class="btn-key special" onclick="pressKey('.')">.</button>
+                
+                <button class="btn-key zero-wide" onclick="pressKey('0')" style="grid-column: span 4;">0</button>
             </div>
         </div>
     </div>
