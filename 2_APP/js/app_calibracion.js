@@ -6,8 +6,8 @@ import { initRotation } from './rotation.js';
 import { initHeader } from './header.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    initHeader('calibracion');
     initRouter();
+    initHeader('calibracion');
     initFullscreen();
     initWakeLock();
     initRotation();

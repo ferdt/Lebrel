@@ -6,8 +6,8 @@ import { initRotation } from './rotation.js';
 import { initHeader } from './header.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    initHeader('copiloto');
     initRouter();
+    initHeader('copiloto');
     initFullscreen();
     initWakeLock();
     initRotation();

@@ -8,9 +8,8 @@ import { initHeader } from './header.js';
 document.addEventListener('DOMContentLoaded', () => {
     console.log('App Piloto: DOM Cargado');
     try {
-        initHeader('piloto');
-        console.log('App Piloto: Header inicializado');
         initRouter();
+        initHeader('piloto');
         initFullscreen();
         initWakeLock();
         initRotation();

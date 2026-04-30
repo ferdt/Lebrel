@@ -651,3 +651,106 @@ body.rotate-270 {
     width: 28px;
     filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
 }
+/* --- Welcome Page --- */
+.welcome-container {
+    text-align: center;
+    padding: 40px;
+    max-width: 800px;
+    width: 90%;
+    margin: auto;
+    animation: fadeInWelcome 1s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+}
+
+@keyframes fadeInWelcome {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.logo-large {
+    width: 180px;
+    height: 180px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.4));
+}
+
+.welcome-container h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    margin-bottom: 10px;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+}
+
+.welcome-container .subtitle {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.welcome-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 15px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    aspect-ratio: 1 / 0.8;
+    height: auto;
+}
+
+.welcome-card:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-blue);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-card svg {
+    width: 28px;
+    height: 28px;
+    color: var(--accent-blue);
+}
+
+.welcome-card span {
+    font-weight: bold;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.welcome-container .version-tag {
+    margin-top: 30px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0.4;
+}
+
+@media (max-width: 600px) {
+    .links-grid { grid-template-columns: repeat(2, 1fr); }
+    .welcome-container h1 { font-size: 2.5rem; }
+    .logo-large { width: 120px; height: 120px; }
+}
