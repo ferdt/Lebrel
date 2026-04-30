@@ -1,4 +1,11 @@
--Calibración
--Sincronización del reloj
--Calcar tramo
--Configuración
+✅ Calibración (GPS y Sensores)
+✅ Sincronización del reloj
+✅ Configuración y Ajustes
+✅ Homogeneización de Interfaz (v1.0.8)
+✅ Página de Inicio / Welcoming
+✅ Historial de Calibraciones
+
+PENDIENTE:
+- Calcar tramo (Grabar recorrido para generar segmentos)
+- Optimización de consumo de CPU en hardware_loop
+- Modo Nocturno Automático (por hora)
