@@ -88,8 +88,14 @@
             font-size: 1.1rem;
         }
 
-        .result-label { color: var(--text-secondary); }
-        .result-value { font-weight: bold; color: var(--accent-green); }
+        .result-label {
+            color: var(--text-secondary);
+        }
+
+        .result-value {
+            font-weight: bold;
+            color: var(--accent-green);
+        }
 
         @media (min-width: 768px) {
             .calibration-grid {
@@ -133,12 +139,15 @@
             <!-- Entrada de Distancia Conocida -->
             <div class="input-box" style="grid-column: 1 / -1;">
                 <div class="input-group">
-                    <label>Distancia Real Recorrida (según hitos/roadbook)</label>
+                    <label>Distancia según hitos/roadbook</label>
                     <input type="number" id="input_real_dist" step="0.001" placeholder="0.000">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button id="btn-reset-cal" style="flex: 1; background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border-color: var(--accent-red);">RESET</button>
-                    <button id="btn-calculate-cal" style="flex: 2; background: rgba(34, 197, 94, 0.1); color: var(--accent-green); border-color: var(--accent-green);">CALCULAR RATIOS</button>
+                    <button id="btn-reset-cal"
+                        style="flex: 1; background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border-color: var(--accent-red);">RESET</button>
+                    <button id="btn-calculate-cal"
+                        style="flex: 2; background: rgba(34, 197, 94, 0.1); color: var(--accent-green); border-color: var(--accent-green);">CALCULAR
+                        RATIOS</button>
                 </div>
             </div>
 
@@ -154,7 +163,8 @@
                         <span id="res_rally_factor" class="result-value">--</span>
                     </div>
                 </div>
-                <button id="btn-save-cal" style="width: 100%; margin-top: 15px; background: var(--accent-blue);">GUARDAR EN HISTORIAL</button>
+                <button id="btn-save-cal" style="width: 100%; margin-top: 15px; background: var(--accent-blue);">GUARDAR
+                    EN HISTORIAL</button>
             </div>
 
             <!-- Historial -->

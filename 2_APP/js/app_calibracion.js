@@ -135,6 +135,3 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
     client.connect();
 });
-
-    client.connect();
-});

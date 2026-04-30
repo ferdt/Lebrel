@@ -370,6 +370,7 @@ async def hardware_loop():
         
         if odo_source == "test":
             test_dist_m += (test_speed_kmh / 3.6) * 0.1
+            velocidad_kmh = test_speed_kmh
             # Mocks para calibración (datos brutos)
             dist_gps_m = test_dist_m * 0.998
             pulses_1 = int(test_dist_m * 1.54)
