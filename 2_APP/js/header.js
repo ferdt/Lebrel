@@ -23,6 +23,8 @@ export function initHeader(currentPage) {
         { id: 'test',       label: 'Test',        url: 'test.html' }
     ];
 
+    const APP_VERSION = '1.0.7';
+
     headerContainer.innerHTML = `
         <header class="unified-header">
             <nav class="main-nav">
@@ -49,6 +51,7 @@ export function initHeader(currentPage) {
             </div>
 
             <div class="header-right">
+                <span style="font-size: 0.6rem; color: var(--text-secondary); opacity: 0.5; margin-right: 5px;">v${APP_VERSION}</span>
                 <button id="btn-rotate" class="icon-btn" title="Girar Pantalla">
                     <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M23 4v6h-6"></path>

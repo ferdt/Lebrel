@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     client.onMessage((data) => {
         if (data.distancia_m !== undefined) {
             currentDistM = data.distancia_m;
-            if (valDistancia) valDistancia.textContent = (data.distancia_m / 1000).toFixed(3) + ' km';
+            if (valDistancia) valDistancia.textContent = (data.distancia_m / 1000).toFixed(3);
         }
         if (data.tramo_nombre !== undefined && valTramo) valTramo.textContent = data.tramo_nombre;
         if (data.tramo_id !== undefined) _activeTramoId = data.tramo_id;

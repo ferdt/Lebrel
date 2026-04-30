@@ -139,8 +139,9 @@
             <!-- Entrada de Distancia Conocida -->
             <div class="input-box" style="grid-column: 1 / -1;">
                 <div class="input-group">
-                    <label>Distancia según hitos/roadbook</label>
-                    <input type="number" id="input_real_dist" step="0.001" placeholder="0.000">
+                    <label>Distancia según hitos/roadbook (km)</label>
+                    <div id="display_real_dist" class="edit-input-large" style="cursor: pointer; background: rgba(255,255,255,0.05); margin-top: 10px;">0.000</div>
+                    <input type="hidden" id="input_real_dist" value="0">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button id="btn-reset-cal"
@@ -190,7 +191,39 @@
         </main>
     </div>
 
-    <script type="module" src="js/app_calibracion.js?v=5"></script>
+    <!-- Barra de edición HOMOGENEIZADA -->
+    <div id="cell-edit-bar" class="cell-edit-bar">
+        <div class="edit-container-full">
+            <div class="edit-left">
+                <span>Distancia Real (km):</span>
+                <input type="text" id="cell-edit-input" class="edit-input-large" readonly>
+                <div class="edit-actions-main">
+                    <button id="cell-edit-cancel" class="btn-cancel">CANCELAR</button>
+                    <button id="cell-edit-ok" class="btn-ok">✓ CONFIRMAR</button>
+                </div>
+            </div>
+            <div class="edit-keypad">
+                <button class="btn-key" onclick="pressKey('7')">7</button>
+                <button class="btn-key" onclick="pressKey('8')">8</button>
+                <button class="btn-key" onclick="pressKey('9')">9</button>
+                <button class="btn-key action" onclick="pressKey('back')">⌫</button>
+
+                <button class="btn-key" onclick="pressKey('4')">4</button>
+                <button class="btn-key" onclick="pressKey('5')">5</button>
+                <button class="btn-key" onclick="pressKey('6')">6</button>
+                <button class="btn-key special" onclick="pressKey('clear')">C</button>
+
+                <button class="btn-key" onclick="pressKey('1')">1</button>
+                <button class="btn-key" onclick="pressKey('2')">2</button>
+                <button class="btn-key" onclick="pressKey('3')">3</button>
+                <button class="btn-key special" onclick="pressKey('.')">.</button>
+
+                <button class="btn-key zero-wide" onclick="pressKey('0')" style="grid-column: span 4;">0</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app_calibracion.js?v=7"></script>
 </body>
 
 </html>

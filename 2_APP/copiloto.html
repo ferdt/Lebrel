@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=7">
     <style>
         .split-layout {
             display: grid;
@@ -121,10 +121,12 @@
                 </div>
 
                 <div class="operations-panel">
-                    <button id="btn-odo-reset" class="danger" style="width:100%; padding:8px; margin-bottom:10px; font-size:0.8rem;">RESET ODO</button>
+                    <button id="btn-odo-reset" class="danger"
+                        style="width:100%; padding:8px; margin-bottom:10px; font-size:0.8rem;">RESET ODO</button>
                     <div class="btn-group-vertical">
                         <button id="btn-calibrar" style="padding:10px;">Calibración</button>
-                        <button id="btn-tramos" style="padding:10px;" onclick="window.navigateSPA('tramos.html')">Tramos</button>
+                        <button id="btn-tramos" style="padding:10px;"
+                            onclick="window.navigateSPA('tramos.html')">Tramos</button>
                     </div>
                 </div>
             </section>
@@ -153,48 +155,41 @@
             </section>
         </main>
 
+        <!-- Ajuste de Odómetro (Recalibración) como BARRA INFERIOR -->
     <!-- Ajuste de Odómetro (Recalibración) como BARRA INFERIOR -->
     <div id="modal-recalibrar" class="cell-edit-bar">
-        <div class="edit-container-full" style="gap: 20px;">
+        <div class="edit-container-full">
             <!-- 1. IZQUIERDA: Ajuste e Info -->
-            <div class="edit-left" style="flex: 1.2;">
+            <div class="edit-left">
                 <span id="recal-label">Ajuste Roadbook</span>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); margin:0;">
-                    Captura: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: 800; font-size: 1.6rem;">0.000</span> km
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin:0;">
+                    Captura: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: 800;">0.000</span> km
                 </p>
-                <input type="text" id="input-roadbook" readonly style="font-size: 3rem; text-align: center; font-weight: 800; height: 80px; margin: 10px 0;">
+                <input type="text" id="input-roadbook" class="edit-input-large" readonly>
                 <div class="edit-actions-main">
                     <button id="btn-recal-cancel" class="btn-cancel">CANCELAR</button>
                     <button id="btn-recal-ok" class="btn-ok">APLICAR</button>
                 </div>
             </div>
 
-            <!-- 2. CENTRO: Botones de ajuste rápido -->
-            <div class="edit-middle-adjust" style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="btn-key plus"  onclick="adjustOdoVal(0.010)"  style="height:55px; width:80px;">+10m</button>
-                <button class="btn-key plus"  onclick="adjustOdoVal(0.001)"  style="height:55px; width:80px;">+1m</button>
-                <button class="btn-key action" onclick="adjustOdoVal('zero')" style="height:55px; width:80px; color:var(--accent-red); font-size: 1rem;">CERO</button>
-                <button class="btn-key minus" onclick="adjustOdoVal(-0.001)" style="height:55px; width:80px;">-1m</button>
-                <button class="btn-key minus" onclick="adjustOdoVal(-0.010)" style="height:55px; width:80px;">-10m</button>
-            </div>
-
-            <!-- 3. DERECHA: Teclado Numérico -->
-            <div class="edit-keypad" style="grid-template-columns: repeat(3, 75px); grid-template-rows: repeat(4, 60px);">
+            <!-- 2. DERECHA: Teclado Numérico -->
+            <div class="edit-keypad">
                 <button class="btn-key" onclick="pressKeyOdo('7')">7</button>
                 <button class="btn-key" onclick="pressKeyOdo('8')">8</button>
                 <button class="btn-key" onclick="pressKeyOdo('9')">9</button>
-                
+                <button class="btn-key action" onclick="pressKeyOdo('back')">⌫</button>
+
                 <button class="btn-key" onclick="pressKeyOdo('4')">4</button>
                 <button class="btn-key" onclick="pressKeyOdo('5')">5</button>
                 <button class="btn-key" onclick="pressKeyOdo('6')">6</button>
-                
+                <button class="btn-key special" onclick="adjustOdoVal('zero')">C</button>
+
                 <button class="btn-key" onclick="pressKeyOdo('1')">1</button>
                 <button class="btn-key" onclick="pressKeyOdo('2')">2</button>
                 <button class="btn-key" onclick="pressKeyOdo('3')">3</button>
-                
                 <button class="btn-key special" onclick="pressKeyOdo('.')">.</button>
-                <button class="btn-key" onclick="pressKeyOdo('0')">0</button>
-                <button class="btn-key action" onclick="pressKeyOdo('back')">⌫</button>
+
+                <button class="btn-key zero-wide" onclick="pressKeyOdo('0')" style="grid-column: span 4;">0</button>
             </div>
         </div>
     </div>
@@ -206,7 +201,7 @@
             <!-- Izquierda: Info y Input -->
             <div class="edit-left">
                 <span id="cell-edit-label">Editar:</span>
-                <input type="text" id="cell-edit-input" readonly>
+                <input type="text" id="cell-edit-input" class="edit-input-large" readonly>
                 <div class="edit-actions-main">
                     <button id="cell-edit-cancel" class="btn-cancel">CANCELAR</button>
                     <button id="cell-edit-ok" class="btn-ok">✓ GUARDAR</button>
@@ -219,28 +214,28 @@
                 <button class="btn-key" onclick="pressKey('8')">8</button>
                 <button class="btn-key" onclick="pressKey('9')">9</button>
                 <button class="btn-key action" onclick="pressKey('back')">⌫</button>
-                
+
                 <button class="btn-key" onclick="pressKey('4')">4</button>
                 <button class="btn-key" onclick="pressKey('5')">5</button>
                 <button class="btn-key" onclick="pressKey('6')">6</button>
                 <button class="btn-key special" onclick="pressKey(':')">:</button>
-                
+
                 <button class="btn-key" onclick="pressKey('1')">1</button>
                 <button class="btn-key" onclick="pressKey('2')">2</button>
                 <button class="btn-key" onclick="pressKey('3')">3</button>
                 <button class="btn-key special" onclick="pressKey('.')">.</button>
-                
+
                 <button class="btn-key zero-wide" onclick="pressKey('0')" style="grid-column: span 4;">0</button>
             </div>
         </div>
     </div>
 
     <!-- Cargar JS como module -->
-    <script type="module" src="js/app_copiloto.js?v=5"></script>
+    <script type="module" src="js/app_copiloto.js?v=7"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=5').catch(err => console.log('SW Fail:', err));
+                navigator.serviceWorker.register('sw.js?v=7').catch(err => console.log('SW Fail:', err));
             });
         }
     </script>

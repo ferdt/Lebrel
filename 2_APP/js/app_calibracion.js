@@ -18,36 +18,82 @@ document.addEventListener('DOMContentLoaded', () => {
         pulses_1: document.getElementById('val_pulses_1'),
         pulses_2: document.getElementById('val_pulses_2'),
         input_real_dist: document.getElementById('input_real_dist'),
+        display_real_dist: document.getElementById('display_real_dist'),
         btn_reset: document.getElementById('btn-reset-cal'),
         btn_calculate: document.getElementById('btn-calculate-cal'),
         btn_save: document.getElementById('btn-save-cal'),
         results_box: document.getElementById('results_box'),
         results_container: document.getElementById('results_container'),
         res_rally_factor: document.getElementById('res_rally_factor'),
-        history_body: document.getElementById('cal_history_body')
+        history_body: document.getElementById('historial-body'),
+        editBar: document.getElementById('cell-edit-bar'),
+        editInput: document.getElementById('cell-edit-input'),
+        btnEditOk: document.getElementById('cell-edit-ok'),
+        btnEditCancel: document.getElementById('cell-edit-cancel')
     };
 
     let startData = null;
     let currentData = null;
     let lastCalculated = null;
+    let _isFirstKey = false;
+
+    // --- Editor Bar Logic ---
+    const openEditor = () => {
+        ui.editInput.value = ui.display_real_dist.textContent;
+        ui.editInput.classList.add('selected-highlight');
+        _isFirstKey = true;
+        ui.editBar.classList.add('open');
+    };
+
+    const closeEditor = () => {
+        ui.editBar.classList.remove('open');
+    };
+
+    window.pressKey = (key) => {
+        if (key === 'back') {
+            ui.editInput.value = ui.editInput.value.slice(0, -1);
+            _isFirstKey = false;
+        } else if (key === 'clear') {
+            ui.editInput.value = '0';
+            _isFirstKey = true;
+        } else {
+            if (_isFirstKey) {
+                ui.editInput.value = key;
+                _isFirstKey = false;
+            } else {
+                ui.editInput.value += key;
+            }
+        }
+        ui.editInput.classList.remove('selected-highlight');
+    };
+
+    ui.display_real_dist.addEventListener('click', openEditor);
+    ui.btnEditCancel.addEventListener('click', closeEditor);
+    ui.btnEditOk.addEventListener('click', () => {
+        const val = parseFloat(ui.editInput.value) || 0;
+        ui.display_real_dist.textContent = val.toFixed(3);
+        ui.input_real_dist.value = val;
+        closeEditor();
+    });
 
     const loadHistory = async () => {
         try {
             const resp = await fetch('/api/calibraciones');
             const data = await resp.json();
-            ui.history_body.innerHTML = data.reverse().map(cal => `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 10px;">${cal.timestamp.split(' ')[0]}</td>
-                    <td style="padding: 10px;">${cal.real_dist_km.toFixed(3)}</td>
-                    <td style="padding: 10px;">${cal.pulses_km_1.toFixed(1)}</td>
-                    <td style="padding: 10px;">${cal.rally_factor.toFixed(4)}</td>
-                    <td style="padding: 10px;">
-                        <button onclick="window.applyCal(${cal.id})" style="padding: 4px 8px; font-size: 0.7rem;">USAR</button>
-                    </td>
-                </tr>
-            `).join('');
+            if (ui.history_body) {
+                ui.history_body.innerHTML = data.reverse().map(cal => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px;">${cal.timestamp.split(' ')[0]}</td>
+                        <td style="padding: 10px;">${cal.real_dist_km.toFixed(3)}</td>
+                        <td style="padding: 10px;">${cal.pulses_km_1.toFixed(1)}</td>
+                        <td style="padding: 10px;">${cal.rally_factor.toFixed(4)}</td>
+                        <td style="padding: 10px;">
+                            <button onclick="window.applyCal(${cal.id})" style="padding: 4px 8px; font-size: 0.7rem; background: var(--accent-blue); color: white; border: none; border-radius: 4px;">USAR</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
             
-            // Hacer la función global para el onclick
             window.applyCal = async (id) => {
                 const cal = data.find(c => c.id === id);
                 if (cal) {
@@ -74,16 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const deltaP1 = data.pulses_1 - startData.pulses_1;
         const deltaP2 = data.pulses_2 - startData.pulses_2;
 
-        ui.dist_gps.textContent = deltaGPS.toFixed(3) + ' km';
-        ui.dist_rally.textContent = deltaRally.toFixed(3) + ' km';
-        ui.pulses_1.textContent = deltaP1;
-        ui.pulses_2.textContent = deltaP2;
+        if(ui.dist_gps) ui.dist_gps.textContent = deltaGPS.toFixed(3) + ' km';
+        if(ui.dist_rally) ui.dist_rally.textContent = deltaRally.toFixed(3) + ' km';
+        if(ui.pulses_1) ui.pulses_1.textContent = deltaP1;
+        if(ui.pulses_2) ui.pulses_2.textContent = deltaP2;
     });
 
     ui.btn_reset.addEventListener('click', () => {
         startData = JSON.parse(JSON.stringify(currentData));
         ui.results_box.classList.remove('visible');
-        ui.input_real_dist.value = '';
+        ui.input_real_dist.value = '0';
+        ui.display_real_dist.textContent = '0.000';
     });
 
     ui.btn_calculate.addEventListener('click', () => {
@@ -99,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         lastCalculated = {
             real_dist_km: realDistKm,
-            rally_factor: deltaGPS / realDistKm,
+            rally_factor: deltaGPS > 0 ? (realDistKm / deltaGPS) : 1.0,
             pulses_km_1: deltaP1 / realDistKm,
             pulses_km_2: deltaP2 / realDistKm
         };
@@ -107,14 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.results_container.innerHTML = `
             <div class="result-item">
                 <span class="result-label">Sensor 1 (Pulsos/km)</span>
-                <span class="result-value">${lastCalculated.pulses_km_1.toFixed(2)}</span>
+                <span class="result-value">${lastCalculated.pulses_km_1.toFixed(1)}</span>
             </div>
             <div class="result-item">
                 <span class="result-label">Sensor 2 (Pulsos/km)</span>
-                <span class="result-value">${lastCalculated.pulses_km_2.toFixed(2)}</span>
+                <span class="result-value">${lastCalculated.pulses_km_2.toFixed(1)}</span>
             </div>
         `;
-
         ui.res_rally_factor.textContent = lastCalculated.rally_factor.toFixed(4);
         ui.results_box.classList.add('visible');
     });
@@ -127,9 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(lastCalculated)
             });
-            alert('Calibración guardada en historial');
+            alert('Calibración guardada');
             loadHistory();
-        } catch (e) { alert('Error al guardar'); }
+        } catch (e) { alert('Error guardando'); }
     });
 
     loadHistory();
