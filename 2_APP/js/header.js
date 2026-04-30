@@ -23,10 +23,13 @@ export function initHeader(currentPage) {
         { id: 'test',       label: 'Test',        url: 'test.html' }
     ];
 
-    const APP_VERSION = '1.0.7';
+    const APP_VERSION = '1.0.8';
 
     headerContainer.innerHTML = `
         <header class="unified-header">
+            <a href="index.html" class="header-logo-link" onclick="window.navigateSPA('index.html'); return false;">
+                <img src="icon.svg" alt="L" class="header-logo-img">
+            </a>
             <nav class="main-nav">
                 ${navLinks.map(link => `
                     <a href="#" onclick="window.navigateSPA('${link.url}'); return false;" 
