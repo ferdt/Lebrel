@@ -11,80 +11,153 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="css/style.css?v=3">
     <style>
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stage-info {
-            display: flex;
-            gap: 20px;
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-        }
-
         .grid-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        /* 1. Sugerencia de conducción */
+        .card-instruction {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #val_instruccion {
+            font-size: clamp(1.0rem, 10vw, 7rem);
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        /* 2. Intervalo y Velocidad */
+        .row-interval-speed {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 12px;
+        }
+
+        .card-interval,
+        .card-speed {
+            padding: 10px 10px;
+            border-radius: 10px;
+        }
+
+        #val_diferencia_ideal {
+            font-size: clamp(3rem, 12vw, 4.5rem);
+        }
+
+        #val_velocidad_actual {
+            font-size: clamp(3rem, 12vw, 4.5rem);
+            color: var(--text-primary);
+        }
+
+        /* 3. Odómetro */
+        .card-odo-total {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            border-color: rgba(59, 130, 246, 0.3);
+            padding: 25px 15px;
+            border-radius: 10px;
+        }
+
+        /* 4. Odómetro Parcial y Media Reset */
+        .row-partial-reset {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto auto;
-            gap: 10px;
-            width: 100%;
+            gap: 12px;
         }
 
-        /* Modifiers for specific cards */
-        .card-delta {
-            grid-column: 1 / 2;
+        .row-partial-reset .card {
+            padding: 15px 10px;
+            border-radius: 10px;
         }
 
-        .card-odo {
-            grid-column: 2 / 3;
-        }
-
-        .card-time {
-            grid-column: 1 / 2;
-        }
-
-        .card-speed {
-            grid-column: 2 / 3;
-        }
-
-        .card-media {
-            grid-column: 1 / -1;
+        /* 5. Cambio de Media */
+        .card-next-media {
             display: flex;
-            flex-direction: row;
-            justify-content: space-between;
+            flex-direction: row !important;
+            justify-content: space-between !important;
             align-items: center;
+            padding: 20px 25px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .media-info-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .media-info-group.right {
+            align-items: flex-end;
         }
 
         .sub-value {
-            font-size: clamp(1rem, 4vmin, 1.5rem);
+            font-size: clamp(1rem, 4vw, 1.8rem);
             color: var(--text-secondary);
+            opacity: 0.7;
         }
 
-        @media (max-width: 768px) {
+        .label-small {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+
+        #btn-reset-parcial {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-red);
+            border-radius: 12px;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        #btn-reset-parcial:active {
+            background: rgba(239, 68, 68, 0.2);
+            transform: scale(0.98);
+        }
+
+        @media (min-width: 769px) {
             .grid-dashboard {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                max-width: 800px;
+                margin: 0 auto;
             }
 
-            .card-delta,
-            .card-odo,
-            .card-time,
-            .card-speed,
-            .card-media {
-                grid-column: 1 / -1;
+            .card-instruction {
+                grid-column: span 2;
             }
 
-            .card-media {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
+            .row-interval-speed {
+                grid-column: span 2;
+            }
+
+            .card-odo-total {
+                grid-column: span 2;
+            }
+
+            .row-partial-reset {
+                grid-column: span 2;
+            }
+
+            .card-next-media {
+                grid-column: span 2;
             }
         }
     </style>
@@ -95,51 +168,65 @@
         <div id="header-container"></div>
 
         <main class="grid-dashboard">
-            <!-- 1. Delta y Odómetro (Principal) -->
-                <div class="card" style="grid-column: span 2; background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.05); justify-content: center;">
-                    <div id="val_instruccion" style="font-size: 5rem; font-weight: 900; letter-spacing: 5px; text-align: center;">--</div>
-                </div>
+            <!-- 1. Sugerencia de conducción -->
+            <div class="card card-instruction">
+                <div id="val_instruccion">--</div>
+            </div>
 
-                <div class="card">
-                    <h4>Intervalo</h4>
+            <!-- 2. Intervalo y velocidad -->
+            <div class="row-interval-speed">
+                <div class="card card-interval">
+                    <div class="label-small">Intervalo</div>
                     <div id="val_diferencia_ideal" class="value positive">+0.0</div>
                 </div>
-
-            <div class="card metric-large card-odo">
-                <h3>Odómetro Total</h3>
-                <div id="val_distancia" class="value">0.00 km</div>
-            </div>
-
-            <!-- 2. Tiempo Tramo y Velocidades -->
-            <div class="card card-time">
-                <h3>Tiempo Tramo</h3>
-                <div id="val_tiempo_tramo" class="value">00:00:00.0</div>
-            </div>
-
-            <div class="card card-speed">
-                <h3>Velocidad (Act / Obj)</h3>
-                <div style="display:flex; align-items:baseline; gap:10px;">
+                <div class="card card-speed">
+                    <div class="label-small">Velocidad</div>
                     <div id="val_velocidad_actual" class="value">0.0</div>
-                    <div class="sub-value">/ <span id="val_velocidad_objetivo">0.0</span> km/h</div>
-                </div>
-            </div>
-
-            <!-- 3. Próxima Media -->
-            <div class="card card-media">
-                <div>
-                    <h3>Próximo Cambio de Media</h3>
-                    <div style="display:flex; align-items:baseline; gap: 10px;">
-                        <div id="val_proxima_media" class="value positive">0.0 km/h</div>
+                    <div id="val_velocidad_objetivo" class="sub-value" style="font-weight: 600; margin-top: 2px;">0.0
                     </div>
                 </div>
-                <div>
-                    <h3>Distancia hasta cambio</h3>
-                    <div id="val_distancia_cambio" class="value">-- km</div>
+            </div>
+
+            <!-- 3. Odómetro -->
+            <div class="card card-odo-total">
+                <div class="label-small">Odómetro Total</div>
+                <div id="val_distancia" class="value" style="font-size: clamp(3.5rem, 12vw, 5rem);">0.000</div>
+            </div>
+
+            <!-- 4. Odómetro parcial y velocidad media desde reset -->
+            <div class="row-partial-reset">
+                <div class="card">
+                    <div class="label-small">Parcial</div>
+                    <div id="val_odo_parcial" class="value" style="font-size: 2.2rem;">0.000</div>
+                </div>
+                <div class="card">
+                    <div class="label-small">Media Reset</div>
+                    <div id="val_media_reset" class="value" style="font-size: 2.2rem;">0.0</div>
                 </div>
             </div>
 
+            <!-- 5. Cambio de media -->
+            <div class="card card-next-media">
+                <div class="media-info-group">
+                    <div class="label-small">Próxima Media</div>
+                    <div id="val_proxima_media" class="value" style="font-size: 2rem; color: var(--accent-blue);">0.0
+                    </div>
+                </div>
+                <div class="media-info-group right">
+                    <div class="label-small">Distancia Cambio</div>
+                    <div id="val_distancia_cambio" class="value" style="font-size: 2rem;">--</div>
+                </div>
+            </div>
+
+            <!-- Botón de Reset Odo Parcial (Flotante o discreto) -->
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="btn-reset-parcial"
+                    style="flex: 1; padding: 15px; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); border-color: var(--accent-red); color: var(--accent-red);">RESET
+                    PARCIAL</button>
+            </div>
         </main>
     </div>
+
 
     <!-- Cargar JS como module -->
     <script type="module" src="js/app_piloto.js?v=3"></script>

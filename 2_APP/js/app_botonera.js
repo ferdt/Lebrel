@@ -1,6 +1,12 @@
-import { initFullscreen } from './fullscreen.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
+import { initHeader } from './header.js';
+import { initFullscreen } from './fullscreen.js';
+
+initHeader('botonera');
+initRouter();
+initRotation();
+initFullscreen();
 
 let socket = null;
 const host = window.location.host || 'localhost:8000';
@@ -16,13 +22,13 @@ function connect() {
     socket = new WebSocket(`ws://${host}/ws`);
     
     socket.onopen = () => {
-        statusInd.textContent = "ONLINE";
-        statusInd.className = "status connected";
+        statusInd.className = "status-dot connected";
+        statusInd.title = "Conectado";
     };
 
     socket.onclose = () => {
-        statusInd.textContent = "OFFLINE";
-        statusInd.className = "status disconnected";
+        statusInd.className = "status-dot disconnected";
+        statusInd.title = "Desconectado";
         setTimeout(connect, 2000);
     };
 
@@ -60,9 +66,6 @@ if (btnOcr) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    initRouter();
-    initFullscreen();
-    initRotation();
     connect();
 });
 

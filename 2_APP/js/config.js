@@ -1,46 +1,49 @@
 import { initFullscreen } from './fullscreen.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
+import { initHeader } from './header.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    initRouter();
-    initFullscreen();
-    initRotation();
-    const btnSave = document.getElementById('btn-save');
-    const msg = document.getElementById('save-msg');
+initHeader('config');
+initRouter();
+initFullscreen();
+initRotation();
 
-    const inputOdo = document.getElementById('odometer_source');
-    const inputWheel = document.getElementById('wheel_perimeter_m');
-    const inputNeutral = document.getElementById('neutral_interval_s');
-    const inputTheme = document.getElementById('theme');
-    const inputFont = document.getElementById('font_size_offset');
-    const valHora = document.getElementById('val_hora');
+const btnSave = document.getElementById('btn-save');
+const msg = document.getElementById('save-msg');
 
-    setInterval(() => {
-        if(valHora) {
-            const now = new Date();
-            valHora.textContent = now.toLocaleTimeString('es-ES', { hour12: false });
-        }
-    }, 1000);
+const inputOdo = document.getElementById('odometer_source');
+const inputWheel = document.getElementById('wheel_perimeter_m');
+const inputNeutral = document.getElementById('neutral_interval_s');
+const inputTheme = document.getElementById('theme');
+const inputFont = document.getElementById('font_size_offset');
+const valHora = document.getElementById('val_hora');
 
-    const API_URL = window.location.origin + '/api/settings';
-
-    // Cargar config
-    try {
-        const res = await fetch(API_URL);
-        if (res.ok) {
-            const data = await res.json();
-            if(inputOdo) inputOdo.value = data.odometer_source || 'test';
-            if(inputWheel) inputWheel.value = data.wheel_perimeter_m || 1.95;
-            if(inputNeutral) inputNeutral.value = data.neutral_interval_s || 0.1;
-            if(inputTheme) inputTheme.value = data.theme || 'dark';
-            if(inputFont) inputFont.value = data.font_size_offset || 0;
-        }
-    } catch (e) {
-        console.error("No se pudo cargar la configuración:", e);
+setInterval(() => {
+    if (valHora) {
+        const now = new Date();
+        valHora.textContent = now.toLocaleTimeString('es-ES', { hour12: false });
     }
+}, 1000);
 
-    // Guardar config
+const API_URL = window.location.origin + '/api/settings';
+
+// Cargar config
+try {
+    const res = await fetch(API_URL);
+    if (res.ok) {
+        const data = await res.json();
+        if (inputOdo) inputOdo.value = data.odometer_source || 'test';
+        if (inputWheel) inputWheel.value = data.wheel_perimeter_m || 1.95;
+        if (inputNeutral) inputNeutral.value = data.neutral_interval_s || 0.1;
+        if (inputTheme) inputTheme.value = data.theme || 'dark';
+        if (inputFont) inputFont.value = data.font_size_offset || 0;
+    }
+} catch (e) {
+    console.error("No se pudo cargar la configuración:", e);
+}
+
+// Guardar config
+if (btnSave) {
     btnSave.addEventListener('click', async () => {
         const payload = {
             odometer_source: inputOdo ? inputOdo.value : 'test',
@@ -70,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (e) {
             console.error("Error detallado al guardar:", e);
-            alert("Error al guardar: " + e.message + "\n\nEste error suele ocurrir si el servidor no está respondiendo o si hay un problema con la red.");
+            alert("Error al guardar: " + e.message);
         }
     });
-});
+}

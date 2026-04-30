@@ -34,11 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     client.onStatusChange((isConnected) => {
         if (isConnected) {
-            statusIndicator.textContent = 'Conectado';
-            statusIndicator.className = 'status connected';
+            statusIndicator.className = 'status-dot connected';
+            statusIndicator.title = 'Conectado';
         } else {
-            statusIndicator.textContent = 'Desconectado';
-            statusIndicator.className = 'status disconnected';
+            statusIndicator.className = 'status-dot disconnected';
+            statusIndicator.title = 'Desconectado';
         }
     });
 

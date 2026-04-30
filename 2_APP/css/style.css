@@ -70,16 +70,29 @@ header h1 {
     transition: all 0.3s ease;
 }
 
-.status.disconnected {
-    background-color: rgba(239, 68, 68, 0.2);
-    color: var(--accent-red);
-    border: 1px solid var(--accent-red);
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.status.connected {
-    background-color: rgba(34, 197, 94, 0.2);
-    color: var(--accent-green);
-    border: 1px solid var(--accent-green);
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.status-dot.disconnected {
+    background-color: var(--accent-red);
+    box-shadow: 0 0 8px var(--accent-red);
+}
+
+.status-dot.connected {
+    background-color: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green);
 }
 
 /* Dashboard Layout */
@@ -458,7 +471,7 @@ body.rotate-270 {
 .modal-box {
     background: #1e293b;
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
+    border-radius: 10px;
     padding: 24px;
     width: min(400px, 90vw);
     display: flex;
