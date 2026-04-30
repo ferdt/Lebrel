@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=5">
     <style>
         .split-layout {
             display: grid;
@@ -234,11 +234,11 @@
     </div>
 
     <!-- Cargar JS como module -->
-    <script type="module" src="js/app_copiloto.js?v=4"></script>
+    <script type="module" src="js/app_copiloto.js?v=5"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Fail:', err));
+                navigator.serviceWorker.register('sw.js?v=5').catch(err => console.log('SW Fail:', err));
             });
         }
     </script>

@@ -6,7 +6,14 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-    e.waitUntil(clients.claim());
+    // Borrar cachés antiguas para forzar actualización
+    e.waitUntil(
+        caches.keys().then((keyList) => {
+            return Promise.all(keyList.map((key) => {
+                return caches.delete(key);
+            }));
+        }).then(() => clients.claim())
+    );
 });
 
 self.addEventListener('fetch', (e) => {
