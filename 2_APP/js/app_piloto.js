@@ -6,11 +6,17 @@ import { initRotation } from './rotation.js';
 import { initHeader } from './header.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    initHeader('piloto');
-    initRouter();
-    initFullscreen();
-    initWakeLock();
-    initRotation();
+    console.log('App Piloto: DOM Cargado');
+    try {
+        initHeader('piloto');
+        console.log('App Piloto: Header inicializado');
+        initRouter();
+        initFullscreen();
+        initWakeLock();
+        initRotation();
+    } catch (e) {
+        console.error('Error durante la inicialización:', e);
+    }
     const statusIndicator = document.getElementById('status-indicator');
     
     const ui = {

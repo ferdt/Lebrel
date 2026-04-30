@@ -78,13 +78,17 @@ app.add_middleware(
 # --- PERSISTENCIA ---
 SETTINGS_FILE = "settings.json"
 TRAMOS_FILE = "tramos.json"
+CALIBRACIONES_FILE = "calibraciones.json"
 
 default_settings = {
     "wheel_perimeter_m": 1.95,
     "theme": "dark",
     "font_size_offset": 0,
     "neutral_interval_s": 0.1,
-    "odometer_source": "test"
+    "odometer_source": "test",
+    "rally_factor": 1.0,
+    "pulses_km_1": 1540,
+    "pulses_km_2": 1520
 }
 
 def load_tramos():
@@ -96,6 +100,16 @@ def load_tramos():
 def save_tramos(t):
     with open(TRAMOS_FILE, "w") as f:
         json.dump(t, f, indent=2)
+
+def load_calibraciones():
+    if os.path.exists(CALIBRACIONES_FILE):
+        with open(CALIBRACIONES_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_calibraciones(c):
+    with open(CALIBRACIONES_FILE, "w") as f:
+        json.dump(c, f, indent=2)
 
 def load_settings():
     if os.path.exists(SETTINGS_FILE):
@@ -150,6 +164,28 @@ async def get_settings():
 async def update_settings(request: Request):
     new_settings = await request.json()
     save_settings(new_settings)
+    return {"status": "ok"}
+
+@app.get("/api/calibraciones")
+async def get_calibraciones():
+    return load_calibraciones()
+
+@app.post("/api/calibraciones")
+async def post_calibracion(data: dict):
+    calibraciones = load_calibraciones()
+    data["id"] = int(time.time())
+    data["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    calibraciones.append(data)
+    save_calibraciones(calibraciones)
+    return data
+
+@app.post("/api/calibraciones/apply")
+async def apply_calibracion(data: dict):
+    settings = load_settings()
+    settings["rally_factor"] = data.get("rally_factor", 1.0)
+    settings["pulses_km_1"] = data.get("pulses_km_1", 1540)
+    settings["pulses_km_2"] = data.get("pulses_km_2", 1520)
+    save_settings(settings)
     return {"status": "ok"}
 
 @app.get("/api/tramos")
@@ -328,13 +364,27 @@ async def hardware_loop():
             tramo_manager.set_active_tramo({"segmentos": segmentos})
 
         # 2. Calcular Distancia y Tiempo elapsado real
+        settings = load_settings()
+        rally_factor = settings.get("rally_factor", 1.0)
+        p_km_1 = settings.get("pulses_km_1", 1540)
+        
         if odo_source == "test":
             test_dist_m += (test_speed_kmh / 3.6) * 0.1
-            dist_m = test_dist_m
-            velocidad_kmh = test_speed_kmh
+            # Mocks para calibración (datos brutos)
+            dist_gps_m = test_dist_m * 0.998
+            pulses_1 = int(test_dist_m * 1.54)
+            pulses_2 = int(test_dist_m * 1.52)
+            
+            # Aplicar calibración para obtener la distancia del rally
+            # Si usamos GPS como base:
+            dist_m = dist_gps_m * rally_factor
         else:
-            dist_m += 1.0  # Simulación hardware real
+            # Simulación hardware real
+            dist_m += 1.0  
             velocidad_kmh = 36.0
+            dist_gps_m = dist_m / rally_factor
+            pulses_1 = int(dist_m * (p_km_1 / 1000))
+            pulses_2 = int(dist_m * 1.53)
 
         # El tiempo elapsado ahora es dinámico respecto a la salida
         start_seconds = tramo_manager.parse_time_to_seconds(hora_inicio_str)
@@ -346,6 +396,11 @@ async def hardware_loop():
         telemetry = {
             "tramo_nombre": tramo_nombre,
             "distancia_m": dist_m,
+            "dist_gps_m": dist_gps_m,
+            "pulses_1": pulses_1,
+            "pulses_2": pulses_2,
+            "rally_factor": rally_factor,
+            "pulses_km_1": p_km_1,
             "tiempo_tramo_s": tiempo_tramo_s,
             "velocidad_kmh": velocidad_kmh,
             "velocidad_objetivo_kmh": seg_info["velocidad_obj"],

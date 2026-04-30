@@ -3,8 +3,12 @@
  * Centraliza la navegación y los controles comunes.
  */
 export function initHeader(currentPage) {
+    console.log('Iniciando Header para:', currentPage);
     const headerContainer = document.getElementById('header-container');
-    if (!headerContainer) return;
+    if (!headerContainer) {
+        console.warn('No se encontró #header-container');
+        return;
+    }
 
     const navLinks = [
         { id: 'piloto',   label: 'Piloto',   url: 'piloto.html' },
@@ -12,10 +16,11 @@ export function initHeader(currentPage) {
     ];
 
     const moreLinks = [
-        { id: 'botonera', label: 'Botonera', url: 'botonera.html' },
-        { id: 'config',   label: 'Config',   url: 'config.html' },
-        { id: 'tramos',   label: 'Tramos',   url: 'tramos.html' },
-        { id: 'test',     label: 'Test',     url: 'test.html' }
+        { id: 'botonera',   label: 'Botonera',    url: 'botonera.html' },
+        { id: 'calibracion', label: 'Calibración', url: 'calibracion.html' },
+        { id: 'config',     label: 'Config',      url: 'config.html' },
+        { id: 'tramos',     label: 'Tramos',      url: 'tramos.html' },
+        { id: 'test',       label: 'Test',        url: 'test.html' }
     ];
 
     headerContainer.innerHTML = `
