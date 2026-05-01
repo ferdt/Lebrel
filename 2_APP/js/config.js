@@ -2,6 +2,6 @@
  * Configuración global de Lebrel
  */
 export const LEBREL_CONFIG = {
-    VERSION: '1.0.16',
-    CACHE_VERSION: '17'
+    VERSION: '1.0.18',
+    CACHE_VERSION: '19'
 };

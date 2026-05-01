@@ -47,11 +47,11 @@
        y="0"
        rx="102.4" />
     <circle
-       style="fill:#111629;fill-opacity:1;stroke:#3b7fee;stroke-width:12;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#111629;fill-opacity:1;stroke:#3b7fee;stroke-width:23.3584;stroke-dasharray:none;stroke-opacity:1"
        id="path41"
-       cx="256.00003"
-       cy="255.99998"
-       r="225.97523" />
+       cx="250"
+       cy="250"
+       r="213.3208" />
     <path
        id="path14"
        style="fill:#ffffff;fill-opacity:1;stroke-width:2.25766"

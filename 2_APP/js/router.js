@@ -7,7 +7,7 @@ import { LEBREL_CONFIG } from './config.js';
 export function initRouter() {
     window.navigateSPA = async function (url) {
         // Evitar recargar la misma página
-        const currentPage = window.location.pathname.split('/').pop() || 'piloto.html';
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         if (currentPage === url) return;
 
         try {
@@ -53,7 +53,7 @@ export function initRouter() {
 
     // Botón "atrás" del navegador
     window.addEventListener('popstate', () => {
-        const url = window.location.pathname.split('/').pop() || 'piloto.html';
+        const url = window.location.pathname.split('/').pop() || 'index.html';
         window.navigateSPA(url);
     });
 }

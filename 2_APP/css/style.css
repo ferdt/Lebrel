@@ -742,9 +742,15 @@ body.rotate-270 {
 }
 
 .header-logo-img {
-    height: 28px;
-    width: 28px;
-    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+    height: 32px;
+    width: 32px;
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) brightness(1.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-logo-link:hover .header-logo-img {
+    filter: drop-shadow(0 0 12px var(--accent-blue)) brightness(1.5);
+    transform: scale(1.08);
 }
 
 /* --- Welcome Page --- */

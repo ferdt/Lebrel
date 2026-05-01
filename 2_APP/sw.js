@@ -1,5 +1,5 @@
 // Service Worker básico para PWA Lebrel.
-const CACHE_NAME = 'lebrel-v17';
+const CACHE_NAME = 'lebrel-v19';
 // Usa Network-First para que los desarrolladores vean los cambios al instante.
 
 self.addEventListener('install', (e) => {
