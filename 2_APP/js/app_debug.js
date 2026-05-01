@@ -71,17 +71,42 @@ document.addEventListener('DOMContentLoaded', () => {
     function exportLog() {
         if (logData.length === 0) return;
 
-        const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
+        const headersSet = new Set();
+        logData.forEach(item => {
+            Object.keys(item).forEach(k => headersSet.add(k));
+        });
+        const headers = Array.from(headersSet);
+
+        const csvRows = [];
+        csvRows.push(headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','));
+
+        logData.forEach(item => {
+            const row = headers.map(h => {
+                let val = item[h];
+                if (val === undefined || val === null) {
+                    val = '';
+                } else if (typeof val === 'object') {
+                    val = JSON.stringify(val);
+                } else {
+                    val = String(val);
+                }
+                return `"${val.replace(/"/g, '""')}"`;
+            });
+            csvRows.push(row.join(','));
+        });
+
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `lebrel_debug_log_${Date.now()}.json`;
+        a.download = `lebrel_debug_log_${Date.now()}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
-        ui.logInfo.textContent = `Log exportado (${logData.length} registros).`;
+        ui.logInfo.textContent = `Log exportado (${logData.length} registros en CSV).`;
     }
 
     client.connect();
