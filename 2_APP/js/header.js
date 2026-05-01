@@ -26,7 +26,19 @@ export function initHeader(currentPage) {
     ];
 
     const APP_VERSION = LEBREL_CONFIG.VERSION;
-
+    const isMuted = localStorage.getItem('lebrel_mute_sounds') === 'true';
+    const muteIcon = isMuted ? `
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+    ` : `
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+    `;
 
     headerContainer.innerHTML = `
         <header class="unified-header">
@@ -58,6 +70,9 @@ export function initHeader(currentPage) {
 
             <div class="header-right">
                 <span style="font-size: 0.6rem; color: var(--text-secondary); opacity: 0.5; margin-right: 5px;">v${APP_VERSION}</span>
+                <button id="btn-mute" class="icon-btn" title="${isMuted ? 'Activar Sonidos' : 'Silenciar Sonidos'}">
+                    ${muteIcon}
+                </button>
                 <button id="btn-rotate" class="icon-btn" title="Girar Pantalla">
                     <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M23 4v6h-6"></path>
@@ -73,4 +88,13 @@ export function initHeader(currentPage) {
             </div>
         </header>
     `;
+
+    const btnMute = document.getElementById('btn-mute');
+    if (btnMute) {
+        btnMute.addEventListener('click', () => {
+            const currentMuted = localStorage.getItem('lebrel_mute_sounds') === 'true';
+            localStorage.setItem('lebrel_mute_sounds', currentMuted ? 'false' : 'true');
+            initHeader(currentPage);
+        });
+    }
 }
