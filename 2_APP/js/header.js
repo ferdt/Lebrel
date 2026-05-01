@@ -1,3 +1,4 @@
+import { LEBREL_CONFIG } from './config.js';
 /**
  * Componente de Cabecero Global para Lebrel
  * Centraliza la navegación y los controles comunes.
@@ -23,7 +24,7 @@ export function initHeader(currentPage) {
         { id: 'test',       label: 'Test',        url: 'test.html' }
     ];
 
-    const APP_VERSION = '1.0.12';
+    const APP_VERSION = LEBREL_CONFIG.VERSION;
 
 
     headerContainer.innerHTML = `

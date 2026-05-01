@@ -1,3 +1,4 @@
+import { LEBREL_CONFIG } from './config.js';
 /**
  * router.js — SPA router para Lebrel.
  * Expone window.navigateSPA(url) para cambiar de vista sin recargar la página
@@ -10,7 +11,7 @@ export function initRouter() {
         if (currentPage === url) return;
 
         try {
-            const response = await fetch(url);
+            const response = await fetch(url + '?v=' + LEBREL_CONFIG.CACHE_VERSION);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const text = await response.text();
 
@@ -38,7 +39,7 @@ export function initRouter() {
             const newScriptSrc = doc.querySelector('script[type="module"]')?.getAttribute('src');
             if (newScriptSrc) {
                 // Forzar recarga añadiendo timestamp (evita caché)
-                await import(newScriptSrc + '?t=' + Date.now());
+                await import(newScriptSrc.split('?')[0] + '?v=' + LEBREL_CONFIG.CACHE_VERSION);
             }
 
             // Avisar al resto de módulos que hemos navegado
