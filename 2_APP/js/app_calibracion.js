@@ -5,12 +5,11 @@ import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
 import { initHeader } from './header.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-    initRouter();
-    initHeader('calibracion');
-    initFullscreen();
-    initWakeLock();
-    initRotation();
+initRouter();
+initHeader('odometro');
+initFullscreen();
+initWakeLock();
+initRotation();
 
     const ui = {
         dist_gps: document.getElementById('val_dist_gps'),
@@ -178,6 +177,79 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { alert('Error guardando'); }
     });
 
+    const sourceButtons = {
+        sensor1: document.getElementById('btn-source-sensor1'),
+        sensor2: document.getElementById('btn-source-sensor2'),
+        gps: document.getElementById('btn-source-gps')
+    };
+
+    let currentSettings = {};
+
+    async function fetchSettings() {
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                currentSettings = await res.json();
+                updateSourceUI(currentSettings.odometer_source || 'sensor1');
+            }
+        } catch (err) {
+            console.error('Error fetching settings:', err);
+        }
+    }
+
+    function updateSourceUI(source) {
+        Object.keys(sourceButtons).forEach(k => {
+            const btn = sourceButtons[k];
+            if (btn) {
+                if (k === source) {
+                    btn.classList.add('active');
+                    btn.style.background = 'var(--accent-blue)';
+                    btn.style.borderColor = 'var(--accent-blue)';
+                    btn.style.fontWeight = 'bold';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.background = 'rgba(255, 255, 255, 0.03)';
+                    btn.style.borderColor = 'var(--glass-border)';
+                    btn.style.fontWeight = 'normal';
+                }
+            }
+        });
+    }
+
+    async function updateSource(source) {
+        currentSettings.odometer_source = source;
+        currentSettings.test_mode = false;
+        updateSourceUI(source);
+        try {
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(currentSettings)
+            });
+        } catch (err) {
+            console.error('Error updating odometer source:', err);
+        }
+    }
+
+    if (sourceButtons.sensor1) {
+        sourceButtons.sensor1.addEventListener('click', () => {
+            console.log('Switching to sensor1');
+            updateSource('sensor1');
+        });
+    }
+    if (sourceButtons.sensor2) {
+        sourceButtons.sensor2.addEventListener('click', () => {
+            console.log('Switching to sensor2');
+            updateSource('sensor2');
+        });
+    }
+    if (sourceButtons.gps) {
+        sourceButtons.gps.addEventListener('click', () => {
+            console.log('Switching to gps');
+            updateSource('gps');
+        });
+    }
+
+    fetchSettings();
     loadHistory();
     client.connect();
-});

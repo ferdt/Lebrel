@@ -7,5 +7,6 @@
 
 PENDIENTE:
 - Calcar tramo (Grabar recorrido para generar segmentos)
+- Ayudas sonoras al piloto
 - Optimización de consumo de CPU en hardware_loop
 - Modo Nocturno Automático (por hora)

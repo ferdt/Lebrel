@@ -27,6 +27,13 @@ except Exception as e:
     rapid_ocr_engine = None
     print(f"⚠️ Error al cargar RapidOCR: {e}", flush=True)
 
+# --- VARIABLES GLOBALES DE SIMULACIÓN (TEST) ---
+test_speed_kmh = 0.0
+test_pulses_1 = 0.0
+test_pulses_2 = 0.0
+test_dist_gps = 0.0
+test_dist_m = 0.0
+
 # --- UTILIDADES OCR ---
 def sort_boxes(dt_boxes, matched_texts, matched_scores):
     if dt_boxes is None or len(dt_boxes) == 0:
@@ -85,7 +92,8 @@ default_settings = {
     "theme": "dark",
     "font_size_offset": 0,
     "neutral_interval_s": 0.1,
-    "odometer_source": "test",
+    "test_mode": False,
+    "odometer_source": "sensor1",
     "rally_factor": 1.0,
     "pulses_km_1": 1540,
     "pulses_km_2": 1520,
@@ -260,6 +268,11 @@ async def set_test_speed(request: Request):
     global test_speed_kmh
     body = await request.json()
     test_speed_kmh = float(body.get("speed", 0.0))
+    
+    settings = load_settings()
+    settings["test_mode"] = True
+    save_settings(settings)
+    
     return {"status": "ok"}
 
 @app.post("/ocr")
@@ -363,8 +376,8 @@ async def hardware_loop():
         time_offset_s = settings.get("time_offset_s", 0.0)
         wall_time_s = now.hour * 3600 + now.minute * 60 + now.second + now.microsecond / 1_000_000 + time_offset_s
 
-        settings = load_settings()
-        odo_source = settings.get("odometer_source", "test")
+        test_mode = settings.get("test_mode", False)
+        odo_source = settings.get("odometer_source", "sensor1")
         
         segmentos = active_tramo["segmentos"] if active_tramo and active_tramo.get("segmentos") else tramo_mock
         tramo_nombre = active_tramo["nombre"] if active_tramo else "TC-DEMO"
@@ -377,9 +390,10 @@ async def hardware_loop():
         settings = load_settings()
         rally_factor = settings.get("rally_factor", 1.0)
         p_km_1 = settings.get("pulses_km_1", 1540)
+        p_km_2 = settings.get("pulses_km_2", 1520)
         
-        if odo_source == "test":
-            global test_pulses_1
+        if test_mode:
+            global test_pulses_1, test_pulses_2, test_dist_gps
             # 1. Calcular el tiempo elapsado real entre ciclos para una simulación ultra precisa
             current_test_time = time.time()
             elapsed_test_s = current_test_time - last_test_time
@@ -387,19 +401,20 @@ async def hardware_loop():
             
             delta_m = (test_speed_kmh / 3.6) * elapsed_test_s
             
-            # 2. Convertimos esa distancia a pulsos a la inversa usando la calibración actual (p_km_1)
-            delta_pulses = delta_m * (p_km_1 / 1000.0)
+            # 2. Convertimos esa distancia a pulsos de cada sensor y GPS según calibración
+            delta_p1 = delta_m * (p_km_1 / 1000.0)
+            delta_p2 = delta_m * (p_km_2 / 1000.0)
+            delta_gps = delta_m / rally_factor if rally_factor > 0 else delta_m
             
-            # 3. Sumamos el incremento al contador global de pulsos de prueba
-            test_pulses_1 += delta_pulses
+            test_pulses_1 += delta_p1
+            test_pulses_2 += delta_p2
+            test_dist_gps += delta_gps
             
-            # 4. Los pulsos de rueda son los acumulados
+            # 3. Guardamos los pulsos de rueda como enteros para telemetría
             pulses_1 = int(test_pulses_1)
-            pulses_2 = int(test_pulses_1 * 0.99)
-            
-            # 5. La distancia del rally se obtiene de los pulsos a la inversa
-            dist_m = test_pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else test_pulses_1 / 1.54
-            dist_gps_m = dist_m * 0.998
+            pulses_2 = int(test_pulses_2)
+            dist_m = test_dist_gps
+
             velocidad_kmh = test_speed_kmh
         else:
             last_test_time = time.time()
@@ -409,6 +424,17 @@ async def hardware_loop():
             dist_gps_m = dist_m / rally_factor
             pulses_1 = int(dist_m * (p_km_1 / 1000))
             pulses_2 = int(dist_m * 1.53)
+
+        # 4. La distancia del rally depende de la fuente seleccionada en Odómetro
+        if odo_source == "sensor2":
+            dist_m = test_pulses_2 / (p_km_2 / 1000.0) if p_km_2 > 0 else test_pulses_2 / 1.52
+            dist_gps_m = test_dist_gps
+        elif odo_source == "gps":
+            dist_m = test_dist_gps * rally_factor
+            dist_gps_m = test_dist_gps
+        else: # default a sensor1
+            dist_m = test_pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else test_pulses_1 / 1.54
+            dist_gps_m = test_dist_gps
 
         # El tiempo elapsado ahora es dinámico respecto a la salida
         start_seconds = tramo_manager.parse_time_to_seconds(hora_inicio_str)

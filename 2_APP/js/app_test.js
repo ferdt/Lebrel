@@ -42,6 +42,9 @@ if (speedSlider) {
         if (speedVal) speedVal.textContent = speed;
         updateRemoteSpeed(speed);
     });
+    updateRemoteSpeed(parseFloat(speedSlider.value));
+} else {
+    updateRemoteSpeed(0);
 }
 
 async function updateRemoteSpeed(speed) {

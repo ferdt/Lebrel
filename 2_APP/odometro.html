@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lebrel - Odómetro</title>
+    <link rel="stylesheet" href="css/style.css?v=20">
+    <style>
+        .calibration-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .source-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+        }
+
+        .source-info h4 {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .source-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .input-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--accent-blue);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            padding: 15px;
+            font-size: 2rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .results-box {
+            display: none;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .results-box.visible {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+        }
+
+        .result-value {
+            font-weight: bold;
+            color: var(--accent-green);
+        }
+
+        @media (min-width: 768px) {
+            .calibration-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .btn-source.active {
+            background: var(--accent-blue) !important;
+            border-color: var(--accent-blue) !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <div class="glass-container">
+        <div id="header-container"></div>
+
+        <main class="calibration-grid">
+            <!-- Selector de Fuente del Odómetro -->
+            <div class="source-card" style="grid-column: 1 / -1; flex-direction: column; align-items: stretch; gap: 10px;">
+                <h4 style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Fuente del Odómetro</h4>
+                <div class="odo-source-buttons" style="display: flex; gap: 10px;">
+                    <button id="btn-source-sensor1" class="btn-source" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: white; cursor: pointer;">Sensor 1</button>
+                    <button id="btn-source-sensor2" class="btn-source" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: white; cursor: pointer;">Sensor 2</button>
+                    <button id="btn-source-gps" class="btn-source" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: white; cursor: pointer;">GPS</button>
+                </div>
+            </div>
+
+            <!-- Fuentes de datos -->
+            <div class="source-card" style="grid-column: 1 / -1; border-color: var(--accent-blue);">
+                <div class="source-info">
+                    <h4>Distancia GPS (Referencia)</h4>
+                    <div id="val_dist_gps" class="source-value">0.000 km</div>
+                </div>
+                <div class="source-info" style="text-align: right;">
+                    <h4>Distancia Rally (Teórica)</h4>
+                    <div id="val_dist_rally" class="source-value">0.000 km</div>
+                </div>
+            </div>
+
+            <div class="source-card">
+                <div class="source-info">
+                    <h4>Pulsos Sensor 1</h4>
+                    <div id="val_pulses_1" class="source-value">0</div>
+                </div>
+            </div>
+
+            <div class="source-card">
+                <div class="source-info">
+                    <h4>Pulsos Sensor 2</h4>
+                    <div id="val_pulses_2" class="source-value">0</div>
+                </div>
+            </div>
+
+            <!-- Entrada de Distancia Conocida -->
+            <div class="input-box" style="grid-column: 1 / -1;">
+                <div class="input-group">
+                    <label>Distancia según hitos/roadbook (km)</label>
+                    <div id="display_real_dist" class="edit-input-large" style="cursor: pointer; background: rgba(255,255,255,0.05); margin-top: 10px;">0.000</div>
+                    <input type="hidden" id="input_real_dist" value="0">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="btn-reset-cal"
+                        style="flex: 1; background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border-color: var(--accent-red);">RESET</button>
+                    <button id="btn-calculate-cal"
+                        style="flex: 2; background: rgba(34, 197, 94, 0.1); color: var(--accent-green); border-color: var(--accent-green);">CALCULAR
+                        RATIOS</button>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            <div id="results_box" class="results-box" style="grid-column: 1 / -1;">
+                <h3 style="margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">Ratios Calculados</h3>
+                <div id="results_container">
+                    <!-- Dinámico -->
+                </div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div class="result-item">
+                        <span class="result-label">Factor Calibracion Rally (GPS vs Real)</span>
+                        <span id="res_rally_factor" class="result-value">--</span>
+                    </div>
+                </div>
+                <button id="btn-save-cal" style="width: 100%; margin-top: 15px; background: var(--accent-blue);">GUARDAR
+                    EN HISTORIAL</button>
+            </div>
+
+            <!-- Historial -->
+            <div class="card" style="grid-column: 1 / -1; margin-top: 20px;">
+                <h3 style="margin-bottom: 15px;">Historial de Calibraciones</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead style="border-bottom: 1px solid var(--glass-border); text-align: left;">
+                            <tr>
+                                <th style="padding: 10px;">Fecha</th>
+                                <th style="padding: 10px;">Dist. Real</th>
+                                <th style="padding: 10px;">P/km S1</th>
+                                <th style="padding: 10px;">Factor GPS</th>
+                                <th style="padding: 10px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cal_history_body">
+                            <!-- Dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Barra de edición HOMOGENEIZADA -->
+    <div id="cell-edit-bar" class="cell-edit-bar">
+        <div class="edit-container-full">
+            <div class="edit-left">
+                <span>Distancia Real (km):</span>
+                <input type="text" id="cell-edit-input" class="edit-input-large" readonly>
+                <div class="edit-actions-main">
+                    <button id="cell-edit-cancel" class="btn-cancel">CANCELAR</button>
+                    <button id="cell-edit-ok" class="btn-ok">✓ CONFIRMAR</button>
+                </div>
+            </div>
+            <div class="edit-keypad">
+                <button class="btn-key" onclick="pressKey('7')">7</button>
+                <button class="btn-key" onclick="pressKey('8')">8</button>
+                <button class="btn-key" onclick="pressKey('9')">9</button>
+                <button class="btn-key action" onclick="pressKey('back')">⌫</button>
+
+                <button class="btn-key" onclick="pressKey('4')">4</button>
+                <button class="btn-key" onclick="pressKey('5')">5</button>
+                <button class="btn-key" onclick="pressKey('6')">6</button>
+                <button class="btn-key special" onclick="pressKey('clear')">C</button>
+
+                <button class="btn-key" onclick="pressKey('1')">1</button>
+                <button class="btn-key" onclick="pressKey('2')">2</button>
+                <button class="btn-key" onclick="pressKey('3')">3</button>
+                <button class="btn-key special" onclick="pressKey('.')">.</button>
+
+                <button class="btn-key zero-wide" onclick="pressKey('0')" style="grid-column: span 4;">0</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app_calibracion.js?v=20"></script>
+</body>
+
+</html>
