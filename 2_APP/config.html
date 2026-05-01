@@ -60,6 +60,49 @@
                     <input type="number" step="0.01" id="neutral_interval_s" value="0.10">
                 </div>
 
+                <h3 style="width:100%; margin-top:20px;">Control PID (Sugerencia de Conducción)</h3>
+                
+                <div class="form-group" style="width:100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="pid_weight">Peso del Coche (kg)</label>
+                        <input type="number" id="pid_weight" value="1000">
+                    </div>
+                    <div>
+                        <label for="pid_power">Potencia del Coche (cv)</label>
+                        <input type="number" id="pid_power" value="100">
+                    </div>
+                </div>
+
+                <div class="form-group" style="width:100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="pid_accel_max">Acel. Máxima (G)</label>
+                        <input type="number" step="0.01" id="pid_accel_max" value="0.54">
+                    </div>
+                    <div>
+                        <label for="pid_decel_max">Decel. Máxima (G)</label>
+                        <input type="number" step="0.01" id="pid_decel_max" value="0.50">
+                    </div>
+                </div>
+
+                <div class="form-group" style="width:100%;">
+                    <button id="btn-pid-autotune" style="width:100%; background: rgba(59, 130, 246, 0.2); border-color: var(--accent-blue); color: var(--accent-blue);">Calibrar PID Automáticamente</button>
+                </div>
+
+                <div class="form-group" style="width:100%; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="pid_kp">Kp</label>
+                        <input type="number" step="0.001" id="pid_kp" value="0.500">
+                    </div>
+                    <div>
+                        <label for="pid_ki">Ki</label>
+                        <input type="number" step="0.001" id="pid_ki" value="0.050">
+                    </div>
+                    <div>
+                        <label for="pid_kd">Kd</label>
+                        <input type="number" step="0.001" id="pid_kd" value="0.100">
+                    </div>
+                </div>
+
                 <h3 style="width:100%; margin-top:20px;">Apariencia</h3>
                 <div class="form-group" style="width:100%;">
                     <label for="theme">Tema</label>

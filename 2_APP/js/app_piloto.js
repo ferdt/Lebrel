@@ -139,6 +139,55 @@ function updatePartialUI() {
 }
 
 const wsHost = window.location.host || 'localhost:8000';
+
+let pidSettings = { kp: 0.5, ki: 0.05, kd: 0.1 };
+async function loadPIDSettings() {
+    try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+            const settings = await res.json();
+            pidSettings.kp = settings.pid_kp !== undefined ? parseFloat(settings.pid_kp) : 0.500;
+            pidSettings.ki = settings.pid_ki !== undefined ? parseFloat(settings.pid_ki) : 0.050;
+            pidSettings.kd = settings.pid_kd !== undefined ? parseFloat(settings.pid_kd) : 0.100;
+        }
+    } catch (e) {
+        console.error('Error loading PID settings:', e);
+    }
+}
+loadPIDSettings();
+
+let prevError = 0;
+let errorIntegral = 0;
+let lastTime = 0;
+
+function computePID(diff) {
+    const error = diff;
+    const now = Date.now();
+    const dt = lastTime === 0 ? 0 : (now - lastTime) / 1000;
+    lastTime = now;
+
+    if (dt > 0) {
+        const derivative = (error - prevError) / dt;
+        
+        // Clamping anti-windup:
+        let trialOutput = pidSettings.kp * error + pidSettings.ki * errorIntegral + pidSettings.kd * derivative;
+        const isSaturated = trialOutput >= 1 || trialOutput <= -1;
+        const sameSign = Math.sign(trialOutput) === Math.sign(error);
+        
+        if (!isSaturated || !sameSign) {
+            errorIntegral += error * dt;
+        }
+        
+        errorIntegral = Math.max(-2, Math.min(2, errorIntegral));
+        prevError = error;
+
+        let output = pidSettings.kp * error + pidSettings.ki * errorIntegral + pidSettings.kd * derivative;
+        output = Math.max(-1, Math.min(1, output));
+        return output;
+    }
+    prevError = error;
+    return 0;
+}
 const client = new TelemetryClient(`ws://${wsHost}/ws/telemetry`);
 
 client.onStatusChange((isConnected) => {
@@ -166,9 +215,28 @@ client.onMessage((data) => {
         const diff = data.diferencia_ideal_s;
         const threshold = 0.1; // Umbral para OK
         
-        // 1. Actualizar cifra
-        ui.diferencia_ideal.textContent = (diff > 0 ? '+' : '') + diff.toFixed(1);
+        // 1. Actualizar cifra con centésimas en menor tamaño y weight
+        const diffStr = (diff > 0 ? '+' : '') + diff.toFixed(2);
+        const mainPart = diffStr.substring(0, diffStr.length - 1);
+        const hundredthPart = diffStr.substring(diffStr.length - 1);
+        ui.diferencia_ideal.innerHTML = `${mainPart}<span style="font-size: 0.6em; opacity: 0.7; font-weight: 300;">${hundredthPart}</span>`;
         ui.diferencia_ideal.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
+        
+        // Actualizar barra horizontal PID
+        const pidOutput = computePID(diff);
+        const barLeft = document.getElementById('pid-bar-left');
+        const barRight = document.getElementById('pid-bar-right');
+        if (barLeft && barRight) {
+            if (pidOutput > 0) {
+                // Acelerar (verde hacia la derecha)
+                barRight.style.width = (pidOutput * 50) + '%';
+                barLeft.style.width = '0%';
+            } else {
+                // Frenar (rojo hacia la izquierda)
+                barLeft.style.width = (Math.abs(pidOutput) * 50) + '%';
+                barRight.style.width = '0%';
+            }
+        }
         
         // 2. Actualizar Instrucción Gigante
         if (ui.instruccion) {

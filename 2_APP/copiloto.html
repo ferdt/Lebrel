@@ -101,22 +101,22 @@
                 <!-- Botonera Integrada -->
                 <div class="botonera-mini-grid">
                     <button class="btn-mini plus" id="btn-odo-plus">
-                        <span>+10m</span>
+                        <span>+10 m</span>
                     </button>
                     <button class="btn-mini minus" id="btn-odo-minus">
-                        <span>-10m</span>
+                        <span>-10 m</span>
                     </button>
                     <button class="btn-mini plus" id="btn-odo-plus1">
-                        <span>+1m</span>
+                        <span>+1 m</span>
                     </button>
                     <button class="btn-mini minus" id="btn-odo-minus1">
-                        <span>-1m</span>
+                        <span>-1 m</span>
                     </button>
                     <button class="btn-mini action" id="btn-milestone">
                         <span>HITOS</span>
                     </button>
                     <button class="btn-mini action" id="btn-ocr">
-                        <span>OCR</span>
+                        <span>TABLAS</span>
                     </button>
                 </div>
 
@@ -156,43 +156,44 @@
         </main>
 
         <!-- Ajuste de Odómetro (Recalibración) como BARRA INFERIOR -->
-    <!-- Ajuste de Odómetro (Recalibración) como BARRA INFERIOR -->
-    <div id="modal-recalibrar" class="cell-edit-bar">
-        <div class="edit-container-full">
-            <!-- 1. IZQUIERDA: Ajuste e Info -->
-            <div class="edit-left">
-                <span id="recal-label">Ajuste Roadbook</span>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin:0;">
-                    Captura: <span id="snap-dist-val" style="color: var(--accent-blue); font-weight: 800;">0.000</span> km
-                </p>
-                <input type="text" id="input-roadbook" class="edit-input-large" readonly>
-                <div class="edit-actions-main">
-                    <button id="btn-recal-cancel" class="btn-cancel">CANCELAR</button>
-                    <button id="btn-recal-ok" class="btn-ok">APLICAR</button>
+        <!-- Ajuste de Odómetro (Recalibración) como BARRA INFERIOR -->
+        <div id="modal-recalibrar" class="cell-edit-bar">
+            <div class="edit-container-full">
+                <!-- 1. IZQUIERDA: Ajuste e Info -->
+                <div class="edit-left">
+                    <span id="recal-label">Ajuste Roadbook</span>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin:0;">
+                        Captura: <span id="snap-dist-val"
+                            style="color: var(--accent-blue); font-weight: 800;">0.000</span> km
+                    </p>
+                    <input type="text" id="input-roadbook" class="edit-input-large" readonly>
+                    <div class="edit-actions-main">
+                        <button id="btn-recal-cancel" class="btn-cancel">CANCELAR</button>
+                        <button id="btn-recal-ok" class="btn-ok">APLICAR</button>
+                    </div>
+                </div>
+
+                <!-- 2. DERECHA: Teclado Numérico -->
+                <div class="edit-keypad">
+                    <button class="btn-key" onclick="pressKeyOdo('7')">7</button>
+                    <button class="btn-key" onclick="pressKeyOdo('8')">8</button>
+                    <button class="btn-key" onclick="pressKeyOdo('9')">9</button>
+                    <button class="btn-key action" onclick="pressKeyOdo('back')">⌫</button>
+
+                    <button class="btn-key" onclick="pressKeyOdo('4')">4</button>
+                    <button class="btn-key" onclick="pressKeyOdo('5')">5</button>
+                    <button class="btn-key" onclick="pressKeyOdo('6')">6</button>
+                    <button class="btn-key special" onclick="adjustOdoVal('zero')">C</button>
+
+                    <button class="btn-key" onclick="pressKeyOdo('1')">1</button>
+                    <button class="btn-key" onclick="pressKeyOdo('2')">2</button>
+                    <button class="btn-key" onclick="pressKeyOdo('3')">3</button>
+                    <button class="btn-key special" onclick="pressKeyOdo('.')">.</button>
+
+                    <button class="btn-key zero-wide" onclick="pressKeyOdo('0')" style="grid-column: span 4;">0</button>
                 </div>
             </div>
-
-            <!-- 2. DERECHA: Teclado Numérico -->
-            <div class="edit-keypad">
-                <button class="btn-key" onclick="pressKeyOdo('7')">7</button>
-                <button class="btn-key" onclick="pressKeyOdo('8')">8</button>
-                <button class="btn-key" onclick="pressKeyOdo('9')">9</button>
-                <button class="btn-key action" onclick="pressKeyOdo('back')">⌫</button>
-
-                <button class="btn-key" onclick="pressKeyOdo('4')">4</button>
-                <button class="btn-key" onclick="pressKeyOdo('5')">5</button>
-                <button class="btn-key" onclick="pressKeyOdo('6')">6</button>
-                <button class="btn-key special" onclick="adjustOdoVal('zero')">C</button>
-
-                <button class="btn-key" onclick="pressKeyOdo('1')">1</button>
-                <button class="btn-key" onclick="pressKeyOdo('2')">2</button>
-                <button class="btn-key" onclick="pressKeyOdo('3')">3</button>
-                <button class="btn-key special" onclick="pressKeyOdo('.')">.</button>
-
-                <button class="btn-key zero-wide" onclick="pressKeyOdo('0')" style="grid-column: span 4;">0</button>
-            </div>
         </div>
-    </div>
     </div>
 
     <!-- Barra de edición rápida con TECLADO NUMÉRICO integrado -->

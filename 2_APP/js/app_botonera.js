@@ -1,3 +1,4 @@
+import { TelemetryClient } from './telemetry.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
 import { initHeader } from './header.js';
@@ -8,53 +9,50 @@ initRouter();
 initRotation();
 initFullscreen();
 
-let socket = null;
 const host = window.location.host || 'localhost:8000';
+const client = new TelemetryClient(`ws://${host}/ws/telemetry`);
 
-const valDist     = document.getElementById('val_distancia');
-const valHora     = document.getElementById('val_hora');
-const valTramo    = document.getElementById('val_tramo_nombre');
-const statusInd   = document.getElementById('status-indicator');
+const valDist      = document.getElementById('val_distancia');
+const valHora      = document.getElementById('val_hora');
+const valTramo     = document.getElementById('val_tramo_nombre');
+const statusInd    = document.getElementById('status-indicator');
 const btnMilestone = document.getElementById('btn-milestone');
 const btnOcr       = document.getElementById('btn-ocr');
 
-function connect() {
-    socket = new WebSocket(`ws://${host}/ws`);
-    
-    socket.onopen = () => {
-        statusInd.className = "status-dot connected";
-        statusInd.title = "Conectado";
-    };
+client.onStatusChange((isConnected) => {
+    if (statusInd) {
+        if (isConnected) {
+            statusInd.className = "status-dot connected";
+            statusInd.title = "Conectado";
+        } else {
+            statusInd.className = "status-dot disconnected";
+            statusInd.title = "Desconectado";
+        }
+    }
+});
 
-    socket.onclose = () => {
-        statusInd.className = "status-dot disconnected";
-        statusInd.title = "Desconectado";
-        setTimeout(connect, 2000);
-    };
-
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        
-        if (valDist)  valDist.textContent  = (data.distancia_m / 1000).toFixed(3) + " km";
-        if (valHora)  valHora.textContent  = data.hora;
-        if (valTramo) valTramo.textContent = data.tramo_nombre || "TC-0: SIN TRAMO";
-    };
-}
+client.onMessage((data) => {
+    if (valDist && data.distancia_m !== undefined) {
+        valDist.textContent = (data.distancia_m / 1000).toFixed(3) + " km";
+    }
+    if (valHora && data.system_time) {
+        valHora.textContent = data.system_time;
+    }
+    if (valTramo && data.tramo_nombre) {
+        valTramo.textContent = data.tramo_nombre;
+    }
+});
 
 window.adjustDist = function(meters) {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(`DIST_ADJUST:${meters}`);
-    }
+    client.sendCommand(`DIST_ADJUST:${meters}`);
 };
 
 if (btnMilestone) {
     btnMilestone.addEventListener('click', () => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send("MILESTONE");
-            // Visual feedback
-            btnMilestone.style.background = "rgba(59, 130, 246, 0.3)";
-            setTimeout(() => btnMilestone.style.background = "", 200);
-        }
+        client.sendCommand("MILESTONE");
+        // Visual feedback
+        btnMilestone.style.background = "rgba(59, 130, 246, 0.3)";
+        setTimeout(() => btnMilestone.style.background = "", 200);
     });
 }
 
@@ -65,9 +63,7 @@ if (btnOcr) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    connect();
-});
+client.connect();
 
 window.addEventListener('spa-navigated', () => {
     initFullscreen();

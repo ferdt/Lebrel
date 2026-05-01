@@ -135,7 +135,10 @@ header h1 {
     letter-spacing: 2px;
 }
 
-.value, .mono, [id^="val_"], .cronometro {
+.value,
+.mono,
+[id^="val_"],
+.cronometro {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-size: clamp(2rem, 8vmin, 3.5rem);
     font-weight: 700;
@@ -216,6 +219,20 @@ button.danger:hover {
     padding-bottom: 8px;
     margin-bottom: 10px;
     width: 100%;
+}
+
+.unified-header .stage-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.unified-header .stage-info span {
+    font-size: 1.1rem !important;
+    font-family: var(--font-main);
+    font-weight: 500;
 }
 
 /* --- Nav & Dropdown --- */
@@ -798,12 +815,14 @@ body.rotate-270 {
 
 .welcome-container h1 {
     font-size: 3rem;
-    font-weight: 900;
+    font-weight: 500;
     margin-bottom: 5px;
     background: linear-gradient(to right, #fff, #94a3b8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    letter-spacing: -1px;
+    font-family: 'Michroma', sans-serif;
+    letter-spacing: 10px;
+    font-stretch: expanded;
 }
 
 .welcome-container .subtitle {
@@ -868,6 +887,40 @@ body.rotate-270 {
 }
 
 @media (max-width: 600px) {
+    .unified-header {
+        flex-wrap: wrap;
+        row-gap: 4px;
+        padding-bottom: 4px;
+        margin-bottom: 6px;
+    }
+    
+    .unified-header .header-logo-link {
+        order: 1;
+    }
+
+    .unified-header .main-nav {
+        order: 2;
+    }
+
+    .unified-header .header-right {
+        order: 3;
+        margin-left: auto;
+    }
+
+    .unified-header .stage-info {
+        order: 4;
+        flex-basis: 100%;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+        padding: 4px 0;
+        margin-top: 2px;
+    }
+
+    .unified-header .stage-info span {
+        font-size: 0.95rem !important;
+    }
+
     .links-grid {
         grid-template-columns: repeat(2, 1fr);
     }

@@ -31,7 +31,7 @@
         }
 
         #val_instruccion {
-            font-size: clamp(1.0rem, 10vw, 7rem);
+            font-size: clamp(0.5rem, 7vw, 7rem);
             font-weight: 900;
             letter-spacing: 2px;
             text-align: center;
@@ -52,11 +52,11 @@
         }
 
         #val_diferencia_ideal {
-            font-size: clamp(3rem, 12vw, 4.5rem);
+            font-size: clamp(3rem, 12vw, 5rem);
         }
 
         #val_velocidad_actual {
-            font-size: clamp(3rem, 12vw, 4.5rem);
+            font-size: clamp(3rem, 12vw, 4rem);
             color: var(--text-primary);
         }
 
@@ -168,9 +168,15 @@
         <div id="header-container"></div>
 
         <main class="grid-dashboard">
-            <!-- 1. Sugerencia de conducción -->
             <div class="card card-instruction">
                 <div id="val_instruccion">--</div>
+            </div>
+
+            <!-- PID Control Bar -->
+            <div class="pid-container" style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 8px; height: 16px; position: relative; overflow: hidden; width: 100%; margin-top: -6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center;">
+                <div id="pid-bar-center" style="position: absolute; left: 50%; width: 2px; height: 100%; background: var(--text-secondary); opacity: 0.5; z-index: 2;"></div>
+                <div id="pid-bar-left" style="position: absolute; right: 50%; height: 100%; background: var(--accent-red); width: 0%; z-index: 1; transition: width 0.1s ease;"></div>
+                <div id="pid-bar-right" style="position: absolute; left: 50%; height: 100%; background: var(--accent-green); width: 0%; z-index: 1; transition: width 0.1s ease;"></div>
             </div>
 
             <!-- 2. Intervalo y velocidad -->
@@ -181,8 +187,8 @@
                 </div>
                 <div class="card card-speed">
                     <div class="label-small">Velocidad</div>
-                    <div class="value"><span id="val_velocidad_actual">0.0</span> / <span id="val_velocidad_objetivo"
-                            style="color:var(--text-secondary); font-size:clamp(0.9rem, 4vmin, 1.2rem);">0.0</span>
+                    <div class="value"><span id="val_velocidad_actual">0.0</span> <span id="val_velocidad_objetivo"
+                            style="color:var(--text-secondary); font-size:clamp(1.5rem, 4vmin, 2rem);">0.0</span>
                     </div>
                 </div>
             </div>
@@ -196,12 +202,12 @@
             <!-- 4. Odómetro parcial y velocidad media desde reset -->
             <div class="row-partial-reset">
                 <div class="card">
-                    <div class="label-small">Parcial</div>
-                    <div id="val_odo_parcial" class="value" style="font-size: 2.2rem;">0.000</div>
-                </div>
-                <div class="card">
                     <div class="label-small">Media Reset</div>
                     <div id="val_media_reset" class="value" style="font-size: 2.2rem;">0.0</div>
+                </div>
+                <div class="card">
+                    <div class="label-small">Parcial</div>
+                    <div id="val_odo_parcial" class="value" style="font-size: 2.2rem;">0.000</div>
                 </div>
             </div>
 
