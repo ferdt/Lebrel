@@ -160,8 +160,9 @@ let prevError = 0;
 let errorIntegral = 0;
 let lastTime = 0;
 
-function computePID(diff) {
-    const error = diff;
+function computePID(diff, targetSpeedKmh) {
+    const targetSpeedMps = (targetSpeedKmh || 50) / 3.6;
+    const error = diff * targetSpeedMps;
     const now = Date.now();
     const dt = lastTime === 0 ? 0 : (now - lastTime) / 1000;
     lastTime = now;
@@ -223,7 +224,7 @@ client.onMessage((data) => {
         ui.diferencia_ideal.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
         
         // Actualizar barra horizontal PID
-        const pidOutput = computePID(diff);
+        const pidOutput = computePID(diff, data.velocidad_objetivo_kmh || 50);
         const barLeft = document.getElementById('pid-bar-left');
         const barRight = document.getElementById('pid-bar-right');
         if (barLeft && barRight) {
