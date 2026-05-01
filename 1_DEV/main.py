@@ -150,6 +150,7 @@ manager = ConnectionManager()
 active_tramo: dict | None = None
 test_speed_kmh = 0.0
 test_dist_m = 0.0
+test_pulses_1 = 0.0
 
 # --- ENDPOINTS API ---
 
@@ -303,13 +304,14 @@ async def process_ocr(request: Request):
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
-    global test_dist_m
+    global test_dist_m, test_pulses_1
     await manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
             if data == "ODO_RESET":
                 test_dist_m = 0.0
+                test_pulses_1 = 0.0
                 rally_logger.log_event("RECALIBRACION_RESET")
             elif data == "MILESTONE":
                 rally_logger.log_event("HITO_MANUAL")
@@ -317,6 +319,9 @@ async def websocket_telemetry(websocket: WebSocket):
                 try:
                     delta = float(data.split(":")[1])
                     test_dist_m += delta
+                    settings = load_settings()
+                    p_km_1 = settings.get("pulses_km_1", 1540)
+                    test_pulses_1 += delta * (p_km_1 / 1000)
                     rally_logger.log_event(f"AJUSTE_DISTANCIA:{delta}")
                 except:
                     pass
@@ -348,6 +353,8 @@ async def hardware_loop():
     dist_m = 0.0
     tiempo_tramo_s = 0.0
     tramo_mock = [{"inicio_m": 0, "fin_m": 12000, "media_kmh": 45.0}]
+    import time
+    last_test_time = time.time()
 
     while True:
         # 1. Obtener Hora Actual del Sistema (segundos desde medianoche)
@@ -372,17 +379,30 @@ async def hardware_loop():
         p_km_1 = settings.get("pulses_km_1", 1540)
         
         if odo_source == "test":
-            test_dist_m += (test_speed_kmh / 3.6) * 0.1
-            velocidad_kmh = test_speed_kmh
-            # Mocks para calibración (datos brutos)
-            dist_gps_m = test_dist_m * 0.998
-            pulses_1 = int(test_dist_m * 1.54)
-            pulses_2 = int(test_dist_m * 1.52)
+            global test_pulses_1
+            # 1. Calcular el tiempo elapsado real entre ciclos para una simulación ultra precisa
+            current_test_time = time.time()
+            elapsed_test_s = current_test_time - last_test_time
+            last_test_time = current_test_time
             
-            # Aplicar calibración para obtener la distancia del rally
-            # Si usamos GPS como base:
-            dist_m = dist_gps_m * rally_factor
+            delta_m = (test_speed_kmh / 3.6) * elapsed_test_s
+            
+            # 2. Convertimos esa distancia a pulsos a la inversa usando la calibración actual (p_km_1)
+            delta_pulses = delta_m * (p_km_1 / 1000.0)
+            
+            # 3. Sumamos el incremento al contador global de pulsos de prueba
+            test_pulses_1 += delta_pulses
+            
+            # 4. Los pulsos de rueda son los acumulados
+            pulses_1 = int(test_pulses_1)
+            pulses_2 = int(test_pulses_1 * 0.99)
+            
+            # 5. La distancia del rally se obtiene de los pulsos a la inversa
+            dist_m = test_pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else test_pulses_1 / 1.54
+            dist_gps_m = dist_m * 0.998
+            velocidad_kmh = test_speed_kmh
         else:
+            last_test_time = time.time()
             # Simulación hardware real
             dist_m += 1.0  
             velocidad_kmh = 36.0
