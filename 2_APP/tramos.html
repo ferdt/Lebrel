@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="css/style.css?v=19">
+    <link rel="stylesheet" href="css/style.css?v=20">
     <style>
         /* ---- Two-panel layout ---- */
         .tramos-layout {
@@ -21,7 +21,10 @@
         }
 
         @media (max-width: 768px) {
-            .tramos-layout { grid-template-columns: 1fr; height: auto; }
+            .tramos-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
         }
 
         /* ---- LEFT: Tramos list ---- */
@@ -33,7 +36,7 @@
         }
 
         .panel-card {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             overflow: hidden;
@@ -74,7 +77,9 @@
             flex-shrink: 0;
         }
 
-        .btn-icon-green:hover { background: rgba(34, 197, 94, 0.35); }
+        .btn-icon-green:hover {
+            background: rgba(34, 197, 94, 0.35);
+        }
 
         .btn-icon-blue {
             background: rgba(59, 130, 246, 0.15);
@@ -92,7 +97,9 @@
             flex-shrink: 0;
         }
 
-        .btn-icon-blue:hover { background: rgba(59, 130, 246, 0.35); }
+        .btn-icon-blue:hover {
+            background: rgba(59, 130, 246, 0.35);
+        }
 
         .btn-icon-red {
             background: rgba(239, 68, 68, 0.15);
@@ -110,7 +117,9 @@
             flex-shrink: 0;
         }
 
-        .btn-icon-red:hover { background: rgba(239, 68, 68, 0.35); }
+        .btn-icon-red:hover {
+            background: rgba(239, 68, 68, 0.35);
+        }
 
         .tramos-list {
             overflow-y: auto;
@@ -130,10 +139,12 @@
             border: 1px solid transparent;
             cursor: pointer;
             transition: all 0.15s;
-            background: rgba(255,255,255,0.02);
+            background: rgba(255, 255, 255, 0.02);
         }
 
-        .tramo-item:hover { background: rgba(255,255,255,0.06); }
+        .tramo-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
 
         .tramo-item.selected {
             background: rgba(59, 130, 246, 0.12);
@@ -200,7 +211,7 @@
 
         /* ---- Tramo info card ---- */
         .tramo-info-card {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             padding: 14px 16px;
@@ -240,7 +251,7 @@
         }
 
         .tramo-info-value.editable:hover {
-            background: rgba(59,130,246,0.12);
+            background: rgba(59, 130, 246, 0.12);
         }
 
         /* ---- Add segment button (below table) ---- */
@@ -258,8 +269,14 @@
             letter-spacing: 0.5px;
         }
 
-        .btn-add-seg-row:hover  { background: rgba(34, 197, 94, 0.2); border-style: solid; }
-        .btn-add-seg-row:active { transform: scale(0.98); }
+        .btn-add-seg-row:hover {
+            background: rgba(34, 197, 94, 0.2);
+            border-style: solid;
+        }
+
+        .btn-add-seg-row:active {
+            transform: scale(0.98);
+        }
 
         /* Action bar */
         .action-bar {
@@ -281,7 +298,9 @@
             transition: all 0.2s;
         }
 
-        .btn-save:hover { background: rgba(34, 197, 94, 0.3); }
+        .btn-save:hover {
+            background: rgba(34, 197, 94, 0.3);
+        }
 
         .btn-clear-segs {
             background: rgba(239, 68, 68, 0.12);
@@ -295,7 +314,9 @@
             transition: all 0.2s;
         }
 
-        .btn-clear-segs:hover { background: rgba(239, 68, 68, 0.25); }
+        .btn-clear-segs:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
 
         .btn-launch {
             background: rgba(251, 191, 36, 0.15);
@@ -310,8 +331,13 @@
             white-space: nowrap;
         }
 
-        .btn-launch:hover { background: rgba(251, 191, 36, 0.3); }
-        .btn-launch:active { transform: scale(0.97); }
+        .btn-launch:hover {
+            background: rgba(251, 191, 36, 0.3);
+        }
+
+        .btn-launch:active {
+            transform: scale(0.97);
+        }
 
         .btn-launch.active-tramo {
             background: rgba(251, 191, 36, 0.25);
@@ -320,8 +346,15 @@
         }
 
         @keyframes pulse-launch {
-            0%, 100% { box-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
-            50%       { box-shadow: 0 0 18px rgba(251, 191, 36, 0.7); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 18px rgba(251, 191, 36, 0.7);
+            }
         }
 
         .tramo-item.active-tramo {
@@ -344,7 +377,7 @@
 
         /* Segments table */
         .seg-table-card {
-            background: rgba(255,255,255,0.02);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             overflow: hidden;
@@ -380,12 +413,19 @@
             border-radius: 20px;
         }
 
-        .seg-table-scroll { overflow-y: auto; flex: 1; }
+        .seg-table-scroll {
+            overflow-y: auto;
+            flex: 1;
+        }
 
-        .seg-table { width: 100%; border-collapse: collapse; font-size: clamp(0.78rem, 2.5vmin, 0.92rem); }
+        .seg-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: clamp(0.78rem, 2.5vmin, 0.92rem);
+        }
 
         .seg-table th {
-            background: rgba(0,0,0,0.25);
+            background: rgba(0, 0, 0, 0.25);
             padding: 9px 10px;
             color: var(--text-secondary);
             font-size: 0.75rem;
@@ -400,15 +440,20 @@
 
         .seg-table td {
             padding: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             font-variant-numeric: tabular-nums;
             text-align: center;
             vertical-align: middle;
         }
 
-        .seg-table tr:hover td { background: rgba(255,255,255,0.04); }
+        .seg-table tr:hover td {
+            background: rgba(255, 255, 255, 0.04);
+        }
 
-        .seg-num { color: var(--text-secondary); font-size: 0.78rem; }
+        .seg-num {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
 
         .media-badge {
             display: inline-block;
@@ -420,7 +465,10 @@
             border-radius: 6px;
         }
 
-        .hora-cell { color: var(--text-secondary); font-size: 0.82rem; }
+        .hora-cell {
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+        }
 
         /* Row action buttons */
         .row-actions {
@@ -430,7 +478,8 @@
             align-items: center;
         }
 
-        .btn-del-seg, .btn-ins-seg {
+        .btn-del-seg,
+        .btn-ins-seg {
             background: transparent;
             border: 1px solid transparent;
             padding: 3px 6px;
@@ -441,16 +490,22 @@
             line-height: 1;
         }
 
-        .btn-del-seg { color: var(--text-secondary); }
+        .btn-del-seg {
+            color: var(--text-secondary);
+        }
+
         .btn-del-seg:hover {
-            background: rgba(239,68,68,0.15);
+            background: rgba(239, 68, 68, 0.15);
             border-color: var(--accent-red);
             color: var(--accent-red);
         }
 
-        .btn-ins-seg { color: var(--text-secondary); }
+        .btn-ins-seg {
+            color: var(--text-secondary);
+        }
+
         .btn-ins-seg:hover {
-            background: rgba(34,197,94,0.15);
+            background: rgba(34, 197, 94, 0.15);
             border-color: var(--accent-green);
             color: var(--accent-green);
         }
@@ -475,12 +530,12 @@
             right: 0;
             z-index: 600;
             background: #1e293b;
-            border-top: 2px solid rgba(59,130,246,0.5);
+            border-top: 2px solid rgba(59, 130, 246, 0.5);
             padding: 12px 14px 16px;
             display: none;
             flex-direction: column;
             gap: 8px;
-            box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
             transform: translateY(100%);
             transition: transform 0.2s ease;
         }
@@ -505,8 +560,8 @@
 
         .cell-edit-input {
             flex: 1;
-            background: rgba(0,0,0,0.45);
-            border: 1.5px solid rgba(59,130,246,0.6);
+            background: rgba(0, 0, 0, 0.45);
+            border: 1.5px solid rgba(59, 130, 246, 0.6);
             border-radius: 10px;
             color: #fff;
             font-size: clamp(1.2rem, 5vmin, 1.6rem);
@@ -534,20 +589,24 @@
         }
 
         .cell-edit-ok {
-            background: rgba(34,197,94,0.2);
+            background: rgba(34, 197, 94, 0.2);
             border: 1.5px solid var(--accent-green);
             color: var(--accent-green);
         }
 
-        .cell-edit-ok:hover  { background: rgba(34,197,94,0.4); }
+        .cell-edit-ok:hover {
+            background: rgba(34, 197, 94, 0.4);
+        }
 
         .cell-edit-cancel {
-            background: rgba(239,68,68,0.12);
-            border: 1.5px solid rgba(239,68,68,0.4);
+            background: rgba(239, 68, 68, 0.12);
+            border: 1.5px solid rgba(239, 68, 68, 0.4);
             color: var(--accent-red);
         }
 
-        .cell-edit-cancel:hover { background: rgba(239,68,68,0.28); }
+        .cell-edit-cancel:hover {
+            background: rgba(239, 68, 68, 0.28);
+        }
 
         /* Empty / placeholder states */
         .empty-state {
@@ -570,7 +629,9 @@
             padding: 20px;
         }
 
-        .placeholder-state svg { opacity: 0.25; }
+        .placeholder-state svg {
+            opacity: 0.25;
+        }
 
         /* Status msg */
         .save-msg {
@@ -580,14 +641,23 @@
             display: none;
         }
 
-        .save-msg.ok { color: var(--accent-green); background: rgba(34,197,94,0.1); display: inline; }
-        .save-msg.err { color: var(--accent-red); background: rgba(239,68,68,0.1); display: inline; }
+        .save-msg.ok {
+            color: var(--accent-green);
+            background: rgba(34, 197, 94, 0.1);
+            display: inline;
+        }
+
+        .save-msg.err {
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+            display: inline;
+        }
 
         /* New-tramo modal */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(4px);
             display: none;
             align-items: center;
@@ -595,7 +665,9 @@
             z-index: 999;
         }
 
-        .modal-overlay.open { display: flex; }
+        .modal-overlay.open {
+            display: flex;
+        }
 
         .modal-box {
             background: #1e293b;
@@ -614,7 +686,12 @@
             font-weight: 700;
         }
 
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
 
         .btn-modal-cancel {
             background: transparent;
@@ -627,10 +704,12 @@
             transition: all 0.15s;
         }
 
-        .btn-modal-cancel:hover { background: rgba(255,255,255,0.06); }
+        .btn-modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
 
         .btn-modal-ok {
-            background: rgba(34,197,94,0.15);
+            background: rgba(34, 197, 94, 0.15);
             border: 1px solid var(--accent-green);
             color: var(--accent-green);
             padding: 9px 20px;
@@ -640,7 +719,9 @@
             transition: all 0.15s;
         }
 
-        .btn-modal-ok:hover { background: rgba(34,197,94,0.3); }
+        .btn-modal-ok:hover {
+            background: rgba(34, 197, 94, 0.3);
+        }
     </style>
 </head>
 
@@ -669,17 +750,17 @@
         <div id="header-container"></div>
 
         <main class="tramos-layout">
-            
+
             <!-- PANEL IZQUIERDO: Lista de Tramos -->
             <section class="tramos-panel">
                 <div class="panel-card" style="flex:1; min-height:0;">
                     <div class="panel-card-header">
-                        <h3>Tramos</h3>
                         <div style="display:flex; gap:5px;">
                             <button class="btn-icon-blue" id="btn-export" title="Exportar CSV">📤</button>
                             <button class="btn-icon-blue" id="btn-import-trigger" title="Importar CSV">📥</button>
                             <input type="file" id="import-file" accept=".csv" style="display:none;">
-                            <button class="btn-icon-red" id="btn-delete-all" title="Borrar todos los tramos">🗑️</button>
+                            <button class="btn-icon-red" id="btn-delete-all"
+                                title="Borrar todos los tramos">🗑️</button>
                             <button class="btn-icon-green" id="btn-nuevo-tramo" title="Nuevo tramo">+</button>
                         </div>
                     </div>
@@ -696,7 +777,8 @@
 
                 <!-- Placeholder cuando no hay tramo seleccionado -->
                 <div class="placeholder-state" id="placeholder-noselect">
-                    <svg viewBox="0 0 24 24" width="56" height="56" stroke="currentColor" stroke-width="1.5" fill="none">
+                    <svg viewBox="0 0 24 24" width="56" height="56" stroke="currentColor" stroke-width="1.5"
+                        fill="none">
                         <path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                         <path d="M15 17h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4"></path>
                         <line x1="12" y1="3" x2="12" y2="21"></line>
@@ -715,7 +797,8 @@
                         </div>
                         <div class="tramo-info-item">
                             <span class="tramo-info-label">Hora Inicio</span>
-                            <span class="tramo-info-value editable" id="info-hora-inicio" title="Tocar para editar">—</span>
+                            <span class="tramo-info-value editable" id="info-hora-inicio"
+                                title="Tocar para editar">—</span>
                         </div>
                         <div class="tramo-info-item">
                             <span class="tramo-info-label">Hora Fin</span>
@@ -734,7 +817,7 @@
                     <!-- Action bar -->
                     <div class="action-bar">
                         <button class="btn-launch" id="btn-launch">▶ Lanzar Tramo</button>
-                        <button class="btn-save"   id="btn-save">💾 Guardar</button>
+                        <button class="btn-save" id="btn-save">💾 Guardar</button>
                         <button class="btn-clear-segs" id="btn-clear-segs">🗑 Limpiar</button>
                         <span class="save-msg" id="save-status"></span>
                     </div>
@@ -778,21 +861,21 @@
     <div class="cell-edit-bar" id="cell-edit-bar">
         <span class="cell-edit-bar-label" id="cell-edit-label">Valor</span>
         <div class="cell-edit-row">
-            <input id="cell-edit-input" class="cell-edit-input" type="text"
-                   inputmode="decimal" autocomplete="off" autocorrect="off"
-                   autocapitalize="off" spellcheck="false">
-            <button class="cell-edit-btn cell-edit-ok"     id="cell-edit-ok">✓</button>
+            <input id="cell-edit-input" class="cell-edit-input" type="text" inputmode="decimal" autocomplete="off"
+                autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button class="cell-edit-btn cell-edit-ok" id="cell-edit-ok">✓</button>
             <button class="cell-edit-btn cell-edit-cancel" id="cell-edit-cancel">✗</button>
         </div>
     </div>
 
-    <script type="module" src="js/tramos.js?v=19"></script>
+    <script type="module" src="js/tramos.js?v=20"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(() => {});
+                navigator.serviceWorker.register('sw.js').catch(() => { });
             });
         }
     </script>
 </body>
+
 </html>

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lebrel - Sistema de Navegación de Rally</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css?v=19">
+    <link rel="stylesheet" href="css/style.css?v=20">
 </head>
 
 <body class="dark-theme">
@@ -65,9 +65,16 @@
                     </svg>
                     <span>Botones</span>
                 </div>
+                <div onclick="window.navigateSPA('sincronizacion.html')" class="welcome-card" style="border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.05);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>Sincro</span>
+                </div>
             </div>
 
-            <div class="version-tag">Lebrel Navigation System v1.0.15</div>
+            <div class="version-tag">Lebrel Navigation System v1.0.19</div>
         </div>
     </main>
 
@@ -77,7 +84,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=19').catch(err => console.log('SW Fail:', err));
+                navigator.serviceWorker.register('sw.js?v=20').catch(err => console.log('SW Fail:', err));
             });
         }
     </script>

@@ -88,7 +88,8 @@ default_settings = {
     "odometer_source": "test",
     "rally_factor": 1.0,
     "pulses_km_1": 1540,
-    "pulses_km_2": 1520
+    "pulses_km_2": 1520,
+    "time_offset_s": 0.0
 }
 
 def load_tramos():
@@ -351,7 +352,9 @@ async def hardware_loop():
     while True:
         # 1. Obtener Hora Actual del Sistema (segundos desde medianoche)
         now = datetime.now()
-        wall_time_s = now.hour * 3600 + now.minute * 60 + now.second + now.microsecond / 1_000_000
+        settings = load_settings()
+        time_offset_s = settings.get("time_offset_s", 0.0)
+        wall_time_s = now.hour * 3600 + now.minute * 60 + now.second + now.microsecond / 1_000_000 + time_offset_s
 
         settings = load_settings()
         odo_source = settings.get("odometer_source", "test")
@@ -413,7 +416,9 @@ async def hardware_loop():
             "tramo_tabla": segmentos,
             "segment_idx": seg_info["idx"],
             "hora_inicio_tramo": active_tramo.get("hora_inicio", "00:00:00.0") if active_tramo else "00:00:00.0",
-            "system_time": now.strftime("%H:%M:%S"),
+            "system_time": f"{int(wall_time_s // 3600) % 24:02d}:{int((wall_time_s % 3600) // 60):02d}:{int(wall_time_s % 60):02d}.{int((wall_time_s * 10) % 10):01d}",
+            "gps_time": now.strftime("%H:%M:%S.%f")[:-5],
+            "time_offset_s": time_offset_s,
             "tramo_id": active_tramo.get("id") if active_tramo else None
         }
         

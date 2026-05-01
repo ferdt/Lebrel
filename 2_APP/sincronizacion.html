@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lebrel - Sincronización del Reloj</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="css/style.css?v=20">
+    <style>
+        .sync-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 20px;
+            width: 100%;
+            padding: 10px;
+        }
+
+        .clock-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px 30px;
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        .rally-time-label {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .rally-time-val {
+            font-size: clamp(3.5rem, 12vw, 5.5rem);
+            font-weight: 900;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+            font-family: monospace;
+            background: linear-gradient(to bottom, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+            letter-spacing: -2px;
+        }
+
+        .gps-info-grid {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px 35px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 100%;
+            justify-content: space-around;
+        }
+
+        .info-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .info-col span:first-child {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-col span:last-child {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+            font-family: monospace;
+        }
+
+        .offset-val.positive {
+            color: var(--accent-blue) !important;
+        }
+        .offset-val.negative {
+            color: var(--accent-red) !important;
+        }
+
+        .sync-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn-sync {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1.5px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 18px 5px;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: monospace;
+        }
+
+        .btn-sync:hover {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: var(--accent-blue);
+            transform: scale(1.02);
+        }
+
+        .btn-sync:active {
+            transform: scale(0.96);
+        }
+
+        .btn-sync.minus {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .btn-sync.minus:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--accent-red);
+        }
+
+        .btn-sync.plus {
+            background: rgba(34, 197, 94, 0.08);
+            border-color: rgba(34, 197, 94, 0.2);
+            color: var(--accent-green);
+        }
+
+        .btn-sync.plus:hover {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: var(--accent-green);
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="glass-container">
+        <div id="header-container"></div>
+
+        <main class="sync-container">
+            <div class="clock-card">
+                <span class="rally-time-label">Hora Rally</span>
+                <span id="rally-time" class="rally-time-val">--:--:--.-</span>
+
+                <div class="gps-info-grid">
+                    <div class="info-col">
+                        <span>Hora GPS</span>
+                        <span id="gps-time">--:--:--.-</span>
+                    </div>
+                    <div class="info-col">
+                        <span>Diferencia</span>
+                        <span id="offset-time" class="offset-val">0.0 s</span>
+                    </div>
+                </div>
+
+                <div class="sync-buttons-grid">
+                    <button id="btn-sub-1" class="btn-sync minus">-1s</button>
+                    <button id="btn-sub-01" class="btn-sync minus">-0.1s</button>
+                    <button id="btn-add-01" class="btn-sync plus">+0.1s</button>
+                    <button id="btn-add-1" class="btn-sync plus">+1s</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="js/app_sincronizacion.js?v=20"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js?v=20').catch(err => console.log('SW Fail:', err));
+            });
+        }
+    </script>
+</body>
+</html>

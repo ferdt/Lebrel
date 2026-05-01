@@ -19,6 +19,7 @@ export function initHeader(currentPage) {
     const moreLinks = [
         { id: 'botonera',   label: 'Botonera',    url: 'botonera.html' },
         { id: 'calibracion', label: 'Calibración', url: 'calibracion.html' },
+        { id: 'sincronizacion', label: 'Sincro Reloj', url: 'sincronizacion.html' },
         { id: 'config',     label: 'Config',      url: 'config.html' },
         { id: 'tramos',     label: 'Tramos',      url: 'tramos.html' },
         { id: 'test',       label: 'Test',        url: 'test.html' }

@@ -2,7 +2,7 @@ import os
 import re
 
 # Versión actual
-VERSION = "19"
+VERSION = "20"
 
 def update_html_files():
     directory = "."
