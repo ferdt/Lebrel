@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="css/style.css?v=20">
+    <link rel="stylesheet" href="css/style.css?v=21">
     <style>
         .grid-dashboard {
             display: flex;
@@ -218,22 +218,27 @@
                 </div>
             </div>
 
-            <!-- Botón de Reset Odo Parcial (Flotante o discreto) -->
+            <!-- Ayudas sonoras y Botón de Reset Odo Parcial -->
             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="btn-sound-aids"
+                    style="flex: 1; padding: 15px; font-size: 0.9rem; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); border-radius: 8px; cursor: pointer;">
+                    AYUDA SONORA: <span id="val-sound-aids">ON</span>
+                </button>
                 <button id="btn-reset-parcial"
-                    style="flex: 1; padding: 15px; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); border-color: var(--accent-red); color: var(--accent-red);">RESET
-                    PARCIAL</button>
+                    style="flex: 1; padding: 15px; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); color: var(--accent-red); border-radius: 8px; cursor: pointer;">
+                    RESET PARCIAL
+                </button>
             </div>
         </main>
     </div>
 
 
     <!-- Cargar JS como module -->
-    <script type="module" src="js/app_piloto.js?v=20"></script>
+    <script type="module" src="js/app_piloto.js?v=21"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=20').catch(err => console.log('SW Fail:', err));
+                navigator.serviceWorker.register('sw.js?v=21').catch(err => console.log('SW Fail:', err));
             });
         }
     </script>

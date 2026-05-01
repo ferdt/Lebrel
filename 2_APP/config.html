@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lebrel - Configuración</title>
-    <link rel="stylesheet" href="css/style.css?v=20">
+    <link rel="stylesheet" href="css/style.css?v=21">
     <style>
         .form-group {
             margin-bottom: 20px;
@@ -36,9 +36,17 @@
                 <div class="form-group" style="width:100%;">
                     <label for="odometer_source">Fuente del Odómetro</label>
                     <select id="odometer_source">
-                        <option value="test">Simulador (Test Control)</option>
-                        <option value="wheel">Ruedas (Sensor Hardware)</option>
+                        <option value="sensor1">Sensor 1</option>
+                        <option value="sensor2">Sensor 2</option>
                         <option value="gps">GPS</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="width:100%;">
+                    <label for="driving_sound_aids">Ayudas Sonoras en Piloto</label>
+                    <select id="driving_sound_aids">
+                        <option value="true">Activadas</option>
+                        <option value="false">Desactivadas</option>
                     </select>
                 </div>
 
@@ -74,6 +82,6 @@
         </main>
     </div>
 
-    <script type="module" src="js/app_config.js?v=20"></script>
+    <script type="module" src="js/app_config.js?v=21"></script>
 </body>
 </html>

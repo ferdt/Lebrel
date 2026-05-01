@@ -135,7 +135,8 @@ header h1 {
     letter-spacing: 2px;
 }
 
-.value {
+.value, .mono, [id^="val_"], .cronometro {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-size: clamp(2rem, 8vmin, 3.5rem);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
