@@ -820,7 +820,7 @@ body.rotate-270 {
     background: linear-gradient(to right, #fff, #94a3b8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-family: 'Michroma', sans-serif;
+    font-family: 'Outfit', sans-serif;
     letter-spacing: 10px;
     font-stretch: expanded;
 }
@@ -898,7 +898,7 @@ body.rotate-270 {
         width: 100% !important;
         align-items: center !important;
     }
-    
+
     .unified-header .header-logo-link {
         grid-column: 1 !important;
         grid-row: 1 !important;
