@@ -77,7 +77,7 @@ app = FastAPI(title="Lebrel Backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -394,6 +394,20 @@ async def set_test_speed(request: Request):
     
     return {"status": "ok"}
 
+def run_ocr_sync(img):
+    result, elapse = rapid_ocr_engine(img)
+    detected_text = ""
+    if result:
+        boxes = [line[0] for line in result]
+        texts = [line[1] for line in result]
+        scores = [line[2] for line in result]
+        _, sorted_texts, _ = sort_boxes(boxes, texts, scores)
+        detected_text = "\n".join(sorted_texts)
+    
+    _, buffer = cv2.imencode('.jpg', img)
+    processed_image_b64 = base64.b64encode(buffer).decode('utf-8')
+    return detected_text, processed_image_b64
+
 @app.post("/ocr")
 async def process_ocr(request: Request):
     if not rapid_ocr_engine:
@@ -413,18 +427,10 @@ async def process_ocr(request: Request):
             return {"error": "Failed to decode image"}
 
         start_time = time.time()
-        result, elapse = rapid_ocr_engine(img)
         
-        detected_text = ""
-        if result:
-            boxes = [line[0] for line in result]
-            texts = [line[1] for line in result]
-            scores = [line[2] for line in result]
-            _, sorted_texts, _ = sort_boxes(boxes, texts, scores)
-            detected_text = "\n".join(sorted_texts)
-        
-        _, buffer = cv2.imencode('.jpg', img)
-        processed_image_b64 = base64.b64encode(buffer).decode('utf-8')
+        # Ejecutar en un hilo separado para que no bloquee el bucle principal de asyncio
+        loop = asyncio.get_event_loop()
+        detected_text, processed_image_b64 = await loop.run_in_executor(None, run_ocr_sync, img)
 
         return {
             'text': detected_text,
