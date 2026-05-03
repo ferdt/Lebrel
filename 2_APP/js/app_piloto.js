@@ -101,19 +101,20 @@ function playBeep(freq = 1000, duration = 0.1) {
 
 // Estado para el Odómetro Parcial y Media Reset
 let partialBaseDistM = 0;
-let partialBaseTime = Date.now();
+let partialBaseTime = 0;
 let currentDistM = 0;
+let currentWallTimeS = 0;
 
 // Recuperar estado previo de localStorage si existe
 const savedBaseDist = localStorage.getItem('lebrel_partial_base_dist');
 const savedBaseTime = localStorage.getItem('lebrel_partial_base_time');
 if (savedBaseDist !== null) partialBaseDistM = parseFloat(savedBaseDist);
-if (savedBaseTime !== null) partialBaseTime = parseInt(savedBaseTime);
+if (savedBaseTime !== null) partialBaseTime = parseFloat(savedBaseTime);
 
 if (ui.btn_reset_parcial) {
     ui.btn_reset_parcial.addEventListener('click', () => {
         partialBaseDistM = currentDistM;
-        partialBaseTime = Date.now();
+        partialBaseTime = currentWallTimeS;
         localStorage.setItem('lebrel_partial_base_dist', partialBaseDistM);
         localStorage.setItem('lebrel_partial_base_time', partialBaseTime);
         updatePartialUI();
@@ -122,15 +123,15 @@ if (ui.btn_reset_parcial) {
 
 function updatePartialUI() {
     const partialDistM = currentDistM - partialBaseDistM;
-    const elapsedS = (Date.now() - partialBaseTime) / 1000;
+    const partialTime = currentWallTimeS - partialBaseTime;
     
     if (ui.odo_parcial) {
         ui.odo_parcial.textContent = (partialDistM / 1000).toFixed(3);
     }
     
     if (ui.media_reset) {
-        if (elapsedS > 2 && partialDistM > 0) {
-            const media = (partialDistM / 1000) / (elapsedS / 3600);
+        if (partialTime > 2 && partialDistM > 0) {
+            const media = (partialDistM / 1000) / (partialTime / 3600);
             ui.media_reset.textContent = media.toFixed(1);
         } else {
             ui.media_reset.textContent = "0.0";
@@ -206,6 +207,10 @@ client.onStatusChange((isConnected) => {
 client.onMessage((data) => {
     if (data.tramo_nombre !== undefined && ui.tramo_nombre) ui.tramo_nombre.textContent = data.tramo_nombre;
     
+    if (data.wall_time_s !== undefined) {
+        currentWallTimeS = data.wall_time_s;
+    }
+
     if (data.distancia_m !== undefined) {
         currentDistM = data.distancia_m;
         if (ui.distancia) ui.distancia.textContent = (currentDistM / 1000).toFixed(3);

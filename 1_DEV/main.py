@@ -492,6 +492,7 @@ async def hardware_loop():
             "system_time": f"{int(wall_time_s // 3600) % 24:02d}:{int((wall_time_s % 3600) // 60):02d}:{int(wall_time_s % 60):02d}.{int((wall_time_s * 10) % 10):01d}",
             "gps_time": now.strftime("%H:%M:%S.%f")[:-5],
             "time_offset_s": time_offset_s,
+            "wall_time_s": wall_time_s,
             "tramo_id": active_tramo.get("id") if active_tramo else None
         }
         
