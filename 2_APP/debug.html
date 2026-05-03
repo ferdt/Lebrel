@@ -117,6 +117,22 @@
                     </tbody>
                 </table>
             </div>
+
+            <div style="margin-top: 20px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px;">
+                <h3 style="color: var(--accent-blue); margin: 0 0 12px 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Historial de Rendimiento</h3>
+                <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 0.8rem;">
+                    <span style="color: #38bdf8; display: flex; align-items: center; gap: 5px;">
+                        <span style="display:inline-block; width:12px; height:3px; background:#38bdf8; border-radius:2px;"></span> Carga CPU (%)
+                    </span>
+                    <span style="color: #ef4444; display: flex; align-items: center; gap: 5px;">
+                        <span style="display:inline-block; width:12px; height:3px; background:#ef4444; border-radius:2px;"></span> Temp. CPU (°C)
+                    </span>
+                    <span style="color: #10b981; display: flex; align-items: center; gap: 5px;">
+                        <span style="display:inline-block; width:12px; height:3px; background:#10b981; border-radius:2px;"></span> RAM Usada (%)
+                    </span>
+                </div>
+                <canvas id="system-stats-chart" width="800" height="180" style="width:100%; height:180px; display:block;"></canvas>
+            </div>
         </main>
     </div>
 

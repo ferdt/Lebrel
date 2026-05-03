@@ -109,6 +109,72 @@ function initDebug() {
         ui.logInfo.textContent = `Log exportado (${logData.length} registros en CSV).`;
     }
 
+    const history = [];
+    const maxDataPoints = 30;
+
+    function updateChart(cpuLoad, cpuTemp, ramUsed) {
+        history.push({ cpu: cpuLoad, temp: cpuTemp, ram: ramUsed });
+        if (history.length > maxDataPoints) {
+            history.shift();
+        }
+
+        const canvas = document.getElementById('system-stats-chart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const w = canvas.width;
+        const h = canvas.height;
+
+        // Clear
+        ctx.clearRect(0, 0, w, h);
+
+        // Draw grid lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 3; i++) {
+            const y = (h / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        if (history.length < 2) return;
+
+        // X steps
+        const stepX = w / (maxDataPoints - 1);
+
+        // Function to draw lines for metrics
+        const drawLine = (prop, color, maxScale) => {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            history.forEach((pt, i) => {
+                const x = i * stepX;
+                let val = pt[prop];
+                if (typeof val !== 'number' || isNaN(val)) val = 0;
+                const pct = Math.min(val / maxScale, 1);
+                const y = h - (pct * (h - 20)) - 10;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Glow effect
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8;
+            ctx.stroke();
+            ctx.shadowBlur = 0; // reset
+        };
+
+        // Scale CPU load up to 2.0, CPU temp up to 100 °C, RAM up to 100 %
+        drawLine('cpu', '#38bdf8', 2.0);
+        drawLine('temp', '#ef4444', 100);
+        drawLine('ram', '#10b981', 100);
+    }
+
     async function fetchStats() {
         try {
             const r = await fetch('/api/system/stats');
@@ -121,6 +187,8 @@ function initDebug() {
                 if (cpuEl) cpuEl.textContent = s.cpu_load_1m + " (carga 1m)";
                 if (tempEl) tempEl.textContent = s.cpu_temp_c + " °C";
                 if (ramEl) ramEl.textContent = `${s.ram_used_pct}% (${s.ram_total_mb} MB total)`;
+
+                updateChart(s.cpu_load_1m, s.cpu_temp_c, s.ram_used_pct);
             }
         } catch(e) {}
     }
