@@ -147,10 +147,10 @@ btnDeleteAll.addEventListener('click', async () => {
 });
 
 btnExport.addEventListener('click', () => {
-    let csv = "Tramo,Hora Inicio,KM Inicio,KM Fin,Media\n";
+    let csv = "Tramo,Hora Inicio,KM Inicio,KM Fin,Media,Ref Ext\n";
     tramos.forEach(t => {
         t.segmentos.forEach(s => {
-            csv += `"${t.nombre}","${t.hora_inicio}",${(s.inicio_m/1000).toFixed(3)},${(s.fin_m/1000).toFixed(3)},${s.media_kmh.toFixed(1)}\n`;
+            csv += `"${t.nombre}","${t.hora_inicio}",${(s.inicio_m/1000).toFixed(3)},${(s.fin_m/1000).toFixed(3)},${s.media_kmh.toFixed(1)},${s.referencias_externas ? 'Sí' : 'No'}\n`;
         });
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -187,7 +187,14 @@ importFile.addEventListener('change', (e) => {
                 // Parser que respeta el delimitador detectado y comillas
                 const regex = new RegExp(`${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
                 const parts = l.split(regex).map(p => p.replace(/^"|"$/g, '').trim());
-                return { tramo: parts[0], hora: parts[1], ini: parseFloat(parts[2]), fin: parseFloat(parts[3]), media: parseFloat(parts[4]) };
+                return { 
+                    tramo: parts[0], 
+                    hora: parts[1], 
+                    ini: parseFloat(parts[2]), 
+                    fin: parseFloat(parts[3]), 
+                    media: parseFloat(parts[4]),
+                    ref_ext: (parts[5] === 'Sí' || parts[5] === 'SI' || parts[5] === 'true' || parts[5] === '1')
+                };
             });
 
             // Agrupar por nombre de tramo
@@ -218,7 +225,8 @@ importFile.addEventListener('change', (e) => {
                     segmentos: g.rows.map(r => ({
                         inicio_m: (r.ini || 0) * 1000,
                         fin_m: (r.fin || 0) * 1000,
-                        media_kmh: r.media || 0
+                        media_kmh: r.media || 0,
+                        referencias_externas: !!r.ref_ext
                     })).sort((a,b) => a.inicio_m - b.inicio_m)
                 });
             }
@@ -382,7 +390,7 @@ function addSegmentAtEnd(tramo) {
     const ini   = segs.length > 0 ? segs[segs.length-1].fin_m : 0;
     const fin   = ini + 1000; // 1 km default
     const media = defaultMedia(tramo);
-    const seg   = { inicio_m: ini, fin_m: fin, media_kmh: media };
+    const seg   = { inicio_m: ini, fin_m: fin, media_kmh: media, referencias_externas: false };
     segs.push(seg);
     renderSegmentos();
     // Open editor on fin_m of new row immediately
@@ -401,7 +409,7 @@ function insertSegmentAbove(tramo, idx) {
     const iniM   = idx > 0 ? segs[idx-1].fin_m : 0;
     const finM   = segs[idx].inicio_m > iniM ? segs[idx].inicio_m : iniM + 1000;
     const media  = defaultMedia(tramo);
-    const newSeg = { inicio_m: iniM, fin_m: finM, media_kmh: media };
+    const newSeg = { inicio_m: iniM, fin_m: finM, media_kmh: media, referencias_externas: false };
     segs.splice(idx, 0, newSeg);
     renderSegmentos();
     // Open editor on fin_m of inserted row
@@ -523,6 +531,14 @@ function renderSegmentos() {
         tdMedia.innerHTML = `<span class="media-badge">${seg.media_kmh.toFixed(1)}</span>`;
         tdMedia.addEventListener('click', () => openCellEditor(tdMedia, tramo));
 
+        const tdRefExt = document.createElement('td');
+        tdRefExt.style.cursor = 'pointer';
+        tdRefExt.innerHTML = seg.referencias_externas ? '<span class="media-badge" style="background: rgba(251, 191, 36, 0.2); border-color: #f59e0b; color: #f59e0b;">Sí</span>' : '<span style="opacity: 0.4;">No</span>';
+        tdRefExt.addEventListener('click', () => {
+            seg.referencias_externas = !seg.referencias_externas;
+            renderSegmentos();
+        });
+
         const tdAct = document.createElement('td');
         tdAct.innerHTML = `
             <div class="row-actions">
@@ -531,7 +547,7 @@ function renderSegmentos() {
             </div>
         `;
 
-        [tdNum, tdIni, tdFin, tdMedia, tdDur, tdTIni, tdTFin, tdAct].forEach(td => tr.appendChild(td));
+        [tdNum, tdIni, tdFin, tdMedia, tdRefExt, tdDur, tdTIni, tdTFin, tdAct].forEach(td => tr.appendChild(td));
         segTbody.appendChild(tr);
     });
 }

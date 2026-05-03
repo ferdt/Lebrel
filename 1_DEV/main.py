@@ -159,6 +159,7 @@ active_tramo: dict | None = None
 test_speed_kmh = 0.0
 test_dist_m = 0.0
 test_pulses_1 = 0.0
+current_dist_m = 0.0
 
 # --- ENDPOINTS API ---
 
@@ -338,6 +339,30 @@ async def websocket_telemetry(websocket: WebSocket):
                     rally_logger.log_event(f"AJUSTE_DISTANCIA:{delta}")
                 except:
                     pass
+            elif data == "REF_EXT_ACTION":
+                try:
+                    global current_dist_m, active_tramo
+                    if active_tramo and "segmentos" in active_tramo:
+                        seg_info = tramo_manager.get_current_segment_info(current_dist_m)
+                        idx = seg_info.get("idx", 0)
+                        segs = active_tramo["segmentos"]
+                        if 0 <= idx < len(segs):
+                            cur_seg = segs[idx]
+                            if cur_seg.get("referencias_externas") or active_tramo.get("referencias_externas"):
+                                cur_seg["fin_m"] = current_dist_m
+                                if idx + 1 < len(segs):
+                                    segs[idx + 1]["inicio_m"] = current_dist_m
+                                
+                                all_tramos = load_tramos()
+                                found = next((t for t in all_tramos if t.get("id") == active_tramo.get("id")), None)
+                                if found:
+                                    found["segmentos"] = segs
+                                    save_tramos(all_tramos)
+                                    active_tramo = found
+                                    tramo_manager.set_active_tramo(found)
+                                rally_logger.log_event(f"REF_EXT_APLICADO:{current_dist_m}")
+                except:
+                    pass
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
@@ -358,7 +383,7 @@ async def startup_event():
     asyncio.create_task(hardware_loop())
 
 async def hardware_loop():
-    global test_dist_m
+    global test_dist_m, current_dist_m
     print("🚀 Iniciando bucle de telemetría a 10Hz...", flush=True)
     setup_hardware_readers()
     rally_logger.start_tramo("test")
@@ -435,6 +460,8 @@ async def hardware_loop():
         else: # default a sensor1
             dist_m = test_pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else test_pulses_1 / 1.54
             dist_gps_m = test_dist_gps
+
+        current_dist_m = dist_m
 
         # El tiempo elapsado ahora es dinámico respecto a la salida
         start_seconds = tramo_manager.parse_time_to_seconds(hora_inicio_str)

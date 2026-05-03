@@ -186,6 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="td-editable" onclick="editCell(this, 'ini', ${ix})">${(row.inicio_m / 1000).toFixed(3)}</td>
                 <td class="td-editable" onclick="editCell(this, 'fin', ${ix})">${(row.fin_m    / 1000).toFixed(3)}</td>
                 <td class="td-editable" onclick="editCell(this, 'media', ${ix})" style="font-weight:bold;">${row.media_kmh.toFixed(1)}</td>
+                <td>${row.referencias_externas ? 'Sí' : 'No'}</td>
                 <td class="td-editable" onclick="editCell(this, 'dur', ${ix})" style="color:var(--text-secondary); font-size:0.85em;">${formatDuration(durSecs)}</td>
                 <td class="td-editable" onclick="editCell(this, 'h_fin', ${ix})" style="color:var(--text-secondary); font-size:0.85em; font-variant-numeric:tabular-nums;">${formatTimeFull(tiempoFin)}</td>
             `;
@@ -360,6 +361,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if(btnOcr) {
         btnOcr.addEventListener('click', () => {
             window.location.href = "/tablitos/tablas.html";
+        });
+    }
+
+    const btnRefExtAction = document.getElementById('btn-ref-ext-action');
+    if(btnRefExtAction) {
+        btnRefExtAction.addEventListener('click', () => {
+            client.sendCommand('REF_EXT_ACTION');
+            btnRefExtAction.style.background = "rgba(251, 191, 36, 0.4)";
+            setTimeout(() => btnRefExtAction.style.background = "rgba(251, 191, 36, 0.2)", 200);
         });
     }
 

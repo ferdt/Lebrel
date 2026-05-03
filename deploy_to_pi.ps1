@@ -8,7 +8,7 @@ y reiniciar el servicio de forma automática.
 #>
 
 $PI_USER = "lebrel"
-$PI_HOST = "192.168.1.142" # IP detectada a través del nombre de dispositivo 'PiLebrelTest'
+$PI_HOST = "192.168.1.147" # IP detectada a través del nombre de dispositivo 'PiLebrelTest'
 $PI_PATH = "/home/$PI_USER/Lebrel"
 $LOCAL_PATH = $PSScriptRoot
 
@@ -37,12 +37,12 @@ if ($LASTEXITCODE -ne 0) {
 # 2. Copiar archivos excluyendo venv y cachés usando tar+ssh
 Write-Host "2. Comprimiendo y enviando archivos de Lebrel..."
 Set-Location $LOCAL_PATH
-cmd.exe /c "tar.exe -c --exclude=1_DEV/venv --exclude=1_DEV/__pycache__ --exclude=.git 1_DEV 2_APP | ssh $PI_USER@$PI_HOST `"tar -x -v -C $PI_PATH`""
+cmd.exe /c "tar.exe -c -f - --exclude=1_DEV/venv --exclude=1_DEV/__pycache__ --exclude=.git 1_DEV 2_APP | ssh $PI_USER@$PI_HOST `"tar -x -v -C $PI_PATH`""
 
 Write-Host "2.1 Comprimiendo y enviando archivos de Tablitos..."
 $TABLITOS_LOCAL = Join-Path $LOCAL_PATH "..\Tablitos\public"
 # Entramos en la carpeta de tablitos local para que el tar no incluya toda la ruta de carpetas
-cmd.exe /c "tar.exe -c -C $TABLITOS_LOCAL . | ssh $PI_USER@$PI_HOST `"tar -x -v -C /home/$PI_USER/Tablitos/public`""
+cmd.exe /c "tar.exe -c -f - -C $TABLITOS_LOCAL . | ssh $PI_USER@$PI_HOST `"tar -x -v -C /home/$PI_USER/Tablitos/public`""
 
 # 3. Arreglar retornos de carro (CRLF de Windows a LF de Linux) y Reiniciar el servicio
 Write-Host "3. Preparando scripts y reiniciando el servicio lebrel-backend en la Raspberry Pi..."

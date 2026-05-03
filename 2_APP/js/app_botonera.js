@@ -63,6 +63,15 @@ if (btnOcr) {
     });
 }
 
+const btnRefExtAction = document.getElementById('btn-ref-ext-action');
+if (btnRefExtAction) {
+    btnRefExtAction.addEventListener('click', () => {
+        client.sendCommand("REF_EXT_ACTION");
+        btnRefExtAction.style.background = "rgba(251, 191, 36, 0.4)";
+        setTimeout(() => btnRefExtAction.style.background = "rgba(251, 191, 36, 0.2)", 200);
+    });
+}
+
 client.connect();
 
 window.addEventListener('spa-navigated', () => {
