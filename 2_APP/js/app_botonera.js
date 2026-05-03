@@ -48,11 +48,25 @@ window.adjustDist = function(meters) {
 };
 
 if (btnMilestone) {
-    btnMilestone.addEventListener('click', () => {
-        client.sendCommand("MILESTONE");
-        // Visual feedback
-        btnMilestone.style.background = "rgba(59, 130, 246, 0.3)";
-        setTimeout(() => btnMilestone.style.background = "", 200);
+    btnMilestone.addEventListener('click', async () => {
+        let defHitos = 5;
+        try {
+            const r = await fetch('/api/settings');
+            if (r.ok) {
+                const s = await r.json();
+                if (s.default_hitos !== undefined) defHitos = s.default_hitos;
+            }
+        } catch(e) {}
+        
+        const num = prompt("Número de hitos a generar:", defHitos);
+        if (num) {
+            const count = parseInt(num);
+            if (!isNaN(count) && count > 0) {
+                client.sendCommand(`PREPARE_HITOS:${count}`);
+                btnMilestone.style.background = "rgba(59, 130, 246, 0.4)";
+                setTimeout(() => btnMilestone.style.background = "", 200);
+            }
+        }
     });
 }
 

@@ -4,13 +4,14 @@
 ✅ Homogeneización de Interfaz (v1.0.8)
 ✅ Página de Inicio / Welcoming
 ✅ Historial de Calibraciones
+✅ Calcar tramo (Grabar recorrido para generar segmentos)
+✅ Referencias externas
+✅ Hitos
+✅ Tipografías monospaciadas para todos los displaus de odómetro y velocidad
 
 PENDIENTE:
-- Calcar tramo (Grabar recorrido para generar segmentos)
-- Referencias externas
-- Hitos
+- OCR con RapidOCR
 - Ayudas sonoras al piloto
-- Arrelgar la media del odómetro parcial.
-- Tipografías monospaciadas para todos los displaus de odómetro y velocidad
+- Arreglar la media del odómetro parcial
 - Optimización de consumo de CPU en hardware_loop
 - Modo Nocturno Automático (por hora)

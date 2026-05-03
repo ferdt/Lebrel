@@ -1,4 +1,4 @@
-# Lebrel — Referencia Técnica del Backend (v1.0.19)
+# Lebrel — Referencia Técnica del Backend (v1.0.20)
 
 Documento de referencia para el sistema de navegación Lebrel. Describe el modelo de datos, las variables calculadas, la telemetría y los servicios de IA (OCR).
 
@@ -15,8 +15,9 @@ Array de tramos con segmentos de velocidad y hora de inicio.
     "nombre": "TC-1: La Puebla",
     "hora_inicio": "17:10:00.0",
     "segmentos": [
-      { "inicio_m": 0, "fin_m": 1500, "media_kmh": 49.9 }
-    ]
+      { "inicio_m": 0, "fin_m": 1500, "media_kmh": 49.9, "referencias_externas": true }
+    ],
+    "grabar_a_calcar": false
   }
 ]
 ```
@@ -35,6 +36,8 @@ Parámetros de configuración del sistema.
 - `neutral_interval_s`: Margen neutro para cálculos.
 - `odometer_source`: Origen del odómetro (`test`, `wheel`, `gps`).
 - `time_offset_s`: Ajuste de compensación de hora rally en segundos.
+- `distcalcardelta`: Distancia para generación de medias al calcar tramo (m).
+- `default_hitos`: Valor por defecto para generación de hitos.
 
 ---
 
@@ -53,6 +56,7 @@ Parámetros de configuración del sistema.
 - **GET `/api/tramos`**: Listado de tramos.
 - **POST `/api/tramos/active`**: Activa un tramo por su ID.
 - **POST `/api/tramos/import_tablitos`**: Importa segmentos procesados por OCR desde la aplicación móvil.
+- **POST `/api/tramos/generar-calcado/{id}`**: Genera un nuevo tramo a partir del recorrido grabado.
 
 ### 2.4 IA y OCR
 - **POST `/ocr`**: Procesa una imagen base64 usando el motor **RapidOCR (AI)**. Devuelve el texto detectado y una imagen pre-procesada para validación.
@@ -61,7 +65,14 @@ Parámetros de configuración del sistema.
 
 ## 3. Telemetría y WebSocket (10Hz)
 
-Canal: `/ws/telemetry`. Envía un flujo constante de datos:
+Canal: `/ws/telemetry`. Envía un flujo constante de datos.
+
+### 3.1 Comandos WebSocket Soportados (Salientes):
+- `ODO_RESET`: Pone el odómetro de prueba/test a 0.
+- `REF_EXT_ACTION`: Aplica el ajuste de referencias externas.
+- `PREPARE_HITOS:count`: Prepara los hitos en el backend a la espera de `REF_EXT_ACTION` para generarlos.
+
+### 3.2 Formato del Payload:
 
 | Variable | Unidad | Descripción |
 | :--- | :--- | :--- |
@@ -73,10 +84,11 @@ Canal: `/ws/telemetry`. Envía un flujo constante de datos:
 | `system_time` | HH:MM:SS.f | Hora corregida con offset (Hora Rally). |
 | `gps_time` | HH:MM:SS.f | Hora pura del sistema o GPS. |
 | `time_offset_s` | segundos | Ajuste aplicado en el reloj de rally. |
+| `wall_time_s` | segundos | Tiempo exacto de pared del backend. |
 
 ---
 
-## 4. Estándares de Interfaz (v1.0.19)
+## 4. Estándares de Interfaz (v1.0.20)
 
 ### 4.1 Unificación de Editores
 Todos los inputs numéricos utilizan la clase `.cell-edit-bar` con un teclado táctil optimizado:

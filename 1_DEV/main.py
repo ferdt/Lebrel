@@ -98,7 +98,8 @@ default_settings = {
     "pulses_km_1": 1540,
     "pulses_km_2": 1520,
     "time_offset_s": 0.0,
-    "distcalcardelta": 100.0
+    "distcalcardelta": 100.0,
+    "default_hitos": 5
 }
 
 def load_tramos():
@@ -157,6 +158,7 @@ def save_recorded_points():
         pass
 
 load_recorded_points()
+pending_hitos_count = 0
 
 # --- WEBSOCKETS ---
 class ConnectionManager:
@@ -392,7 +394,7 @@ async def process_ocr(request: Request):
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
-    global test_dist_m, test_pulses_1
+    global test_dist_m, test_pulses_1, current_dist_m, active_tramo, pending_hitos_count
     await manager.connect(websocket)
     try:
         while True:
@@ -413,28 +415,71 @@ async def websocket_telemetry(websocket: WebSocket):
                     rally_logger.log_event(f"AJUSTE_DISTANCIA:{delta}")
                 except:
                     pass
+            elif data.startswith("PREPARE_HITOS:"):
+                try:
+                    pending_hitos_count = int(data.split(":")[1])
+                    rally_logger.log_event(f"PREPARAR_HITOS:{pending_hitos_count}")
+                except:
+                    pass
             elif data == "REF_EXT_ACTION":
                 try:
-                    global current_dist_m, active_tramo
                     if active_tramo and "segmentos" in active_tramo:
-                        seg_info = tramo_manager.get_current_segment_info(current_dist_m)
-                        idx = seg_info.get("idx", 0)
-                        segs = active_tramo["segmentos"]
-                        if 0 <= idx < len(segs):
-                            cur_seg = segs[idx]
-                            if cur_seg.get("referencias_externas") or active_tramo.get("referencias_externas"):
-                                cur_seg["fin_m"] = current_dist_m
-                                if idx + 1 < len(segs):
-                                    segs[idx + 1]["inicio_m"] = current_dist_m
-                                
-                                all_tramos = load_tramos()
-                                found = next((t for t in all_tramos if t.get("id") == active_tramo.get("id")), None)
-                                if found:
-                                    found["segmentos"] = segs
-                                    save_tramos(all_tramos)
-                                    active_tramo = found
-                                    tramo_manager.set_active_tramo(found)
-                                rally_logger.log_event(f"REF_EXT_APLICADO:{current_dist_m}")
+                        if pending_hitos_count > 0:
+                            settings = load_settings()
+                            rf = float(settings.get("rally_factor", 1.0))
+                            if rf <= 0:
+                                rf = 1.0
+                            
+                            current_start_m = current_dist_m
+                            filtered = []
+                            for s in active_tramo.get("segmentos", []):
+                                if s.get("fin_m", 0) <= current_start_m:
+                                    filtered.append(s)
+                                elif s.get("inicio_m", 0) < current_start_m:
+                                    s["fin_m"] = current_start_m
+                                    filtered.append(s)
+                            
+                            for _ in range(pending_hitos_count):
+                                next_fin_m = current_start_m + (1000.0 * rf)
+                                filtered.append({
+                                    "inicio_m": round(current_start_m, 2),
+                                    "fin_m": round(next_fin_m, 2),
+                                    "media_kmh": 50.0,
+                                    "referencias_externas": True
+                                })
+                                current_start_m = next_fin_m
+                            
+                            active_tramo["segmentos"] = filtered
+                            
+                            all_tramos = load_tramos()
+                            found = next((t for t in all_tramos if t.get("id") == active_tramo.get("id")), None)
+                            if found:
+                                found["segmentos"] = filtered
+                                save_tramos(all_tramos)
+                                active_tramo = found
+                                tramo_manager.set_active_tramo(found)
+                            
+                            pending_hitos_count = 0
+                            rally_logger.log_event(f"HITOS_GENERADOS:{current_dist_m}")
+                        else:
+                            seg_info = tramo_manager.get_current_segment_info(current_dist_m)
+                            idx = seg_info.get("idx", 0)
+                            segs = active_tramo["segmentos"]
+                            if 0 <= idx < len(segs):
+                                cur_seg = segs[idx]
+                                if cur_seg.get("referencias_externas") or active_tramo.get("referencias_externas"):
+                                    cur_seg["fin_m"] = current_dist_m
+                                    if idx + 1 < len(segs):
+                                        segs[idx + 1]["inicio_m"] = current_dist_m
+                                    
+                                    all_tramos = load_tramos()
+                                    found = next((t for t in all_tramos if t.get("id") == active_tramo.get("id")), None)
+                                    if found:
+                                        found["segmentos"] = segs
+                                        save_tramos(all_tramos)
+                                        active_tramo = found
+                                        tramo_manager.set_active_tramo(found)
+                                    rally_logger.log_event(f"REF_EXT_APLICADO:{current_dist_m}")
                 except:
                     pass
     except WebSocketDisconnect:
