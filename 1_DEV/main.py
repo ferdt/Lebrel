@@ -194,6 +194,48 @@ current_dist_m = 0.0
 async def root():
     return RedirectResponse(url="/piloto.html")
 
+@app.get("/api/system/stats")
+def get_system_stats():
+    try:
+        # Carga de CPU (1 min, 5 min, 15 min)
+        load = [0.0, 0.0, 0.0]
+        if os.path.exists("/proc/loadavg"):
+            with open("/proc/loadavg", "r") as f:
+                load = f.read().strip().split()[:3]
+        
+        # Temperatura de la Pi
+        temp = 0.0
+        if os.path.exists("/sys/class/thermal/thermal_zone0/temp"):
+            with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+                temp = float(f.read().strip()) / 1000.0
+                
+        # Memoria RAM
+        mem_total = 0
+        mem_free = 0
+        if os.path.exists("/proc/meminfo"):
+            with open("/proc/meminfo", "r") as f:
+                for line in f:
+                    if "MemTotal" in line:
+                        mem_total = int(line.split()[1])
+                    elif "MemAvailable" in line:
+                        mem_free = int(line.split()[1])
+                    elif "MemFree" in line and mem_free == 0:
+                        mem_free = int(line.split()[1])
+                        
+        mem_used = mem_total - mem_free
+        mem_pct = (mem_used / mem_total * 100) if mem_total > 0 else 0
+
+        return {
+            "cpu_load_1m": float(load[0]),
+            "cpu_load_5m": float(load[1]),
+            "cpu_load_15m": float(load[2]),
+            "cpu_temp_c": round(temp, 1),
+            "ram_used_pct": round(mem_pct, 1),
+            "ram_total_mb": round(mem_total / 1024, 1)
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/api/settings")
 async def get_settings():
     return load_settings()

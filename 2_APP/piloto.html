@@ -173,10 +173,17 @@
             </div>
 
             <!-- PID Control Bar -->
-            <div class="pid-container" style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 8px; height: 16px; position: relative; overflow: hidden; width: 100%; margin-top: -6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center;">
-                <div id="pid-bar-center" style="position: absolute; left: 50%; width: 2px; height: 100%; background: var(--text-secondary); opacity: 0.5; z-index: 2;"></div>
-                <div id="pid-bar-left" style="position: absolute; right: 50%; height: 100%; background: var(--accent-red); width: 0%; z-index: 1; transition: width 0.1s ease;"></div>
-                <div id="pid-bar-right" style="position: absolute; left: 50%; height: 100%; background: var(--accent-green); width: 0%; z-index: 1; transition: width 0.1s ease;"></div>
+            <div class="pid-container"
+                style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 8px; height: 16px; position: relative; overflow: hidden; width: 100%; margin-top: -6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center;">
+                <div id="pid-bar-center"
+                    style="position: absolute; left: 50%; width: 2px; height: 100%; background: var(--text-secondary); opacity: 0.5; z-index: 2;">
+                </div>
+                <div id="pid-bar-left"
+                    style="position: absolute; right: 50%; height: 100%; background: var(--accent-red); width: 0%; z-index: 1; transition: width 0.1s ease;">
+                </div>
+                <div id="pid-bar-right"
+                    style="position: absolute; left: 50%; height: 100%; background: var(--accent-green); width: 0%; z-index: 1; transition: width 0.1s ease;">
+                </div>
             </div>
 
             <!-- 2. Intervalo y velocidad -->
@@ -188,7 +195,7 @@
                 <div class="card card-speed">
                     <div class="label-small">Velocidad</div>
                     <div class="value"><span id="val_velocidad_actual">0.0</span> <span id="val_velocidad_objetivo"
-                            style="color:var(--text-secondary); font-size:clamp(1.5rem, 4vmin, 2rem);">0.0</span>
+                            style="color:var(--text-secondary); font-size:clamp(0.5rem, 4vmin, 2rem);">0.0</span>
                     </div>
                 </div>
             </div>

@@ -2,7 +2,7 @@ import { TelemetryClient } from './telemetry.js';
 import { initHeader } from './header.js';
 import { initRouter } from './router.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+function initDebug() {
     initHeader('debug');
     initRouter();
 
@@ -109,5 +109,34 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.logInfo.textContent = `Log exportado (${logData.length} registros en CSV).`;
     }
 
+    async function fetchStats() {
+        try {
+            const r = await fetch('/api/system/stats');
+            if (r.ok) {
+                const s = await r.json();
+                if (s.error) return;
+                const cpuEl = document.getElementById('stat-cpu-1m');
+                const tempEl = document.getElementById('stat-cpu-temp');
+                const ramEl = document.getElementById('stat-ram');
+                if (cpuEl) cpuEl.textContent = s.cpu_load_1m + " (carga 1m)";
+                if (tempEl) tempEl.textContent = s.cpu_temp_c + " °C";
+                if (ramEl) ramEl.textContent = `${s.ram_used_pct}% (${s.ram_total_mb} MB total)`;
+            }
+        } catch(e) {}
+    }
+
+    setInterval(fetchStats, 3000);
+    fetchStats();
+
     client.connect();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDebug);
+} else {
+    initDebug();
+}
+
+window.addEventListener('spa-navigated', () => {
+    initDebug();
 });

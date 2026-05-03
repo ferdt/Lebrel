@@ -91,6 +91,32 @@
                 <button id="btn-stop-log" style="background: var(--accent-red); display: none;">PARAR Y EXPORTAR</button>
             </div>
             <div id="log-info" class="log-status">Logging inactivo.</div>
+
+            <div style="margin-top: 30px;">
+                <h2 style="color: var(--accent-blue);">Estadísticas de la Raspberry Pi</h2>
+                <table class="debug-table">
+                    <thead>
+                        <tr>
+                            <th>Parámetro</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sys-stats-body">
+                        <tr>
+                            <td class="var-name">Carga CPU (1m)</td>
+                            <td class="var-value" id="stat-cpu-1m">-</td>
+                        </tr>
+                        <tr>
+                            <td class="var-name">Temperatura CPU</td>
+                            <td class="var-value" id="stat-cpu-temp">-</td>
+                        </tr>
+                        <tr>
+                            <td class="var-name">Memoria RAM Usada</td>
+                            <td class="var-value" id="stat-ram">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </main>
     </div>
 
