@@ -473,6 +473,11 @@ function renderSegmentos() {
         btnLaunch.textContent = isActive ? '✅ En curso' : '▶ Lanzar Tramo';
     }
 
+    const chkGrabarACalcar = document.getElementById('chk-grabar-a-calcar');
+    if (chkGrabarACalcar) {
+        chkGrabarACalcar.checked = !!tramo.grabar_a_calcar;
+    }
+
     const segs     = tramo.segmentos;
     const computed = recalcFrom(tramo, -1, [], null, null);
     const startSecs = parseTime(tramo.hora_inicio) || 0;
@@ -642,6 +647,17 @@ if (btnLaunch) {
 }
 
 btnSave.addEventListener('click', saveAllTramos);
+
+const chkGrabarACalcar = document.getElementById('chk-grabar-a-calcar');
+if (chkGrabarACalcar) {
+    chkGrabarACalcar.addEventListener('change', () => {
+        const tramo = getSelected();
+        if (tramo) {
+            tramo.grabar_a_calcar = chkGrabarACalcar.checked;
+            saveAllTramos();
+        }
+    });
+}
 
 // ---- Modal: nuevo tramo ----
 btnNuevoTramo.addEventListener('click', () => {

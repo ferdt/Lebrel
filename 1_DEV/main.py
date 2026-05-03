@@ -10,7 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 
 from core.hardware import setup_hardware_readers
 from core.logger import rally_logger
@@ -97,7 +97,8 @@ default_settings = {
     "rally_factor": 1.0,
     "pulses_km_1": 1540,
     "pulses_km_2": 1520,
-    "time_offset_s": 0.0
+    "time_offset_s": 0.0,
+    "distcalcardelta": 100.0
 }
 
 def load_tramos():
@@ -132,6 +133,30 @@ def save_settings(s):
             json.dump(s, f, indent=2)
     except Exception as e:
         print(f"Error guardando ajustes: {e}")
+
+RECORDED_POINTS_FILE = "recorded_points.json"
+recorded_points_dict = {}
+
+def load_recorded_points():
+    global recorded_points_dict
+    try:
+        if os.path.exists(RECORDED_POINTS_FILE):
+            with open(RECORDED_POINTS_FILE, "r") as f:
+                recorded_points_dict = json.load(f)
+        else:
+            recorded_points_dict = {}
+    except:
+        recorded_points_dict = {}
+
+def save_recorded_points():
+    global recorded_points_dict
+    try:
+        with open(RECORDED_POINTS_FILE, "w") as f:
+            json.dump(recorded_points_dict, f, indent=2)
+    except:
+        pass
+
+load_recorded_points()
 
 # --- WEBSOCKETS ---
 class ConnectionManager:
@@ -220,6 +245,55 @@ async def update_tramos(request: Request):
             tramo_manager.set_active_tramo(refreshed)
             
     return {"status": "ok"}
+
+@app.post("/api/tramos/generar-calcado/{tramo_id}")
+async def generar_tramo_calcado(tramo_id: str):
+    global recorded_points_dict
+    load_recorded_points()
+    if tramo_id not in recorded_points_dict or len(recorded_points_dict[tramo_id]) < 2:
+        return JSONResponse(status_code=400, content={"error": "No hay suficientes puntos grabados para este tramo. Intenta lanzarlo y recorrerlo primero."})
+    
+    tramos = load_tramos()
+    found = next((t for t in tramos if t.get("id") == tramo_id), None)
+    if not found:
+        return JSONResponse(status_code=404, content={"error": "El tramo original no existe"})
+        
+    pts = recorded_points_dict[tramo_id]
+    segmentos_calcados = []
+    
+    for i in range(len(pts) - 1):
+        p_ini = pts[i]
+        p_fin = pts[i+1]
+        
+        ini_m = p_ini["dist_m"]
+        fin_m = p_fin["dist_m"]
+        dt = p_fin["time_s"] - p_ini["time_s"]
+        
+        longitud_km = (fin_m - ini_m) / 1000.0
+        if dt > 0 and longitud_km > 0:
+            media_kmh = (longitud_km) / (dt / 3600.0)
+        else:
+            media_kmh = 50.0
+            
+        segmentos_calcados.append({
+            "inicio_m": round(ini_m, 2),
+            "fin_m": round(fin_m, 2),
+            "media_kmh": round(media_kmh, 1),
+            "referencias_externas": False
+        })
+        
+    import uuid
+    new_tramo = {
+        "id": str(uuid.uuid4()),
+        "nombre": f"{found.get('nombre', 'Tramo')} - CALCADO",
+        "hora_inicio": found.get("hora_inicio", "00:00:00.0"),
+        "segmentos": segmentos_calcados,
+        "grabar_a_calcar": False
+    }
+    
+    tramos.append(new_tramo)
+    save_tramos(tramos)
+    return {"success": True, "new_tramo": new_tramo}
 
 @app.get("/api/tramos/active")
 async def get_active_tramo():
@@ -462,6 +536,71 @@ async def hardware_loop():
             dist_gps_m = test_dist_gps
 
         current_dist_m = dist_m
+
+        if active_tramo and active_tramo.get("grabar_a_calcar"):
+            t_id = active_tramo.get("id")
+            if t_id:
+                if t_id not in recorded_points_dict:
+                    recorded_points_dict[t_id] = [{"dist_m": 0.0, "time_s": wall_time_s}]
+                
+                settings = load_settings()
+                delta = float(settings.get("distcalcardelta", 100.0))
+                if delta <= 0:
+                    delta = 100.0
+                    
+                next_dist = (len(recorded_points_dict[t_id])) * delta
+                if dist_m >= next_dist:
+                    recorded_points_dict[t_id].append({"dist_m": dist_m, "time_s": wall_time_s})
+                    save_recorded_points()
+
+                # Comprobar si hemos llegado al final del tramo
+                if active_tramo.get("segmentos"):
+                    last_seg = active_tramo["segmentos"][-1]
+                    total_dist_m = last_seg.get("fin_m", 0.0)
+                    if dist_m >= total_dist_m:
+                        if not recorded_points_dict[t_id] or recorded_points_dict[t_id][-1]["dist_m"] < dist_m:
+                            recorded_points_dict[t_id].append({"dist_m": dist_m, "time_s": wall_time_s})
+                            save_recorded_points()
+
+                        active_tramo["grabar_a_calcar"] = False
+                        
+                        pts = recorded_points_dict[t_id]
+                        if len(pts) >= 2:
+                            segmentos_calcados = []
+                            for i in range(len(pts) - 1):
+                                p_ini = pts[i]
+                                p_fin = pts[i+1]
+                                ini_m = p_ini["dist_m"]
+                                fin_m = p_fin["dist_m"]
+                                dt = p_fin["time_s"] - p_ini["time_s"]
+                                longitud_km = (fin_m - ini_m) / 1000.0
+                                if dt > 0 and longitud_km > 0:
+                                    media_kmh = (longitud_km) / (dt / 3600.0)
+                                else:
+                                    media_kmh = 50.0
+                                
+                                segmentos_calcados.append({
+                                    "inicio_m": round(ini_m, 2),
+                                    "fin_m": round(fin_m, 2),
+                                    "media_kmh": round(media_kmh, 1),
+                                    "referencias_externas": False
+                                })
+                            
+                            import uuid
+                            new_tramo = {
+                                "id": str(uuid.uuid4()),
+                                "nombre": f"{active_tramo.get('nombre', 'Tramo')} - CALCADO",
+                                "hora_inicio": active_tramo.get("hora_inicio", "00:00:00.0"),
+                                "segmentos": segmentos_calcados,
+                                "grabar_a_calcar": False
+                            }
+                            
+                            tramos_all = load_tramos()
+                            for t in tramos_all:
+                                if t.get("id") == t_id:
+                                    t["grabar_a_calcar"] = False
+                            tramos_all.append(new_tramo)
+                            save_tramos(tramos_all)
 
         # El tiempo elapsado ahora es dinámico respecto a la salida
         start_seconds = tramo_manager.parse_time_to_seconds(hora_inicio_str)

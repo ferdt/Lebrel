@@ -815,10 +815,14 @@
                     </div>
 
                     <!-- Action bar -->
-                    <div class="action-bar">
+                    <div class="action-bar" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                         <button class="btn-launch" id="btn-launch">▶ Lanzar Tramo</button>
                         <button class="btn-save" id="btn-save">💾 Guardar</button>
                         <button class="btn-clear-segs" id="btn-clear-segs">🗑 Limpiar</button>
+                        <label style="display:inline-flex; align-items:center; gap:6px; color:var(--text-secondary); cursor:pointer;">
+                            <input type="checkbox" id="chk-grabar-a-calcar">
+                            Grabar tramo a calcar
+                        </label>
                         <span class="save-msg" id="save-status"></span>
                     </div>
 
