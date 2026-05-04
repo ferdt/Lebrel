@@ -7,9 +7,10 @@
     <title>Lebrel - Copiloto</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="css/style.css?v=21">
+    <link rel="stylesheet" href="css/style.css?v=24">
     <style>
         .split-layout {
             display: grid;
@@ -238,11 +239,11 @@
     </div>
 
     <!-- Cargar JS como module -->
-    <script type="module" src="js/app_copiloto.js?v=21"></script>
+    <script type="module" src="js/app_copiloto.js?v=24"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=21').catch(err => console.log('SW Fail:', err));
+                navigator.serviceWorker.register('sw.js?v=24').catch(err => console.log('SW Fail:', err));
             });
         }
     </script>

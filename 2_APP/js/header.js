@@ -70,6 +70,9 @@ export function initHeader(currentPage) {
 
             <div class="header-right">
                 <span style="font-size: 0.6rem; color: var(--text-secondary); opacity: 0.5; margin-right: 5px;">v${APP_VERSION}</span>
+                <button id="wakelock-status" style="background:none; border:none; padding:0; margin-right:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; color:var(--accent-red); transition:all 0.3s; outline:none;" title="Presiona para activar No-Sleep">
+                    🔓 OFF
+                </button>
                 <button id="btn-mute" class="icon-btn" title="${isMuted ? 'Activar Sonidos' : 'Silenciar Sonidos'}">
                     ${muteIcon}
                 </button>

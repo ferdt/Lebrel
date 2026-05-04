@@ -17,12 +17,17 @@ from core.logger import rally_logger
 from core.rally import tramo_manager
 
 # --- OCR ENGINE (RapidOCR - IA) ---
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
 try:
     import numpy as np
     import cv2
     from rapidocr_onnxruntime import RapidOCR
     rapid_ocr_engine = RapidOCR()
-    print("✅ RapidOCR (AI) y OpenCV inicializados correctamente.", flush=True)
+    print("✅ RapidOCR (AI) y OpenCV inicializados correctamente con 1 hilo.", flush=True)
 except Exception as e:
     rapid_ocr_engine = None
     print(f"⚠️ Error al cargar RapidOCR: {e}", flush=True)
@@ -358,12 +363,22 @@ async def set_active_tramo(request: Request):
 
 @app.post("/api/tramos/import_tablitos")
 async def import_tablitos(request: Request):
+    global active_tramo
     changes = await request.json()
     tramos = load_tramos()
-    tramo_tablas = next((t for t in tramos if t["nombre"].upper() == "TABLAS"), None)
-    if not tramo_tablas:
-        tramo_tablas = {"id": "tablas_ocr", "nombre": "Tablas", "hora_inicio": "00:00:00.0", "segmentos": []}
-        tramos.append(tramo_tablas)
+    
+    # Encontrar el tramo objetivo: el activo si existe, o el tramo "Tablas"
+    target_tramo = None
+    if active_tramo:
+        target_tramo = next((t for t in tramos if t["id"] == active_tramo.get("id")), None)
+        if not target_tramo:
+            target_tramo = next((t for t in tramos if t["nombre"].upper() == active_tramo.get("nombre", "").upper()), None)
+            
+    if not target_tramo:
+        target_tramo = next((t for t in tramos if t["nombre"].upper() == "TABLAS"), None)
+        if not target_tramo:
+            target_tramo = {"id": "tablas_ocr", "nombre": "Tablas", "hora_inicio": "00:00:00.0", "segmentos": []}
+            tramos.append(target_tramo)
     
     new_segments = []
     for c in changes:
@@ -372,13 +387,12 @@ async def import_tablitos(request: Request):
             "fin_m": round(float(c["dist_to"]) * 1000),
             "media_kmh": float(c["speed"])
         })
-    tramo_tablas["segmentos"] = new_segments
+    target_tramo["segmentos"] = new_segments
     save_tramos(tramos)
 
-    # Si estamos en el tramo de "Tablas", refrescar el motor activo
-    if active_tramo and active_tramo.get("nombre").upper() == "TABLAS":
-        active_tramo = tramo_tablas
-        tramo_manager.set_active_tramo(tramo_tablas)
+    # Actualizar y refrescar el tramo activo en tiempo real
+    active_tramo = target_tramo
+    tramo_manager.set_active_tramo(target_tramo)
 
     return {"status": "ok", "count": len(new_segments)}
 
@@ -394,17 +408,121 @@ async def set_test_speed(request: Request):
     
     return {"status": "ok"}
 
-def run_ocr_sync(img):
-    result, elapse = rapid_ocr_engine(img)
+def apply_sharpening(image):
+    kernel = np.array([[0, -1, 0], 
+                       [-1, 5,-1], 
+                       [0, -1, 0]])
+    return cv2.filter2D(image, -1, kernel)
+
+def detect_and_crop_to_content(image):
+    try:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        edged = cv2.Canny(blurred, 75, 200)
+        cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+        
+        if not cnts:
+            return False, image
+
+        min_area = 1000 
+        large_cnts = [c for c in cnts if cv2.contourArea(c) > min_area]
+
+        if not large_cnts:
+             return False, image
+
+        x_min, y_min = np.inf, np.inf
+        x_max, y_max = -np.inf, -np.inf
+
+        for c in large_cnts:
+            x, y, w, h = cv2.boundingRect(c)
+            x_min = min(x_min, x)
+            y_min = min(y_min, y)
+            x_max = max(x_max, x + w)
+            y_max = max(y_max, y + h)
+
+        padding = 10
+        h_img, w_img = image.shape[:2]
+        
+        x_min = max(0, x_min - padding)
+        y_min = max(0, y_min - padding)
+        x_max = min(w_img, x_max + padding)
+        y_max = min(h_img, y_max + padding)
+
+        cropped = image[int(y_min):int(y_max), int(x_min):int(x_max)]
+        return True, cropped
+
+    except Exception as e:
+        return False, image
+
+def run_ocr_sync(img, prep_config: dict = None):
+    if prep_config is None:
+        prep_config = {}
+        
+    img_to_process = img.copy()
+
+    # 1. Deskew / Crop
+    if prep_config.get('apply_deskew', False):
+         success, cropped_img = detect_and_crop_to_content(img_to_process)
+         if success:
+             img_to_process = cropped_img
+
+    # 1.5 Resize
+    if prep_config.get('apply_resize', False):
+        target_h = int(prep_config.get('resize_height', 2000))
+        h, w = img_to_process.shape[:2]
+        if h > target_h:
+            scale = target_h / h
+            new_w = int(w * scale)
+            img_to_process = cv2.resize(img_to_process, (new_w, target_h), interpolation=cv2.INTER_CUBIC)
+
+    # 2. Contrast
+    if prep_config.get('apply_contrast', False):
+        alpha = float(prep_config.get('contrast_alpha', 1.5))
+        beta = float(prep_config.get('contrast_beta', 0))
+        img_to_process = cv2.convertScaleAbs(img_to_process, alpha=alpha, beta=beta)
+
+    # 3. Sharpening
+    if prep_config.get('apply_sharpening', False):
+        img_to_process = apply_sharpening(img_to_process)
+
+    # 4. Grayscale
+    if prep_config.get('apply_gray', False):
+         if len(img_to_process.shape) == 3:
+            img_to_process = cv2.cvtColor(img_to_process, cv2.COLOR_BGR2GRAY)
+            img_to_process = cv2.cvtColor(img_to_process, cv2.COLOR_GRAY2BGR)
+
+    # 5. Thresholding
+    if prep_config.get('apply_threshold', False):
+        gray_for_thresh = cv2.cvtColor(img_to_process, cv2.COLOR_BGR2GRAY)
+        block_size = int(prep_config.get('threshold_block_size', 15))
+        c_val = int(prep_config.get('threshold_c', 5))
+        if block_size % 2 == 0: block_size += 1
+        img_to_process = cv2.adaptiveThreshold(
+            gray_for_thresh, 255, 
+            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+            cv2.THRESH_BINARY, 
+            block_size, 
+            c_val
+        )
+        img_to_process = cv2.cvtColor(img_to_process, cv2.COLOR_GRAY2BGR)
+
+    result, elapse = rapid_ocr_engine(img_to_process)
     detected_text = ""
+    debug_img = img_to_process.copy()
     if result:
         boxes = [line[0] for line in result]
         texts = [line[1] for line in result]
         scores = [line[2] for line in result]
-        _, sorted_texts, _ = sort_boxes(boxes, texts, scores)
+        sorted_boxes, sorted_texts, _ = sort_boxes(boxes, texts, scores)
         detected_text = "\n".join(sorted_texts)
+        
+        for i in range(len(sorted_texts)):
+            box = sorted_boxes[i]
+            points = np.array(box, dtype=np.int32).reshape((-1, 1, 2))
+            cv2.polylines(debug_img, [points], isClosed=True, color=(0, 0, 255), thickness=2)
     
-    _, buffer = cv2.imencode('.jpg', img)
+    _, buffer = cv2.imencode('.jpg', debug_img)
     processed_image_b64 = base64.b64encode(buffer).decode('utf-8')
     return detected_text, processed_image_b64
 
@@ -427,10 +545,11 @@ async def process_ocr(request: Request):
             return {"error": "Failed to decode image"}
 
         start_time = time.time()
+        prep_config = data.get('preprocessing', {})
         
         # Ejecutar en un hilo separado para que no bloquee el bucle principal de asyncio
         loop = asyncio.get_event_loop()
-        detected_text, processed_image_b64 = await loop.run_in_executor(None, run_ocr_sync, img)
+        detected_text, processed_image_b64 = await loop.run_in_executor(None, run_ocr_sync, img, prep_config)
 
         return {
             'text': detected_text,

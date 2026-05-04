@@ -8,7 +8,7 @@ y reiniciar el servicio de forma automática.
 #>
 
 $PI_USER = "lebrel"
-$PI_HOST = "192.168.1.147" # IP detectada a través del nombre de dispositivo 'PiLebrelTest'
+$PI_HOST = "192.168.1.142" # IP detectada a través del nombre de dispositivo 'PiLebrelTest'
 $PI_PATH = "/home/$PI_USER/Lebrel"
 $LOCAL_PATH = $PSScriptRoot
 

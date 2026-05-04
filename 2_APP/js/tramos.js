@@ -575,7 +575,11 @@ tramosList.addEventListener('click', e => {
         if (!confirm(`¿Eliminar el tramo "${t?.nombre}"?\nSe eliminarán todos sus segmentos.`)) return;
         tramos = tramos.filter(x => x.id !== id);
         if (selectedId === id) selectedId = tramos[0]?.id ?? null;
-        renderTramosList(); renderSegmentos(); return;
+        saveAllTramos().then(() => {
+            renderTramosList(); 
+            renderSegmentos();
+        });
+        return;
     }
     const item = e.target.closest('.tramo-item');
     if (item) selectTramo(item.dataset.id);
@@ -616,6 +620,23 @@ infoHoraIni.addEventListener('click', () => {
     if (!tramo) return;
     openCellEditor(infoHoraIni, tramo, 'tramo_hora_ini');
 });
+
+// ---- Info card: edit nombre tramo ----
+if (infoNombre) {
+    infoNombre.style.cursor = 'pointer';
+    infoNombre.title = 'Haz clic para renombrar el tramo';
+    infoNombre.addEventListener('click', async () => {
+        const tramo = getSelected();
+        if (!tramo) return;
+        const nuevoNombre = prompt('Nuevo nombre del tramo:', tramo.nombre);
+        if (nuevoNombre && nuevoNombre.trim() !== '') {
+            tramo.nombre = nuevoNombre.trim();
+            await saveAllTramos();
+            renderTramosList();
+            renderSegmentos();
+        }
+    });
+}
 
 // ---- Clear segments ----
 btnClearSegs.addEventListener('click', () => {

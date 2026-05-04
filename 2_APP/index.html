@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lebrel - Sistema de Navegación de Rally</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/style.css?v=21">
+    <link rel="stylesheet" href="css/style.css?v=24">
 </head>
 
 <body class="dark-theme">
@@ -75,7 +75,7 @@
                 </div>
             </div>
 
-            <div class="version-tag">Lebrel Navigation System v1.0.19</div>
+            <div class="version-tag">Lebrel Navigation System v1.0.24</div>
         </div>
     </main>
 
@@ -85,7 +85,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=21').catch(err => console.log('SW Fail:', err));
+                navigator.serviceWorker.register('sw.js?v=24').catch(err => console.log('SW Fail:', err));
             });
         }
     </script>

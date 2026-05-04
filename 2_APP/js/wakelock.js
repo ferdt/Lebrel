@@ -4,6 +4,8 @@ export async function initWakeLock() {
     let fallbackAudio = null;
     let isActive = false;
 
+    let userDisabled = false;
+
     const updateStatusUI = (active) => {
         isActive = active;
         const indicator = document.getElementById('wakelock-status');
@@ -20,6 +22,7 @@ export async function initWakeLock() {
     };
 
     const requestWakeLock = async () => {
+        if (userDisabled) return false;
         if ('wakeLock' in navigator) {
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
@@ -41,6 +44,7 @@ export async function initWakeLock() {
     };
 
     const playEverything = () => {
+        if (userDisabled) return;
         if (fallbackVideo) {
             fallbackVideo.play().then(() => {
                 updateStatusUI(true);
@@ -75,40 +79,57 @@ export async function initWakeLock() {
         playEverything();
     };
 
-    const setupUI = () => {
-        let indicator = document.getElementById('wakelock-status');
-        if (!indicator) {
-            const header = document.querySelector('.header-right');
-            if (header) {
-                indicator = document.createElement('button');
-                indicator.id = 'wakelock-status';
-                indicator.style.cssText = 'background:none; border:none; padding:0; margin-right:10px; font-size:0.75rem; font-weight:bold; cursor:pointer; color:var(--accent-red); transition:all 0.3s; outline:none;';
-                indicator.innerHTML = '🔓 OFF';
-                indicator.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    if (!(await requestWakeLock())) {
-                        startFallbacks();
-                        playEverything();
-                    }
-                });
-                header.prepend(indicator);
+    // Usar delegación de eventos para sobrevivir a la navegación SPA
+    document.addEventListener('click', (e) => {
+        const indicator = e.target.closest('#wakelock-status');
+        if (indicator) {
+            e.stopPropagation();
+            if (isActive) {
+                // Apagar manualmente
+                userDisabled = true;
+                if (wakeLock) {
+                    wakeLock.release().catch(() => {});
+                    wakeLock = null;
+                }
+                if (fallbackVideo) fallbackVideo.pause();
+                if (fallbackAudio) fallbackAudio.pause();
+                updateStatusUI(false);
+            } else {
+                // Encender manualmente
+                userDisabled = false;
+                
+                // IMPORTANTE: En móviles (Samsung, Chrome), play() debe llamarse 
+                // SIN NINGÚN await previo para no perder el token de "gesto de usuario".
+                startFallbacks();
+                playEverything();
+                
+                // Intentar la API moderna en segundo plano
+                requestWakeLock().catch(() => {});
             }
         }
-        if (indicator && isActive) updateStatusUI(true);
+    });
+
+    const checkUI = () => {
+        if (isActive) updateStatusUI(true);
     };
 
-    setupUI();
-    setTimeout(setupUI, 500); 
-    setTimeout(setupUI, 2000); 
+    checkUI();
+    setTimeout(checkUI, 500); 
+    setTimeout(checkUI, 2000);
 
     // Ejecución inicial
     if (!(await requestWakeLock())) {
         startFallbacks();
     }
 
+    // Refrescar UI cuando la aplicación navega (porque se recarga el header)
+    window.addEventListener('spa-navigated', () => {
+        updateStatusUI(isActive);
+    });
+
     // Gestión de visibilidad
     document.addEventListener('visibilitychange', async () => {
-        if (document.visibilityState === 'visible') {
+        if (document.visibilityState === 'visible' && !userDisabled) {
             if (!(await requestWakeLock())) {
                 playEverything();
             }
@@ -117,16 +138,20 @@ export async function initWakeLock() {
 
     // Interacciones globales
     ['click', 'touchstart'].forEach(ev => {
-        document.addEventListener(ev, () => {
+        document.addEventListener(ev, (e) => {
+            if (userDisabled) return;
+            if (e.target.closest('#wakelock-status')) return; // No procesar si fue el botón
             if (!isActive) {
-                playEverything();
+                requestWakeLock().then(success => {
+                    if (!success) playEverything();
+                });
             }
         }, { once: false });
     });
 
     // Refresco periódico
     setInterval(async () => {
-        if (!isActive && document.visibilityState === 'visible') {
+        if (!isActive && document.visibilityState === 'visible' && !userDisabled) {
             if (!(await requestWakeLock())) {
                 playEverything();
             }
