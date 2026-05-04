@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lebrel-v24';
+const CACHE_NAME = 'lebrel-v26';
 // Usa Network-First para que los desarrolladores vean los cambios al instante.
 
 self.addEventListener('install', (e) => {
