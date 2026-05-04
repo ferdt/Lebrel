@@ -129,21 +129,43 @@ function initDebug() {
         // Clear
         ctx.clearRect(0, 0, w, h);
 
-        // Draw grid lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        ctx.lineWidth = 1;
-        for (let i = 1; i <= 3; i++) {
-            const y = (h / 4) * i;
+        const marginX = 40;
+        const chartW = w - marginX;
+
+        // Draw Y axis labels and grid
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        const yLabels = [100, 75, 50, 25, 0];
+        yLabels.forEach((val) => {
+            const y = h - 10 - (val / 100) * (h - 20);
+            
+            // Text label
+            ctx.fillText(val, marginX - 10, y);
+
+            // Grid line from marginX to w
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(0, y);
+            ctx.moveTo(marginX, y);
             ctx.lineTo(w, y);
             ctx.stroke();
-        }
+        });
+
+        // Vertical Y axis line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(marginX, 10);
+        ctx.lineTo(marginX, h - 10);
+        ctx.stroke();
 
         if (history.length < 2) return;
 
         // X steps
-        const stepX = w / (maxDataPoints - 1);
+        const stepX = chartW / (maxDataPoints - 1);
 
         // Function to draw lines for metrics
         const drawLine = (prop, color, maxScale) => {
@@ -152,7 +174,7 @@ function initDebug() {
             ctx.beginPath();
             
             history.forEach((pt, i) => {
-                const x = i * stepX;
+                const x = marginX + i * stepX;
                 let val = pt[prop];
                 if (typeof val !== 'number' || isNaN(val)) val = 0;
                 const pct = Math.min(val / maxScale, 1);
