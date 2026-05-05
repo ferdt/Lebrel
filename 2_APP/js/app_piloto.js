@@ -3,7 +3,7 @@ import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
-import { initHeader } from './header.js';
+import { initHeader, updateGpsStatus } from './header.js';
 
 console.log('App Piloto: Inicializando');
 try {
@@ -206,6 +206,7 @@ client.onStatusChange((isConnected) => {
 
 client.onMessage((data) => {
     if (data.tramo_nombre !== undefined && ui.tramo_nombre) ui.tramo_nombre.textContent = data.tramo_nombre;
+    if (data.gps_tcp_status !== undefined) updateGpsStatus(data.gps_tcp_status);
     
     if (data.wall_time_s !== undefined) {
         currentWallTimeS = data.wall_time_s;

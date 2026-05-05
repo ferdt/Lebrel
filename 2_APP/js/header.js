@@ -87,6 +87,7 @@ export function initHeader(currentPage) {
                         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
                     </svg>
                 </button>
+                <div id="gps-tcp-indicator" class="status-dot gps-disconnected" title="GPS TCP: Desconectado"></div>
                 <div id="status-indicator" class="status-dot disconnected" title="Desconectado"></div>
             </div>
         </header>
@@ -99,5 +100,22 @@ export function initHeader(currentPage) {
             localStorage.setItem('lebrel_mute_sounds', currentMuted ? 'false' : 'true');
             initHeader(currentPage);
         });
+    }
+}
+
+/** Actualiza visualmente el estado del GPS TCP en el cabecero */
+export function updateGpsStatus(status) {
+    const gpsIndicator = document.getElementById('gps-tcp-indicator');
+    if (!gpsIndicator) return;
+
+    if (status === "Connected") {
+        gpsIndicator.className = 'status-dot gps-connected';
+        gpsIndicator.title = 'GPS TCP: Conectado';
+    } else if (status && status.startsWith("Error")) {
+        gpsIndicator.className = 'status-dot gps-error';
+        gpsIndicator.title = `GPS TCP: ${status}`;
+    } else {
+        gpsIndicator.className = 'status-dot gps-disconnected';
+        gpsIndicator.title = 'GPS TCP: Desconectado';
     }
 }

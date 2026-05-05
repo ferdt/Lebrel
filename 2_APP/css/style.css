@@ -95,6 +95,22 @@ header h1 {
     box-shadow: 0 0 8px var(--accent-green);
 }
 
+.status-dot.gps-disconnected {
+    background-color: #475569;
+    box-shadow: 0 0 5px rgba(255,255,255,0.1);
+    opacity: 0.5;
+}
+
+.status-dot.gps-connected {
+    background-color: var(--accent-blue);
+    box-shadow: 0 0 8px var(--accent-blue);
+}
+
+.status-dot.gps-error {
+    background-color: #f59e0b; /* Amber */
+    box-shadow: 0 0 8px #f59e0b;
+}
+
 /* Dashboard Layout */
 .dashboard {
     display: grid;

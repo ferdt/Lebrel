@@ -3,7 +3,7 @@ import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
-import { initHeader } from './header.js';
+import { initHeader, updateGpsStatus } from './header.js';
 
 function initCopiloto() {
     initRouter();
@@ -309,6 +309,7 @@ function initCopiloto() {
         }
         if (data.tramo_nombre !== undefined && valTramo) valTramo.textContent = data.tramo_nombre;
         if (data.tramo_id !== undefined) _activeTramoId = data.tramo_id;
+        if (data.gps_tcp_status !== undefined) updateGpsStatus(data.gps_tcp_status);
 
         if (data.diferencia_ideal_s !== undefined && valDiferencia) {
             const diff = data.diferencia_ideal_s;

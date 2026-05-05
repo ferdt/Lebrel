@@ -15,6 +15,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from core.hardware import setup_hardware_readers
 from core.logger import rally_logger
 from core.rally import tramo_manager
+from core.gps_tcp import gps_tcp_manager
 
 # --- OCR ENGINE (RapidOCR - IA) ---
 import os
@@ -569,6 +570,9 @@ async def websocket_telemetry(websocket: WebSocket):
             if data == "ODO_RESET":
                 test_dist_m = 0.0
                 test_pulses_1 = 0.0
+                test_pulses_2 = 0.0
+                test_dist_gps = 0.0
+                gps_tcp_manager.reset_distance()
                 rally_logger.log_event("RECALIBRACION_RESET")
             elif data == "MILESTONE":
                 rally_logger.log_event("HITO_MANUAL")
@@ -666,6 +670,7 @@ app.mount("/", StaticFiles(directory=str(app_dir), html=True), name="static")
 # --- BUCLE DE HARDWARE ---
 @app.on_event("startup")
 async def startup_event():
+    gps_tcp_manager.start()
     asyncio.create_task(hardware_loop())
 
 async def hardware_loop():
@@ -743,6 +748,9 @@ async def hardware_loop():
         elif odo_source == "gps":
             dist_m = test_dist_gps * rally_factor
             dist_gps_m = test_dist_gps
+        elif odo_source == "gps_tcp":
+            dist_gps_m = gps_tcp_manager.get_distance()
+            dist_m = dist_gps_m * rally_factor
         else: # default a sensor1
             dist_m = test_pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else test_pulses_1 / 1.54
             dist_gps_m = test_dist_gps
@@ -825,6 +833,7 @@ async def hardware_loop():
             "tramo_nombre": tramo_nombre,
             "distancia_m": dist_m,
             "dist_gps_m": dist_gps_m,
+            "gps_tcp_status": gps_tcp_manager.status,
             "pulses_1": pulses_1,
             "pulses_2": pulses_2,
             "rally_factor": rally_factor,
