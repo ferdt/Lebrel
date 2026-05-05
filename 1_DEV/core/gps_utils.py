@@ -32,18 +32,24 @@ def nmea_to_dec(value, direction):
 class GpsDistanceCalculator:
     def __init__(self):
         self.total_distance_m = 0.0
+        self.delta_distance_m = 0.0
         self.last_lat = None
         self.last_lon = None
         self.last_update = 0
 
     def reset(self):
         self.total_distance_m = 0.0
+        self.delta_distance_m = 0.0
+
+    def get_delta_m(self):
+        d = self.delta_distance_m
+        self.delta_distance_m = 0.0
+        return d
 
     def update(self, lat, lon, current_speed_kmh=0.0, min_speed_kmh=2.0):
         now = time.time()
         dist_added = 0.0
         
-        # Solo sumamos distancia si superamos la velocidad mínima (evita drift en parado)
         if current_speed_kmh < min_speed_kmh:
             self.last_lat = lat
             self.last_lon = lon
@@ -55,9 +61,9 @@ class GpsDistanceCalculator:
             dt = now - self.last_update
             if dt > 0:
                 speed_calc = dist / dt
-                # Filtro de seguridad: saltos de más de 200km/h se consideran error de señal
                 if dist > 0.1 and speed_calc < 60:
                     self.total_distance_m += dist
+                    self.delta_distance_m += dist
                     dist_added = dist
                     
         self.last_lat = lat

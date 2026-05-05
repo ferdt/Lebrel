@@ -36,7 +36,12 @@ class GpsBleManager:
         with self._lock: self.calc.reset()
 
     def get_distance(self):
-        with self._lock: return self.calc.total_distance_m
+        with self._lock:
+            return self.calc.total_distance_m
+
+    def get_delta(self):
+        with self._lock:
+            return self.calc.get_delta_m()
 
     def _run_async_loop(self):
         loop = asyncio.new_event_loop()

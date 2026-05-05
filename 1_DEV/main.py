@@ -211,6 +211,8 @@ active_tramo: dict | None = None
 test_speed_kmh = 0.0
 test_dist_m = 0.0
 test_pulses_1 = 0.0
+test_pulses_2 = 0.0
+test_dist_gps = 0.0
 current_dist_m = 0.0
 
 # --- ENDPOINTS API ---
@@ -402,10 +404,13 @@ async def import_tablitos(request: Request):
     
     new_segments = []
     for c in changes:
+        speed = float(c["speed"])
+        if speed <= 0: speed = 1.0 # Evitar división por cero en cálculos posteriores
         new_segments.append({
             "inicio_m": round(float(c["dist_from"]) * 1000),
             "fin_m": round(float(c["dist_to"]) * 1000),
-            "media_kmh": float(c["speed"])
+            "media_kmh": round(speed, 2),
+            "referencias_externas": False
         })
     target_tramo["segmentos"] = new_segments
     save_tramos(tramos)
@@ -581,7 +586,7 @@ async def process_ocr(request: Request):
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
-    global test_dist_m, test_pulses_1, current_dist_m, active_tramo, pending_hitos_count
+    global test_dist_m, test_pulses_1, test_pulses_2, test_dist_gps, current_dist_m, active_tramo, pending_hitos_count
     await manager.connect(websocket)
     try:
         while True:
@@ -708,7 +713,7 @@ async def startup_event():
     asyncio.create_task(hardware_loop())
 
 async def hardware_loop():
-    global test_dist_m, current_dist_m
+    global test_dist_m, current_dist_m, test_pulses_1, test_pulses_2, test_dist_gps
     print("🚀 Iniciando bucle de telemetría a 10Hz...", flush=True)
     setup_hardware_readers()
     rally_logger.start_tramo("test")
@@ -743,7 +748,6 @@ async def hardware_loop():
         p_km_2 = settings.get("pulses_km_2", 1520)
         
         if test_mode:
-            global test_pulses_1, test_pulses_2, test_dist_gps
             # 1. Calcular el tiempo elapsado real entre ciclos para una simulación ultra precisa
             current_test_time = time.time()
             elapsed_test_s = current_test_time - last_test_time
@@ -767,43 +771,50 @@ async def hardware_loop():
 
             velocidad_kmh = test_speed_kmh
         else:
-            last_test_time = time.time()
-            # En modo real, inicializamos a 0 y dejaremos que cada fuente actualice
-            pulses_1 = 0
-            pulses_2 = 0
-            dist_m = current_dist_m
-            dist_gps_m = 0.0
-            velocidad_kmh = 0.0
+            # En modo real, usamos el tiempo elapsado para la simulación de respaldo
+            current_real_time = time.time()
+            elapsed_real_s = current_real_time - last_test_time
+            last_test_time = current_real_time
+            
+            # Si no hay GPS activo, mantenemos una velocidad de simulación para que el usuario pueda probar
+            # pero SOLO si no hay sensores reales (en este caso el mock de hardware.py)
+            if "gps" not in odo_source and odo_source.startswith("sensor"):
+                sim_speed = 36.0 # kmh
+                delta_m_sim = (sim_speed / 3.6) * elapsed_real_s
+                
+                test_pulses_1 += delta_m_sim * (p_km_1 / 1000.0)
+                test_pulses_2 += delta_m_sim * (p_km_2 / 1000.0)
+                
+                pulses_1 = int(test_pulses_1)
+                pulses_2 = int(test_pulses_2)
+                velocidad_kmh = sim_speed
+            else:
+                # Si hay GPS o estamos parados, los pulsos se mantienen
+                pulses_1 = int(test_pulses_1)
+                pulses_2 = int(test_pulses_2)
+                velocidad_kmh = 0.0
 
         # 4. La distancia del rally depende de la fuente seleccionada en Odómetro
-        if odo_source == "sensor2":
-            dist_m = test_pulses_2 / (p_km_2 / 1000.0) if p_km_2 > 0 else test_pulses_2 / 1.52
-            dist_gps_m = test_dist_gps
-        elif odo_source == "gps":
-            dist_m = test_dist_gps * rally_factor
-            dist_gps_m = test_dist_gps
-        elif odo_source == "gps_tcp":
-            if gps_tcp_manager:
-                dist_gps_m = gps_tcp_manager.get_distance()
-                velocidad_kmh = gps_tcp_manager.data.get("speed_kmh", 0.0)
-            else:
-                dist_gps_m = 0.0
-                velocidad_kmh = 0.0
-            dist_m = dist_gps_m * rally_factor
-        elif odo_source == "gps_ble":
-            if gps_ble_manager:
-                gps_ble_manager.data["min_speed_threshold"] = settings.get("gps_min_speed_kmh", 2.0)
-                dist_gps_m = gps_ble_manager.get_distance()
-                velocidad_kmh = gps_ble_manager.data.get("speed_kmh", 0.0)
-            else:
-                dist_gps_m = 0.0
-                velocidad_kmh = 0.0
-            dist_m = dist_gps_m * rally_factor
+        delta_odo_m = 0.0
+        if odo_source == "gps_tcp" and gps_tcp_manager:
+            delta_gps = gps_tcp_manager.get_delta()
+            delta_odo_m = delta_gps * rally_factor
+            velocidad_kmh = gps_tcp_manager.data.get("speed_kmh", 0.0)
+        elif odo_source == "gps_ble" and gps_ble_manager:
+            gps_ble_manager.data["min_speed_threshold"] = settings.get("gps_min_speed_kmh", 2.0)
+            delta_gps = gps_ble_manager.get_delta()
+            delta_odo_m = delta_gps * rally_factor
+            velocidad_kmh = gps_ble_manager.data.get("speed_kmh", 0.0)
+        
+        if "gps" in odo_source:
+            current_dist_m += delta_odo_m
+            dist_m = current_dist_m
+        elif odo_source == "sensor2":
+            dist_m = pulses_2 / (p_km_2 / 1000.0) if p_km_2 > 0 else pulses_2 / 1.52
+            current_dist_m = dist_m
         else: # default a sensor1
-            dist_m = test_pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else test_pulses_1 / 1.54
-            dist_gps_m = test_dist_gps
-
-        current_dist_m = dist_m
+            dist_m = pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else pulses_1 / 1.54
+            current_dist_m = dist_m
 
         if active_tramo and active_tramo.get("grabar_a_calcar"):
             t_id = active_tramo.get("id")
@@ -880,7 +891,7 @@ async def hardware_loop():
         telemetry = {
             "tramo_nombre": tramo_nombre,
             "distancia_m": dist_m,
-            "dist_gps_m": dist_gps_m,
+            "dist_gps_m": gps_ble_manager.get_distance() if gps_ble_manager else (gps_tcp_manager.get_distance() if gps_tcp_manager else 0.0),
             "gps_tcp_status": gps_tcp_manager.status if gps_tcp_manager else "Not Available",
             "gps_ble_status": gps_ble_manager.status if gps_ble_manager else "Not Available",
             "gps_ble_data": gps_ble_manager.data if gps_ble_manager else {},

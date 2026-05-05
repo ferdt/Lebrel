@@ -31,6 +31,10 @@ class GpsTcpManager:
         with self._lock:
             return self.calc.total_distance_m
 
+    def get_delta(self):
+        with self._lock:
+            return self.calc.get_delta_m()
+
     def _server_loop(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

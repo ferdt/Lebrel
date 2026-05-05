@@ -68,7 +68,7 @@ function initCopiloto() {
 
     /** Formatea segundos totales a "HH:MM:SS.d" */
     const formatTimeFull = (secs) => {
-        if (secs == null || isNaN(secs)) return '--:--:--.--';
+        if (secs == null || !Number.isFinite(secs)) return '--:--:--.--';
         const h  = Math.floor(secs / 3600);
         const mn = Math.floor((secs % 3600) / 60);
         const s  = Math.floor(secs % 60);
@@ -78,7 +78,7 @@ function initCopiloto() {
 
     /** Formatea una duración en segundos a "MM:SS" o "H:MM:SS" */
     const formatDuration = (secs) => {
-        if (secs == null || isNaN(secs) || secs < 0) return '--:--';
+        if (secs == null || !Number.isFinite(secs) || secs < 0) return '--:--';
         const h = Math.floor(secs / 3600);
         const m = Math.floor((secs % 3600) / 60);
         const s = Math.floor(secs % 60);
@@ -115,10 +115,11 @@ function initCopiloto() {
     };
 
     const getRelStartTime = (idx) => {
-        let t = 0;
+        let t = parseTimeStr(currentHoraInicioTramo) || 0;
         for (let i = 0; i < idx; i++) {
             const s = currentTableData[i];
-            t += ((s.fin_m - s.inicio_m) / 1000) / s.media_kmh * 3600;
+            const mediaVal = (s.media_kmh && s.media_kmh > 0) ? s.media_kmh : 1.0;
+            t += ((s.fin_m - s.inicio_m) / 1000) / mediaVal * 3600;
         }
         return t;
     };
@@ -142,13 +143,12 @@ function initCopiloto() {
         else if (type === 'fin') seg.fin_m = parseFloat(newVal) * 1000;
         else if (type === 'media') seg.media_kmh = parseFloat(newVal);
         else if (type === 'dur' || type === 'h_fin') {
-            const secs = parseDuration(newVal);
-            if (secs !== null) {
-                const distKm = (seg.fin_m - seg.inicio_m) / 1000;
-                if (distKm > 0) {
-                    const targetSecs = (type === 'dur') ? secs : (secs - (getRelStartTime(idx)));
-                    seg.media_kmh = (distKm / targetSecs) * 3600;
-                }
+            const targetTime = (type === 'h_fin') ? parseTimeStr(newVal) : (getRelStartTime(idx) + parseDuration(newVal));
+            const relStart = getRelStartTime(idx);
+            const targetSecs = targetTime - relStart;
+            const distKm = (seg.fin_m - seg.inicio_m) / 1000;
+            if (targetSecs > 0 && distKm > 0) {
+                seg.media_kmh = (distKm / targetSecs) * 3600;
             }
         }
 
@@ -171,11 +171,13 @@ function initCopiloto() {
     const renderTable = (tabla, activeIdx) => {
         if(!tablaCuerpo) return;
         tablaCuerpo.innerHTML = '';
-        let cursorRelativo = 0; 
+        let cursorRelativo = parseTimeStr(currentHoraInicioTramo) || 0; 
 
         tabla.forEach((row, ix) => {
             const distKm   = (row.fin_m - row.inicio_m) / 1000;
-            const durSecs  = (distKm / row.media_kmh) * 3600;
+            // Evitar división por cero si la media es 0 o inválida
+            const mediaVal = (row.media_kmh && row.media_kmh > 0) ? row.media_kmh : 1.0;
+            const durSecs  = (distKm / mediaVal) * 3600;
             const tiempoFin = cursorRelativo + durSecs;
             cursorRelativo += durSecs;
 

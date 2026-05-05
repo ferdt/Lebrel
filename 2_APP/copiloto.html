@@ -14,23 +14,42 @@
     <style>
         .split-layout {
             display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 10px;
-            height: 100%;
+            grid-template-columns: 350px 1fr;
+            gap: 12px;
+            height: calc(100vh - 100px);
+            overflow: hidden;
         }
 
         /* Lado izquierdo compacto */
         .compact-info {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 8px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .tramo-table-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .tramo-table thead th {
+            position: sticky;
+            top: 0;
+            background: #151c2c;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
         }
 
         .compact-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 15px;
+            padding: 10px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -38,17 +57,42 @@
 
         .compact-card h4 {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .compact-card .value {
-            font-size: clamp(1.2rem, 5vmin, 1.8rem);
+        .compact-card .value,
+        .compact-card .value span {
+            font-size: clamp(1.0rem, 2vmin, 2.0rem) !important;
+            white-space: nowrap;
+            font-weight: 700;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .compact-card .value .tenths {
+            font-size: 1em;
+            /* Igualdad absoluta */
+            opacity: 0.8;
+        }
+
+        .label-small {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .media-info-group.right {
+            text-align: right;
         }
 
         /* Panel de OPeraciones abajo a la izq */
         .operations-panel {
-            margin-top: auto;
+            margin-top: 0;
         }
 
         @media (max-width: 768px) {
@@ -87,28 +131,34 @@
                     </div>
                 </div>
 
+                <!-- Reset Odómetro -->
+                <div class="operations-panel">
+                    <button id="btn-odo-reset" class="danger"
+                        style="width:100%; padding:8px; margin-bottom:4px; font-size:0.8rem;">RESET ODO</button>
+                </div>
+
                 <div class="compact-card">
                     <h4>Intervalo</h4>
                     <div id="val_diferencia_ideal" class="value positive">+0.0</div>
                 </div>
-
+                <!-- Velocidad (Act/Obj) -->
                 <div class="compact-card">
                     <h4>Velocidad (Act/Obj)</h4>
-                    <div class="value"><span id="val_velocidad_actual"
-                            style="font-size: clamp(1.5rem, 8vmin, 2rem);">0.0</span> / <span
-                            id="val_velocidad_objetivo"
-                            style="color:var(--text-secondary); font-size: clamp(1.5rem, 8vmin, 2rem);">0.0</span>
+                    <div class="value">
+                        <span id="val_velocidad_actual">0.0</span> /
+                        <span id="val_velocidad_objetivo" style="color:var(--text-secondary);">0.0</span>
                     </div>
                 </div>
 
-                <!-- Nueva tarjeta: Próxima Media -->
-                <div class="compact-card" style="background: rgba(255, 255, 255, 0.05); border-style: dashed; border-color: rgba(59, 130, 246, 0.3);">
-                    <h4>Próxima Media</h4>
-                    <div class="value" style="display: flex; flex-direction: column; align-items: flex-end;">
-                        <span id="val_proxima_media" style="color: var(--accent-blue); font-weight: 700;">0.0</span>
-                        <small id="val_distancia_cambio" style="font-size: 0.9rem; opacity: 0.7;">En -- m</small>
+                <!-- Próxima Media -->
+                <div class="compact-card">
+                    <h4>Cambio</h4>
+                    <div class="value">
+                        <span id="val_proxima_media">0.0</span>
+                        <span id="val_distancia_cambio" style="color:var(--text-secondary);">0.0</span>
                     </div>
                 </div>
+
 
                 <!-- Botonera Integrada -->
                 <div class="botonera-mini-grid">
@@ -130,43 +180,42 @@
                     <button class="btn-mini action" id="btn-ocr">
                         <span>TABLAS</span>
                     </button>
-                    <button class="btn-mini action" id="btn-ref-ext-action" style="grid-column: 1 / -1; background: rgba(251, 191, 36, 0.2); border-color: #f59e0b; color: #f59e0b; min-height: 50px;">
+                    <button class="btn-mini action" id="btn-ref-ext-action"
+                        style="grid-column: 1 / -1; background: rgba(251, 191, 36, 0.2); border-color: #f59e0b; color: #f59e0b; min-height: 50px;">
                         <span>REF. EXTERNAS</span>
                     </button>
                 </div>
 
+
                 <div class="operations-panel">
-                    <button id="btn-odo-reset" class="danger"
-                        style="width:100%; padding:8px; margin-bottom:10px; font-size:0.8rem;">RESET ODO</button>
                     <div class="btn-group-vertical">
                         <button id="btn-odometro" style="padding:10px;">Odómetro</button>
                         <button id="btn-tramos" style="padding:10px;"
                             onclick="window.navigateSPA('tramos.html')">Tramos</button>
                     </div>
                 </div>
+
             </section>
 
             <!-- PANEL DERECHO: Tabla del tramo -->
-            <section>
-                <div class="card" style="align-items:flex-start; padding:0; overflow:hidden; height:100%;">
-                    <div style="width:100%; overflow-y:auto; flex:1;">
-                        <table class="tramo-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>De (km)</th>
-                                    <th>A (km)</th>
-                                    <th>Media</th>
-                                    <th>Ext.</th>
-                                    <th>Duración</th>
-                                    <th>T. Fin</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla_cuerpo">
-                                <!-- Filas dinámicas generadas desde app_copiloto.js -->
-                            </tbody>
-                        </table>
-                    </div>
+            <section style="height: 100%; overflow: hidden;">
+                <div class="tramo-table-container">
+                    <table class="tramo-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>De (km)</th>
+                                <th>A (km)</th>
+                                <th>Media</th>
+                                <th>Ext.</th>
+                                <th>Duración</th>
+                                <th>T. Fin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla_cuerpo">
+                            <!-- Filas dinámicas generadas desde app_copiloto.js -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </main>
