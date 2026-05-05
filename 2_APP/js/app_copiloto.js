@@ -3,7 +3,7 @@ import { initFullscreen } from './fullscreen.js';
 import { initWakeLock } from './wakelock.js';
 import { initRouter } from './router.js';
 import { initRotation } from './rotation.js';
-import { initHeader, updateGpsStatus } from './header.js';
+import { initHeader, updateGpsStatus, updateGpsBleStatus } from './header.js';
 
 function initCopiloto() {
     initRouter();
@@ -21,6 +21,8 @@ function initCopiloto() {
     const valVelocidadAct = document.getElementById('val_velocidad_actual');
     const valVelocidadObj = document.getElementById('val_velocidad_objetivo');
     const valTiempo = document.getElementById('val_tiempo_tramo');
+    const valProximaMedia = document.getElementById('val_proxima_media');
+    const valDistanciaCambio = document.getElementById('val_distancia_cambio');
     
     // UI Tabla
     const tablaCuerpo = document.getElementById('tabla_cuerpo');
@@ -310,6 +312,7 @@ function initCopiloto() {
         if (data.tramo_nombre !== undefined && valTramo) valTramo.textContent = data.tramo_nombre;
         if (data.tramo_id !== undefined) _activeTramoId = data.tramo_id;
         if (data.gps_tcp_status !== undefined) updateGpsStatus(data.gps_tcp_status);
+        if (data.gps_ble_status !== undefined) updateGpsBleStatus(data.gps_ble_status);
 
         if (data.diferencia_ideal_s !== undefined && valDiferencia) {
             const diff = data.diferencia_ideal_s;
@@ -320,6 +323,13 @@ function initCopiloto() {
         if (data.tiempo_tramo_s !== undefined && valTiempo) valTiempo.innerHTML = formatTime(data.tiempo_tramo_s);
         if (data.velocidad_kmh !== undefined && valVelocidadAct) valVelocidadAct.textContent = data.velocidad_kmh.toFixed(1);
         if (data.velocidad_objetivo_kmh !== undefined && valVelocidadObj) valVelocidadObj.textContent = data.velocidad_objetivo_kmh.toFixed(1);
+
+        if (data.proxima_media_kmh !== undefined && valProximaMedia) {
+            valProximaMedia.textContent = data.proxima_media_kmh.toFixed(1);
+        }
+        if (data.distancia_cambio_m !== undefined && valDistanciaCambio) {
+            valDistanciaCambio.textContent = `En ${Math.round(data.distancia_cambio_m)} m`;
+        }
 
         if (data.hora_inicio_tramo !== undefined) currentHoraInicioTramo = data.hora_inicio_tramo;
         
@@ -425,6 +435,13 @@ function initCopiloto() {
     if(btnOcr) {
         btnOcr.addEventListener('click', () => {
             window.location.href = "/tablitos/tablas.html";
+        });
+    }
+
+    const btnOdometro = document.getElementById('btn-odometro');
+    if(btnOdometro) {
+        btnOdometro.addEventListener('click', () => {
+            window.location.href = "odometro.html";
         });
     }
 

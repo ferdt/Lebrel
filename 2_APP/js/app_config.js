@@ -18,6 +18,7 @@ const elements = {
     pid_kd: document.getElementById('pid_kd'),
     theme: document.getElementById('theme'),
     font_size_offset: document.getElementById('font_size_offset'),
+    gps_min_speed_kmh: document.getElementById('gps_min_speed_kmh'),
     btnSave: document.getElementById('btn-save'),
     saveMsg: document.getElementById('save-msg')
 };
@@ -42,6 +43,7 @@ async function loadSettings() {
         if (elements.pid_kd) elements.pid_kd.value = currentSettings.pid_kd || 0.050;
         if (elements.theme) elements.theme.value = currentSettings.theme || 'dark';
         if (elements.font_size_offset) elements.font_size_offset.value = currentSettings.font_size_offset || 0;
+        if (elements.gps_min_speed_kmh) elements.gps_min_speed_kmh.value = currentSettings.gps_min_speed_kmh || 2.0;
         
         // Cargar desde localStorage para el toggle de ayuda sonora de piloto
         if (elements.driving_sound_aids) {
@@ -83,7 +85,8 @@ if (elements.btnSave) {
             pid_ki: elements.pid_ki ? parseFloat(elements.pid_ki.value) : 0.020,
             pid_kd: elements.pid_kd ? parseFloat(elements.pid_kd.value) : 0.050,
             theme: elements.theme ? elements.theme.value : 'dark',
-            font_size_offset: elements.font_size_offset ? parseInt(elements.font_size_offset.value) : 0
+            font_size_offset: elements.font_size_offset ? parseInt(elements.font_size_offset.value) : 0,
+            gps_min_speed_kmh: elements.gps_min_speed_kmh ? parseFloat(elements.gps_min_speed_kmh.value) : 2.0
         });
 
         if (elements.driving_sound_aids) {

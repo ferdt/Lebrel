@@ -75,7 +75,19 @@ client.onMessage((data) => {
     }
     if (data.odo_source !== undefined && odoSourceVal) {
         odoSourceVal.textContent = data.odo_source.toUpperCase();
-        odoSourceVal.style.color = data.odo_source === 'test' ? 'var(--accent-green)' : 'var(--text-secondary)';
+        odoSourceVal.style.color = (data.odo_source === 'gps_ble' || data.odo_source === 'gps_tcp') ? 'var(--accent-blue)' : (data.odo_source === 'test' ? 'var(--accent-green)' : 'var(--text-secondary)');
+    }
+
+    if (data.gps_ble_data) {
+        const g = data.gps_ble_data;
+        if (document.getElementById('gps_lat')) document.getElementById('gps_lat').textContent = (g.lat || 0).toFixed(6);
+        if (document.getElementById('gps_lon')) document.getElementById('gps_lon').textContent = (g.lon || 0).toFixed(6);
+        if (document.getElementById('gps_alt')) document.getElementById('gps_alt').textContent = (g.alt || 0);
+        if (document.getElementById('gps_sats')) document.getElementById('gps_sats').textContent = (g.sats || 0);
+        if (document.getElementById('gps_speed')) document.getElementById('gps_speed').textContent = (g.speed_kmh || 0).toFixed(1);
+        if (document.getElementById('gps_fix')) document.getElementById('gps_fix').textContent = (g.fix || 0);
+        if (document.getElementById('gps_heading')) document.getElementById('gps_heading').textContent = (g.heading || 0).toFixed(1);
+        if (document.getElementById('gps_raw')) document.getElementById('gps_raw').textContent = (g.raw_hex || '--');
     }
 });
 

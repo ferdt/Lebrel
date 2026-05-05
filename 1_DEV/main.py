@@ -1,3 +1,6 @@
+from fastapi import FastAPI
+app = FastAPI(title="Lebrel Backend")
+
 import asyncio
 import json
 import os
@@ -7,15 +10,36 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
+from core.hardware import setup_hardware_readers
+from core.logger import rally_logger
+from core.rally import tramo_manager
+
+# --- APP FASTAPI ---
+from fastapi import WebSocket, WebSocketDisconnect, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
 
-from core.hardware import setup_hardware_readers
-from core.logger import rally_logger
-from core.rally import tramo_manager
-from core.gps_tcp import gps_tcp_manager
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- GPS MODULES ---
+try:
+    from core.gps_tcp import gps_tcp_manager
+except Exception as e:
+    print(f"⚠️ Error al cargar gps_tcp: {e}")
+    gps_tcp_manager = None
+
+try:
+    from core.gps_ble import gps_ble_manager
+except Exception as e:
+    print(f"⚠️ Error al cargar gps_ble: {e}")
+    gps_ble_manager = None
 
 # --- OCR ENGINE (RapidOCR - IA) ---
 import os
@@ -77,17 +101,6 @@ def sort_boxes(dt_boxes, matched_texts, matched_scores):
             sorted_boxes.append(it['box'])
     return sorted_boxes, sorted_texts, []
 
-# --- APP FASTAPI ---
-app = FastAPI(title="Lebrel Backend")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # --- PERSISTENCIA ---
 SETTINGS_FILE = "settings.json"
 TRAMOS_FILE = "tramos.json"
@@ -105,7 +118,8 @@ default_settings = {
     "pulses_km_2": 1520,
     "time_offset_s": 0.0,
     "distcalcardelta": 100.0,
-    "default_hitos": 5
+    "default_hitos": 5,
+    "gps_min_speed_kmh": 2.0
 }
 
 def load_tramos():
@@ -129,10 +143,15 @@ def save_calibraciones(c):
         json.dump(c, f, indent=2)
 
 def load_settings():
+    settings = default_settings.copy()
     if os.path.exists(SETTINGS_FILE):
-        with open(SETTINGS_FILE, "r") as f:
-            return json.load(f)
-    return default_settings
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                loaded = json.load(f)
+                settings.update(loaded)
+        except:
+            pass
+    return settings
 
 def save_settings(s):
     try:
@@ -572,7 +591,8 @@ async def websocket_telemetry(websocket: WebSocket):
                 test_pulses_1 = 0.0
                 test_pulses_2 = 0.0
                 test_dist_gps = 0.0
-                gps_tcp_manager.reset_distance()
+                if gps_tcp_manager: gps_tcp_manager.reset_distance()
+                if gps_ble_manager: gps_ble_manager.reset_distance()
                 rally_logger.log_event("RECALIBRACION_RESET")
             elif data == "MILESTONE":
                 rally_logger.log_event("HITO_MANUAL")
@@ -668,9 +688,23 @@ if tablitos_dir.exists():
 app.mount("/", StaticFiles(directory=str(app_dir), html=True), name="static")
 
 # --- BUCLE DE HARDWARE ---
+@app.get("/api/gps/log")
+async def get_gps_log():
+    log_path = Path("1_DEV/gps_raw.log")
+    if not log_path.exists():
+        # Intentar ruta relativa directa si estamos en CWD
+        log_path = Path("gps_raw.log")
+        
+    if log_path.exists():
+        from fastapi.responses import FileResponse
+        return FileResponse(log_path, filename="gps_raw.log", media_type="text/plain")
+    else:
+        return {"error": "Archivo de log no encontrado"}
+
 @app.on_event("startup")
 async def startup_event():
-    gps_tcp_manager.start()
+    if gps_tcp_manager: gps_tcp_manager.start()
+    if gps_ble_manager: gps_ble_manager.start()
     asyncio.create_task(hardware_loop())
 
 async def hardware_loop():
@@ -734,12 +768,12 @@ async def hardware_loop():
             velocidad_kmh = test_speed_kmh
         else:
             last_test_time = time.time()
-            # Simulación hardware real
-            dist_m += 1.0  
-            velocidad_kmh = 36.0
-            dist_gps_m = dist_m / rally_factor
-            pulses_1 = int(dist_m * (p_km_1 / 1000))
-            pulses_2 = int(dist_m * 1.53)
+            # En modo real, inicializamos a 0 y dejaremos que cada fuente actualice
+            pulses_1 = 0
+            pulses_2 = 0
+            dist_m = current_dist_m
+            dist_gps_m = 0.0
+            velocidad_kmh = 0.0
 
         # 4. La distancia del rally depende de la fuente seleccionada en Odómetro
         if odo_source == "sensor2":
@@ -749,7 +783,21 @@ async def hardware_loop():
             dist_m = test_dist_gps * rally_factor
             dist_gps_m = test_dist_gps
         elif odo_source == "gps_tcp":
-            dist_gps_m = gps_tcp_manager.get_distance()
+            if gps_tcp_manager:
+                dist_gps_m = gps_tcp_manager.get_distance()
+                velocidad_kmh = gps_tcp_manager.data.get("speed_kmh", 0.0)
+            else:
+                dist_gps_m = 0.0
+                velocidad_kmh = 0.0
+            dist_m = dist_gps_m * rally_factor
+        elif odo_source == "gps_ble":
+            if gps_ble_manager:
+                gps_ble_manager.data["min_speed_threshold"] = settings.get("gps_min_speed_kmh", 2.0)
+                dist_gps_m = gps_ble_manager.get_distance()
+                velocidad_kmh = gps_ble_manager.data.get("speed_kmh", 0.0)
+            else:
+                dist_gps_m = 0.0
+                velocidad_kmh = 0.0
             dist_m = dist_gps_m * rally_factor
         else: # default a sensor1
             dist_m = test_pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else test_pulses_1 / 1.54
@@ -833,7 +881,9 @@ async def hardware_loop():
             "tramo_nombre": tramo_nombre,
             "distancia_m": dist_m,
             "dist_gps_m": dist_gps_m,
-            "gps_tcp_status": gps_tcp_manager.status,
+            "gps_tcp_status": gps_tcp_manager.status if gps_tcp_manager else "Not Available",
+            "gps_ble_status": gps_ble_manager.status if gps_ble_manager else "Not Available",
+            "gps_ble_data": gps_ble_manager.data if gps_ble_manager else {},
             "pulses_1": pulses_1,
             "pulses_2": pulses_2,
             "rally_factor": rally_factor,
@@ -853,7 +903,8 @@ async def hardware_loop():
             "gps_time": now.strftime("%H:%M:%S.%f")[:-5],
             "time_offset_s": time_offset_s,
             "wall_time_s": wall_time_s,
-            "tramo_id": active_tramo.get("id") if active_tramo else None
+            "tramo_id": active_tramo.get("id") if active_tramo else None,
+            "gps_ble_data": gps_ble_manager.data if gps_ble_manager else {}
         }
         
         await manager.broadcast(telemetry)

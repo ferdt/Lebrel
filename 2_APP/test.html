@@ -143,8 +143,28 @@
                 <span class="status-value" id="val_distancia">0.000 km</span>
             </div>
 
+            <div class="card" id="gps-debug-card" style="padding: 15px; background: rgba(59, 130, 246, 0.05); border-color: var(--accent-blue);">
+                <h3 style="margin-bottom:10px; color: var(--accent-blue);">GPS BLE Debug (Qstarz)</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
+                    <div><span class="status-label">Lat:</span> <span id="gps_lat" style="font-variant-numeric: tabular-nums;">0.000000</span></div>
+                    <div><span class="status-label">Lon:</span> <span id="gps_lon" style="font-variant-numeric: tabular-nums;">0.000000</span></div>
+                    <div><span class="status-label">Alt:</span> <span id="gps_alt">0</span> m</div>
+                    <div><span class="status-label">Sats:</span> <span id="gps_sats">0</span></div>
+                    <div><span class="status-label">Spd:</span> <span id="gps_speed">0.0</span> km/h</div>
+                    <div><span class="status-label">Fix:</span> <span id="gps_fix">0</span></div>
+                    <div style="grid-column: span 2;"><span class="status-label">Heading:</span> <span id="gps_heading">0</span>°</div>
+                    <div style="grid-column: span 2; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
+                        <span class="status-label">Raw Hex:</span><br>
+                        <span id="gps_raw" style="font-size: 0.65rem; word-break: break-all; color: var(--text-secondary); font-family: monospace;">--</span>
+                    </div>
+                    <div style="grid-column: span 2; margin-top: 10px;">
+                        <a href="/api/gps/log" target="_blank" class="btn btn-secondary" style="width: 100%; display: block; text-align: center; font-size: 0.8rem; padding: 8px;">Descargar gps_raw.log</a>
+                    </div>
+                </div>
+            </div>
+
             <p style="color: var(--text-secondary); font-size: 0.8rem; text-align: center; padding: 10px;">
-                Nota: Para que esto funcione, en Configuración debe estar seleccionado "Simulador" como fuente del odómetro.
+                Nota: Para que el odómetro principal use la antena, selecciona "GPS vía BLE" en Configuración.
             </p>
         </main>
     </div>

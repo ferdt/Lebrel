@@ -88,6 +88,7 @@ export function initHeader(currentPage) {
                     </svg>
                 </button>
                 <div id="gps-tcp-indicator" class="status-dot gps-disconnected" title="GPS TCP: Desconectado"></div>
+                <div id="gps-ble-indicator" class="status-dot gps-disconnected" title="GPS BLE: Desconectado"></div>
                 <div id="status-indicator" class="status-dot disconnected" title="Desconectado"></div>
             </div>
         </header>
@@ -117,5 +118,29 @@ export function updateGpsStatus(status) {
     } else {
         gpsIndicator.className = 'status-dot gps-disconnected';
         gpsIndicator.title = 'GPS TCP: Desconectado';
+    }
+}
+
+/** Actualiza visualmente el estado del GPS BLE en el cabecero */
+export function updateGpsBleStatus(status) {
+    const gpsIndicator = document.getElementById('gps-ble-indicator');
+    if (!gpsIndicator) return;
+
+    if (status === "Connected") {
+        gpsIndicator.className = 'status-dot gps-connected';
+        gpsIndicator.title = 'GPS BLE: Conectado';
+    } else if (status === "Scanning...") {
+        gpsIndicator.className = 'status-dot gps-scanning';
+        gpsIndicator.title = 'GPS BLE: Buscando antena...';
+    } else if (status && status.startsWith("Error")) {
+        gpsIndicator.className = 'status-dot gps-error';
+        gpsIndicator.title = `GPS BLE: ${status}`;
+    } else if (status === "Not Installed") {
+        gpsIndicator.className = 'status-dot gps-disconnected';
+        gpsIndicator.title = 'GPS BLE: Librería no instalada';
+        gpsIndicator.style.opacity = "0.2";
+    } else {
+        gpsIndicator.className = 'status-dot gps-disconnected';
+        gpsIndicator.title = 'GPS BLE: Desconectado';
     }
 }

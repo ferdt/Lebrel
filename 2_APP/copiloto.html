@@ -101,6 +101,15 @@
                     </div>
                 </div>
 
+                <!-- Nueva tarjeta: Próxima Media -->
+                <div class="compact-card" style="background: rgba(255, 255, 255, 0.05); border-style: dashed; border-color: rgba(59, 130, 246, 0.3);">
+                    <h4>Próxima Media</h4>
+                    <div class="value" style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <span id="val_proxima_media" style="color: var(--accent-blue); font-weight: 700;">0.0</span>
+                        <small id="val_distancia_cambio" style="font-size: 0.9rem; opacity: 0.7;">En -- m</small>
+                    </div>
+                </div>
+
                 <!-- Botonera Integrada -->
                 <div class="botonera-mini-grid">
                     <button class="btn-mini plus" id="btn-odo-plus">
@@ -130,7 +139,7 @@
                     <button id="btn-odo-reset" class="danger"
                         style="width:100%; padding:8px; margin-bottom:10px; font-size:0.8rem;">RESET ODO</button>
                     <div class="btn-group-vertical">
-                        <button id="btn-calibrar" style="padding:10px;">Calibración</button>
+                        <button id="btn-odometro" style="padding:10px;">Odómetro</button>
                         <button id="btn-tramos" style="padding:10px;"
                             onclick="window.navigateSPA('tramos.html')">Tramos</button>
                     </div>

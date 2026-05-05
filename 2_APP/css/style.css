@@ -111,6 +111,17 @@ header h1 {
     box-shadow: 0 0 8px #f59e0b;
 }
 
+.status-dot.gps-scanning {
+    background-color: var(--accent-blue);
+    animation: pulse-blue 1.5s infinite;
+}
+
+@keyframes pulse-blue {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+    70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
 /* Dashboard Layout */
 .dashboard {
     display: grid;
