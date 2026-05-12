@@ -8,12 +8,13 @@ Este documento describe el ciclo de vida completo de las señales de entrada de 
 
 El sistema de navegación Lebrel puede captar la distancia recorrida mediante tres fuentes distintas configurables: **Sensor de Rueda 1**, **Sensor de Rueda 2** y **GPS**.
 
-### 1.1 Sensores de Rueda (Pulsos)
-* **Captación**: Un lector de pulsos electrónico registra el paso de imanes en las ruedas o en el cardán.
-* **Señal Cruda**: Un contador acumulativo de pulsos (`pulses_1` y `pulses_2`).
-* **Conversión a metros**: Se calcula la distancia en metros mediante los parámetros de calibración (`pulses_km_1` y `pulses_km_2`):
+### 1.1 Sensores de Rueda (Sondas Inductivas vía ESP32)
+* **Captación Hardware**: Las sondas inductivas (típicamente de 12V) detectan el paso de los imanes o tornillos en la rueda/cardán.
+* **Procesamiento de Pulsos (ESP32)**: Un microcontrolador ESP32 recibe la señal de las sondas (previamente bajada a 3.3V mediante optoacopladores). El firmware del ESP32 utiliza **interrupciones hardware ultrarrápidas (`IRAM_ATTR`)** en los pines 34/35 junto con un filtro antirrebote de `500µs` (debounce) para no perder ningún pulso y evitar conteos falsos por vibración.
+* **Transmisión a la Pi (Serial/USB)**: El ESP32 envía la cuenta **total absoluta** de pulsos a la Raspberry Pi por USB a `115200` baudios 20 veces por segundo (cada 50ms) en el formato `S1:XXXX,S2:YYYY\n`. El uso de contadores absolutos evita desajustes si se pierde un paquete serial.
+* **Conversión a metros**: En el archivo `core/hardware.py`, un hilo en segundo plano (`ESP32Reader`) lee continuamente los valores seriales y los inyecta al bucle de telemetría. Se calcula la distancia final en metros usando los parámetros de calibración (`pulses_km_1` y `pulses_km_2`):
 
-$$\text{Distancia (m)} = \frac{\text{Pulsos de Rueda}}{\frac{\text{Pulsos/km}}{1000}}$$
+$$\text{Distancia (m)} = \frac{\text{Pulsos de Rueda Absolutos}}{\frac{\text{Pulsos/km}}{1000}}$$
 
 ### 1.2 GPS
 * **Captación**: Antena de GPS en tiempo real.
