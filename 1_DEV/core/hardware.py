@@ -14,6 +14,8 @@ class ESP32Reader:
         self.pulses_2 = 0
         
     def start(self):
+        if self.running:
+            return # Ya está corriendo, evitar duplicar hilos y saturar logs
         self.running = True
         threading.Thread(target=self._read_loop, daemon=True).start()
             
@@ -22,15 +24,33 @@ class ESP32Reader:
         if self.serial:
             self.serial.close()
 
+    def _find_esp32_port(self):
+        import glob
+        # Lista de puertos potenciales en Linux
+        potential_ports = glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
+        if self.port in potential_ports:
+            return self.port # Preferir el configurado
+        if potential_ports:
+            return potential_ports[0] # Devolver el primero encontrado
+        return None
+
     def _read_loop(self):
         while self.running:
             if not self.serial or not self.serial.is_open:
                 try:
-                    self.serial = serial.Serial(self.port, self.baudrate, timeout=1)
-                    print(f"✅ Conectado al ESP32 en {self.port}")
+                    # Auto-detección de puerto si el configurado falla
+                    current_port = self._find_esp32_port()
+                    if not current_port:
+                        # Si no hay ningún puerto, esperar pacientemente sin saturar los logs
+                        print(f"⚠️ No se detecta ningún ESP32 (ttyUSB/ttyACM) conectado...")
+                        time.sleep(5)
+                        continue
+                    
+                    self.serial = serial.Serial(current_port, self.baudrate, timeout=1)
+                    print(f"✅ Conectado al ESP32 en {current_port}")
                 except Exception as e:
-                    print(f"⚠️ Esperando al ESP32 en {self.port}... ({e})")
-                    time.sleep(2)
+                    print(f"⚠️ Esperando al ESP32... ({e})")
+                    time.sleep(5) # Dormir 5 segundos para evitar flood de logs
                     continue
 
             try:

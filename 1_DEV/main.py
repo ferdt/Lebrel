@@ -612,6 +612,7 @@ async def websocket_telemetry(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             if data == "ODO_RESET":
+                current_dist_m = 0.0
                 test_dist_m = 0.0
                 test_pulses_1 = 0.0
                 test_pulses_2 = 0.0
@@ -624,6 +625,7 @@ async def websocket_telemetry(websocket: WebSocket):
             elif data.startswith("DIST_ADJUST:"):
                 try:
                     delta = float(data.split(":")[1])
+                    current_dist_m += delta
                     test_dist_m += delta
                     settings = load_settings()
                     p_km_1 = settings.get("pulses_km_1", 1540)
@@ -740,6 +742,8 @@ async def hardware_loop():
     
     dist_m = 0.0
     tiempo_tramo_s = 0.0
+    pulses_1 = 0
+    pulses_2 = 0
     tramo_mock = [{"inicio_m": 0, "fin_m": 12000, "media_kmh": 45.0}]
     import time
     last_test_time = time.time()
@@ -767,75 +771,72 @@ async def hardware_loop():
         p_km_1 = settings.get("pulses_km_1", 1540)
         p_km_2 = settings.get("pulses_km_2", 1520)
         
+        delta_odo_m = 0.0
+        
         if test_mode:
-            # 1. Calcular el tiempo elapsado real entre ciclos para una simulación ultra precisa
+            # --- MODO SIMULADOR ---
             current_test_time = time.time()
             elapsed_test_s = current_test_time - last_test_time
             last_test_time = current_test_time
             
-            delta_m = (test_speed_kmh / 3.6) * elapsed_test_s
+            delta_odo_m = (test_speed_kmh / 3.6) * elapsed_test_s
+            velocidad_kmh = test_speed_kmh
             
-            # 2. Convertimos esa distancia a pulsos de cada sensor y GPS según calibración
-            delta_p1 = delta_m * (p_km_1 / 1000.0)
-            delta_p2 = delta_m * (p_km_2 / 1000.0)
-            delta_gps = delta_m / rally_factor if rally_factor > 0 else delta_m
-            
-            test_pulses_1 += delta_p1
-            test_pulses_2 += delta_p2
-            test_dist_gps += delta_gps
-            
-            # 3. Guardamos los pulsos de rueda como enteros para telemetría
+            test_pulses_1 += delta_odo_m * (p_km_1 / 1000.0)
+            test_pulses_2 += delta_odo_m * (p_km_2 / 1000.0)
             pulses_1 = int(test_pulses_1)
             pulses_2 = int(test_pulses_2)
-            dist_m = test_dist_gps
 
-            velocidad_kmh = test_speed_kmh
-        else:
-            # MODO REAL: Usamos las lecturas del hardware real (ESP32)
+        elif "gps" in odo_source:
+            # --- MODO GPS REAL ---
             current_real_time = time.time()
             elapsed_real_s = current_real_time - last_test_time
             last_test_time = current_real_time
             
-            # Leer pulsos absolutos desde el ESP32
+            delta_gps = 0.0
+            if odo_source == "gps_tcp" and gps_tcp_manager:
+                delta_gps = gps_tcp_manager.get_delta()
+                velocidad_kmh = gps_tcp_manager.data.get("speed_kmh", 0.0)
+            elif odo_source == "gps_ble" and gps_ble_manager:
+                gps_ble_manager.data["min_speed_threshold"] = settings.get("gps_min_speed_kmh", 2.0)
+                delta_gps = gps_ble_manager.get_delta()
+                velocidad_kmh = gps_ble_manager.data.get("speed_kmh", 0.0)
+            
+            delta_odo_m = delta_gps * rally_factor
+            
+            pulses_1 = esp32_reader.pulses_1
+            pulses_2 = esp32_reader.pulses_2
+
+        else:
+            # --- MODO SENSORES REALES ---
+            current_real_time = time.time()
+            elapsed_real_s = current_real_time - last_test_time
+            last_test_time = current_real_time
+            
             new_pulses_1 = esp32_reader.pulses_1
             new_pulses_2 = esp32_reader.pulses_2
             
-            # Calcular velocidad instantánea basada en el incremento de pulsos si es necesario
-            # De momento, delegamos el cálculo de velocidad a las variaciones de dist_m para telemetría básica
-            # o usamos la diferencial de pulsos
-            delta_p = new_pulses_1 - pulses_1
-            meters_moved = delta_p / (p_km_1 / 1000.0) if p_km_1 > 0 else 0
+            if odo_source == "sensor2":
+                delta_p = new_pulses_2 - pulses_2
+                factor = (p_km_2 / 1000.0) if p_km_2 > 0 else 1.52
+            else:
+                delta_p = new_pulses_1 - pulses_1
+                factor = (p_km_1 / 1000.0) if p_km_1 > 0 else 1.54
+
+            delta_odo_m = delta_p / factor if factor > 0 else 0.0
             
             if elapsed_real_s > 0:
-                velocidad_kmh = (meters_moved / elapsed_real_s) * 3.6
+                velocidad_kmh = (delta_odo_m / elapsed_real_s) * 3.6
             else:
                 velocidad_kmh = 0.0
-
-            # Actualizamos los pulsos globales para el cálculo final
+            
             pulses_1 = new_pulses_1
             pulses_2 = new_pulses_2
 
-        # 4. La distancia del rally depende de la fuente seleccionada en Odómetro
-        delta_odo_m = 0.0
-        if odo_source == "gps_tcp" and gps_tcp_manager:
-            delta_gps = gps_tcp_manager.get_delta()
-            delta_odo_m = delta_gps * rally_factor
-            velocidad_kmh = gps_tcp_manager.data.get("speed_kmh", 0.0)
-        elif odo_source == "gps_ble" and gps_ble_manager:
-            gps_ble_manager.data["min_speed_threshold"] = settings.get("gps_min_speed_kmh", 2.0)
-            delta_gps = gps_ble_manager.get_delta()
-            delta_odo_m = delta_gps * rally_factor
-            velocidad_kmh = gps_ble_manager.data.get("speed_kmh", 0.0)
-        
-        if "gps" in odo_source:
-            current_dist_m += delta_odo_m
-            dist_m = current_dist_m
-        elif odo_source == "sensor2":
-            dist_m = pulses_2 / (p_km_2 / 1000.0) if p_km_2 > 0 else pulses_2 / 1.52
-            current_dist_m = dist_m
-        else: # default a sensor1
-            dist_m = pulses_1 / (p_km_1 / 1000.0) if p_km_1 > 0 else pulses_1 / 1.54
-            current_dist_m = dist_m
+        # ACUMULADOR UNIFICADO
+        current_dist_m += delta_odo_m
+        dist_m = current_dist_m
+
 
         if active_tramo and active_tramo.get("grabar_a_calcar"):
             t_id = active_tramo.get("id")
