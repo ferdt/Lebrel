@@ -10,7 +10,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from core.hardware import setup_hardware_readers
+from core.hardware import setup_hardware_readers, esp32_reader
 from core.logger import rally_logger
 from core.rally import tramo_manager
 
@@ -791,28 +791,29 @@ async def hardware_loop():
 
             velocidad_kmh = test_speed_kmh
         else:
-            # En modo real, usamos el tiempo elapsado para la simulación de respaldo
+            # MODO REAL: Usamos las lecturas del hardware real (ESP32)
             current_real_time = time.time()
             elapsed_real_s = current_real_time - last_test_time
             last_test_time = current_real_time
             
-            # Si no hay GPS activo, mantenemos una velocidad de simulación para que el usuario pueda probar
-            # pero SOLO si no hay sensores reales (en este caso el mock de hardware.py)
-            if "gps" not in odo_source and odo_source.startswith("sensor"):
-                sim_speed = 36.0 # kmh
-                delta_m_sim = (sim_speed / 3.6) * elapsed_real_s
-                
-                test_pulses_1 += delta_m_sim * (p_km_1 / 1000.0)
-                test_pulses_2 += delta_m_sim * (p_km_2 / 1000.0)
-                
-                pulses_1 = int(test_pulses_1)
-                pulses_2 = int(test_pulses_2)
-                velocidad_kmh = sim_speed
+            # Leer pulsos absolutos desde el ESP32
+            new_pulses_1 = esp32_reader.pulses_1
+            new_pulses_2 = esp32_reader.pulses_2
+            
+            # Calcular velocidad instantánea basada en el incremento de pulsos si es necesario
+            # De momento, delegamos el cálculo de velocidad a las variaciones de dist_m para telemetría básica
+            # o usamos la diferencial de pulsos
+            delta_p = new_pulses_1 - pulses_1
+            meters_moved = delta_p / (p_km_1 / 1000.0) if p_km_1 > 0 else 0
+            
+            if elapsed_real_s > 0:
+                velocidad_kmh = (meters_moved / elapsed_real_s) * 3.6
             else:
-                # Si hay GPS o estamos parados, los pulsos se mantienen
-                pulses_1 = int(test_pulses_1)
-                pulses_2 = int(test_pulses_2)
                 velocidad_kmh = 0.0
+
+            # Actualizamos los pulsos globales para el cálculo final
+            pulses_1 = new_pulses_1
+            pulses_2 = new_pulses_2
 
         # 4. La distancia del rally depende de la fuente seleccionada en Odómetro
         delta_odo_m = 0.0

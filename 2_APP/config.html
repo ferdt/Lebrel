@@ -45,6 +45,15 @@
                 </div>
 
                 <div class="form-group" style="width:100%;">
+                    <label for="test_mode">Modo Test (Simulador)</label>
+                    <select id="test_mode">
+                        <option value="false">Desactivado (Sensores Reales)</option>
+                        <option value="true">Activado (Simulador de Velocidad)</option>
+                    </select>
+                    <small style="color: var(--text-dim); font-size: 0.8rem; margin-top: 4px;">Si está activado, ignorará las sondas y simulará el avance a la velocidad marcada en la pantalla Prueba.</small>
+                </div>
+
+                <div class="form-group" style="width:100%;">
                     <label for="driving_sound_aids">Ayudas Sonoras en Piloto</label>
                     <select id="driving_sound_aids">
                         <option value="true">Activadas</option>

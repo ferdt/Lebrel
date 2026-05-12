@@ -6,6 +6,7 @@ initHeader('config');
 
 const elements = {
     odometer_source: document.getElementById('odometer_source'),
+    test_mode: document.getElementById('test_mode'),
     driving_sound_aids: document.getElementById('driving_sound_aids'),
     wheel_perimeter_m: document.getElementById('wheel_perimeter_m'),
     neutral_interval_s: document.getElementById('neutral_interval_s'),
@@ -32,6 +33,7 @@ async function loadSettings() {
         currentSettings = await res.json();
         
         if (elements.odometer_source) elements.odometer_source.value = currentSettings.odometer_source || 'sensor1';
+        if (elements.test_mode) elements.test_mode.value = currentSettings.test_mode ? 'true' : 'false';
         if (elements.wheel_perimeter_m) elements.wheel_perimeter_m.value = currentSettings.wheel_perimeter_m || 1.950;
         if (elements.neutral_interval_s) elements.neutral_interval_s.value = currentSettings.neutral_interval_s || 0.10;
         if (elements.pid_weight) elements.pid_weight.value = currentSettings.pid_weight || 1000;
@@ -75,6 +77,7 @@ if (elements.btnSave) {
     elements.btnSave.addEventListener('click', async () => {
         const newSettings = Object.assign({}, currentSettings, {
             odometer_source: elements.odometer_source ? elements.odometer_source.value : 'sensor1',
+            test_mode: elements.test_mode ? elements.test_mode.value === 'true' : false,
             wheel_perimeter_m: elements.wheel_perimeter_m ? parseFloat(elements.wheel_perimeter_m.value) : 1.950,
             neutral_interval_s: elements.neutral_interval_s ? parseFloat(elements.neutral_interval_s.value) : 0.10,
             pid_weight: elements.pid_weight ? parseFloat(elements.pid_weight.value) : 1000,
