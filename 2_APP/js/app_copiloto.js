@@ -12,7 +12,7 @@ function initCopiloto() {
     initWakeLock();
     initRotation();
     const statusIndicator = document.getElementById('status-indicator');
-    
+
     // UI Elements Izquierda
     const valTramo = document.getElementById('val_tramo_nombre');
     const valHora = document.getElementById('val_hora');
@@ -23,7 +23,7 @@ function initCopiloto() {
     const valTiempo = document.getElementById('val_tiempo_tramo');
     const valProximaMedia = document.getElementById('val_proxima_media');
     const valDistanciaCambio = document.getElementById('val_distancia_cambio');
-    
+
     // UI Tabla
     const tablaCuerpo = document.getElementById('tabla_cuerpo');
 
@@ -54,7 +54,7 @@ function initCopiloto() {
         const s = Math.floor(absSecs % 60);
         const ms = Math.floor((absSecs % 1) * 10);
         const sign = isNeg ? '-' : '';
-        const timePart = `${sign}${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        const timePart = `${sign}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         return `${timePart}<span class="tenths">.${ms}</span>`;
     };
 
@@ -69,11 +69,11 @@ function initCopiloto() {
     /** Formatea segundos totales a "HH:MM:SS.d" */
     const formatTimeFull = (secs) => {
         if (secs == null || !Number.isFinite(secs)) return '--:--:--.--';
-        const h  = Math.floor(secs / 3600);
+        const h = Math.floor(secs / 3600);
         const mn = Math.floor((secs % 3600) / 60);
-        const s  = Math.floor(secs % 60);
-        const d  = Math.floor((secs % 1) * 10);
-        return `${String(h).padStart(2,'0')}:${String(mn).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
+        const s = Math.floor(secs % 60);
+        const d = Math.floor((secs % 1) * 10);
+        return `${String(h).padStart(2, '0')}:${String(mn).padStart(2, '0')}:${String(s).padStart(2, '0')}.${d}`;
     };
 
     /** Formatea una duración en segundos a "MM:SS" o "H:MM:SS" */
@@ -82,8 +82,8 @@ function initCopiloto() {
         const h = Math.floor(secs / 3600);
         const m = Math.floor((secs % 3600) / 60);
         const s = Math.floor(secs % 60);
-        if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     };
 
     const CELL_LABELS = {
@@ -97,13 +97,13 @@ function initCopiloto() {
         _editCell = { td, type, idx };
         const label = CELL_LABELS[type] || type;
         const val = td.textContent.split(' ')[0];
-        
+
         document.getElementById('cell-edit-label').textContent = label;
         const input = document.getElementById('cell-edit-input');
         input.value = val;
         _isFirstKey = true;
         input.classList.add('selected-highlight');
-        
+
         modalRecal.classList.remove('open');
         document.getElementById('cell-edit-bar').classList.add('open');
     };
@@ -115,7 +115,7 @@ function initCopiloto() {
     };
 
     const getRelStartTime = (idx) => {
-        let t = parseTimeStr(currentHoraInicioTramo) || 0;
+        let t = 0;
         for (let i = 0; i < idx; i++) {
             const s = currentTableData[i];
             const mediaVal = (s.media_kmh && s.media_kmh > 0) ? s.media_kmh : 1.0;
@@ -134,21 +134,26 @@ function initCopiloto() {
     document.getElementById('cell-edit-cancel').addEventListener('click', closeCellEditor);
     document.getElementById('cell-edit-ok').addEventListener('click', async () => {
         if (!_editCell || !currentTableData || !_activeTramoId) return;
-        
+
         const newVal = document.getElementById('cell-edit-input').value.replace(',', '.');
         const { type, idx } = _editCell;
         const seg = currentTableData[idx];
 
         if (type === 'ini') seg.inicio_m = parseFloat(newVal) * 1000;
         else if (type === 'fin') seg.fin_m = parseFloat(newVal) * 1000;
-        else if (type === 'media') seg.media_kmh = parseFloat(newVal);
-        else if (type === 'dur' || type === 'h_fin') {
-            const targetTime = (type === 'h_fin') ? parseTimeStr(newVal) : (getRelStartTime(idx) + parseDuration(newVal));
+        if (type === 'media') seg.media_kmh = parseFloat(newVal);
+        if (type === 'dur' || type === 'h_fin') {
             const relStart = getRelStartTime(idx);
-            const targetSecs = targetTime - relStart;
+            const targetSecs = (type === 'h_fin') ? parseDuration(newVal) : parseDuration(newVal);
+            // Si es h_fin, el valor introducido ya es el tiempo acumulado deseado (relativo)
+            // Si es dur, el valor es la duración del segmento, pero en el editor de copiloto
+            // el comportamiento esperado al editar h_fin es fijar el tiempo acumulado.
+
             const distKm = (seg.fin_m - seg.inicio_m) / 1000;
-            if (targetSecs > 0 && distKm > 0) {
-                seg.media_kmh = (distKm / targetSecs) * 3600;
+            const finalTargetSecs = (type === 'h_fin') ? (targetSecs - relStart) : targetSecs;
+
+            if (finalTargetSecs > 0 && distKm > 0) {
+                seg.media_kmh = (distKm / finalTargetSecs) * 3600;
             }
         }
 
@@ -169,26 +174,26 @@ function initCopiloto() {
     });
 
     const renderTable = (tabla, activeIdx) => {
-        if(!tablaCuerpo) return;
+        if (!tablaCuerpo) return;
         tablaCuerpo.innerHTML = '';
-        let cursorRelativo = parseTimeStr(currentHoraInicioTramo) || 0; 
+        let cursorRelativo = 0;
 
         tabla.forEach((row, ix) => {
-            const distKm   = (row.fin_m - row.inicio_m) / 1000;
+            const distKm = (row.fin_m - row.inicio_m) / 1000;
             // Evitar división por cero si la media es 0 o inválida
             const mediaVal = (row.media_kmh && row.media_kmh > 0) ? row.media_kmh : 1.0;
-            const durSecs  = (distKm / mediaVal) * 3600;
+            const durSecs = (distKm / mediaVal) * 3600;
             const tiempoFin = cursorRelativo + durSecs;
             cursorRelativo += durSecs;
 
             const tr = document.createElement('tr');
-            if (ix === activeIdx)      tr.className = 'active-row';
-            else if (ix < activeIdx)   tr.className = 'passed-row';
-            
+            if (ix === activeIdx) tr.className = 'active-row';
+            else if (ix < activeIdx) tr.className = 'passed-row';
+
             tr.innerHTML = `
                 <td>${ix + 1}</td>
                 <td class="td-editable" onclick="editCell(this, 'ini', ${ix})">${(row.inicio_m / 1000).toFixed(3)}</td>
-                <td class="td-editable" onclick="editCell(this, 'fin', ${ix})">${(row.fin_m    / 1000).toFixed(3)}</td>
+                <td class="td-editable" onclick="editCell(this, 'fin', ${ix})">${(row.fin_m / 1000).toFixed(3)}</td>
                 <td class="td-editable" onclick="editCell(this, 'media', ${ix})" style="font-weight:bold;">${row.media_kmh.toFixed(1)}</td>
                 <td>${row.referencias_externas ? 'Sí' : 'No'}</td>
                 <td class="td-editable" onclick="editCell(this, 'dur', ${ix})" style="color:var(--text-secondary); font-size:0.85em;">${formatDuration(durSecs)}</td>
@@ -197,7 +202,7 @@ function initCopiloto() {
             tablaCuerpo.appendChild(tr);
         });
     };
-    
+
     window.editCell = (td, type, idx) => openCellEditor(td, type, idx);
 
     // --- Recalibración al paso ---
@@ -330,11 +335,11 @@ function initCopiloto() {
             valProximaMedia.textContent = data.proxima_media_kmh.toFixed(1);
         }
         if (data.distancia_cambio_m !== undefined && valDistanciaCambio) {
-            valDistanciaCambio.textContent = `En ${Math.round(data.distancia_cambio_m)} m`;
+            valDistanciaCambio.textContent = `${Math.round(data.distancia_cambio_m)} m`;
         }
 
         if (data.hora_inicio_tramo !== undefined) currentHoraInicioTramo = data.hora_inicio_tramo;
-        
+
         // NO actualizar la tabla si estamos editando una celda para evitar sobrescrituras
         if (data.tramo_tabla && !_editCell) {
             currentTableData = data.tramo_tabla;
@@ -358,12 +363,12 @@ function initCopiloto() {
     const btnOcr = document.getElementById('btn-ocr');
     const btnReset = document.getElementById('btn-odo-reset');
 
-    if(btnPlus) btnPlus.addEventListener('click', () => client.sendCommand('DIST_ADJUST:10'));
-    if(btnMinus) btnMinus.addEventListener('click', () => client.sendCommand('DIST_ADJUST:-10'));
-    if(btnPlus1) btnPlus1.addEventListener('click', () => client.sendCommand('DIST_ADJUST:1'));
-    if(btnMinus1) btnMinus1.addEventListener('click', () => client.sendCommand('DIST_ADJUST:-1'));
-    
-    if(btnMilestone) {
+    if (btnPlus) btnPlus.addEventListener('click', () => client.sendCommand('DIST_ADJUST:10'));
+    if (btnMinus) btnMinus.addEventListener('click', () => client.sendCommand('DIST_ADJUST:-10'));
+    if (btnPlus1) btnPlus1.addEventListener('click', () => client.sendCommand('DIST_ADJUST:1'));
+    if (btnMinus1) btnMinus1.addEventListener('click', () => client.sendCommand('DIST_ADJUST:-1'));
+
+    if (btnMilestone) {
         btnMilestone.addEventListener('click', async () => {
             let defHitos = 5;
             try {
@@ -372,8 +377,8 @@ function initCopiloto() {
                     const s = await r.json();
                     if (s.default_hitos !== undefined) defHitos = s.default_hitos;
                 }
-            } catch(e) {}
-            
+            } catch (e) { }
+
             // Create custom dialog popup overlay
             const overlay = document.createElement('div');
             overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.width = '100%'; overlay.style.height = '100%';
@@ -434,21 +439,21 @@ function initCopiloto() {
         });
     }
 
-    if(btnOcr) {
+    if (btnOcr) {
         btnOcr.addEventListener('click', () => {
             window.location.href = "/tablitos/tablas.html";
         });
     }
 
     const btnOdometro = document.getElementById('btn-odometro');
-    if(btnOdometro) {
+    if (btnOdometro) {
         btnOdometro.addEventListener('click', () => {
             window.location.href = "odometro.html";
         });
     }
 
     const btnRefExtAction = document.getElementById('btn-ref-ext-action');
-    if(btnRefExtAction) {
+    if (btnRefExtAction) {
         btnRefExtAction.addEventListener('click', () => {
             client.sendCommand('REF_EXT_ACTION');
             btnRefExtAction.style.background = "rgba(251, 191, 36, 0.4)";
@@ -456,7 +461,7 @@ function initCopiloto() {
         });
     }
 
-    if(btnReset) btnReset.addEventListener('click', () => {
+    if (btnReset) btnReset.addEventListener('click', () => {
         if (confirm('¿Resetear odómetro a 0?')) client.sendCommand('ODO_RESET');
     });
 

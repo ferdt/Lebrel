@@ -102,6 +102,17 @@ export function initHeader(currentPage) {
             initHeader(currentPage);
         });
     }
+
+    // --- Reloj Automático ---
+    const updateHeaderClock = () => {
+        const valHora = document.getElementById('val_hora');
+        if (valHora) {
+            const now = new Date();
+            valHora.textContent = now.toLocaleTimeString('es-ES', { hour12: false });
+        }
+    };
+    updateHeaderClock();
+    setInterval(updateHeaderClock, 1000);
 }
 
 /** Actualiza visualmente el estado del GPS TCP en el cabecero */

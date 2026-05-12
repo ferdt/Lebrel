@@ -62,9 +62,9 @@
             letter-spacing: 0.5px;
         }
 
-        .compact-card .value,
-        .compact-card .value span {
-            font-size: clamp(1.0rem, 2vmin, 2.0rem) !important;
+        .compact-card:not(.odo-card) .value,
+        .compact-card:not(.odo-card) .value span {
+            font-size: clamp(1.0rem, 4.5vmin, 3.0rem) !important;
             white-space: nowrap;
             font-weight: 700;
             display: flex;
@@ -91,6 +91,18 @@
         }
 
         /* Panel de OPeraciones abajo a la izq */
+        .btn-group-horizontal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-group-horizontal button {
+            padding: 10px !important;
+            font-size: 0.9rem !important;
+        }
+
         .operations-panel {
             margin-top: 0;
         }
@@ -121,21 +133,22 @@
                     <div id="val_tiempo_tramo" class="value">00:00:00</div>
                 </div>
 
-                <div class="compact-card"
-                    style="border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.15);">
-                    <h4>Odómetro</h4>
+                <div class="compact-card odo-card"
+                    style="border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.15); flex-direction: column; align-items: flex-start; padding: 15px;">
+                    <h4 style="margin-bottom: 5px; font-size: 0.9rem;">Odómetro</h4>
                     <div class="value"
-                        style="font-size: clamp(2rem, 8vmin, 3rem); color: #facc15; font-weight: 800; display: flex; align-items: baseline; gap: 6px;">
+                        style="font-size: clamp(4rem, 16vmin, 7.5rem); color: #facc15; font-weight: 900; display: flex; align-items: baseline; gap: 8px; line-height: 1;">
                         <span id="val_distancia">0.000</span>
-                        <span style="font-weight: 400; font-size: 0.5em; opacity: 0.8;">km</span>
+                        <span
+                            style="font-weight: 400; font-size: 0.3em; opacity: 0.8; color: var(--text-secondary);">km</span>
                     </div>
                 </div>
 
                 <!-- Reset Odómetro -->
-                <div class="operations-panel">
+                <!-- <div class="operations-panel">
                     <button id="btn-odo-reset" class="danger"
                         style="width:100%; padding:8px; margin-bottom:4px; font-size:0.8rem;">RESET ODO</button>
-                </div>
+                </div> -->
 
                 <div class="compact-card">
                     <h4>Intervalo</h4>
@@ -154,7 +167,7 @@
                 <div class="compact-card">
                     <h4>Cambio</h4>
                     <div class="value">
-                        <span id="val_proxima_media">0.0</span>
+                        <span id="val_proxima_media">0.0</span> /
                         <span id="val_distancia_cambio" style="color:var(--text-secondary);">0.0</span>
                     </div>
                 </div>
@@ -181,17 +194,16 @@
                         <span>TABLAS</span>
                     </button>
                     <button class="btn-mini action" id="btn-ref-ext-action"
-                        style="grid-column: 1 / -1; background: rgba(251, 191, 36, 0.2); border-color: #f59e0b; color: #f59e0b; min-height: 50px;">
+                        style="grid-column: 1 / -1; background: rgba(251, 191, 36, 0.2); border-color: #f59e0b; color: #f59e0b; min-height: 75px;">
                         <span>REF. EXTERNAS</span>
                     </button>
                 </div>
 
 
                 <div class="operations-panel">
-                    <div class="btn-group-vertical">
-                        <button id="btn-odometro" style="padding:10px;">Odómetro</button>
-                        <button id="btn-tramos" style="padding:10px;"
-                            onclick="window.navigateSPA('tramos.html')">Tramos</button>
+                    <div class="btn-group-horizontal">
+                        <button id="btn-odometro">Odómetro</button>
+                        <button id="btn-tramos" onclick="window.navigateSPA('tramos.html')">Tramos</button>
                     </div>
                 </div>
 

@@ -286,6 +286,26 @@ async def post_calibracion(data: dict):
     save_calibraciones(calibraciones)
     return data
 
+@app.put("/api/calibraciones/{cal_id}")
+async def update_calibracion(cal_id: int, data: dict):
+    calibraciones = load_calibraciones()
+    for i, c in enumerate(calibraciones):
+        if c.get("id") == cal_id:
+            data["id"] = cal_id  # Mantener el mismo ID
+            if "timestamp" not in data:
+                data["timestamp"] = c.get("timestamp")
+            calibraciones[i] = data
+            save_calibraciones(calibraciones)
+            return data
+    return {"error": "Calibración no encontrada"}
+
+@app.delete("/api/calibraciones/{cal_id}")
+async def delete_calibracion(cal_id: int):
+    calibraciones = load_calibraciones()
+    new_cal = [c for c in calibraciones if c.get("id") != cal_id]
+    save_calibraciones(new_cal)
+    return {"status": "ok"}
+
 @app.post("/api/calibraciones/apply")
 async def apply_calibracion(data: dict):
     settings = load_settings()
