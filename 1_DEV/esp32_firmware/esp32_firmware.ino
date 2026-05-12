@@ -66,12 +66,13 @@ void loop() {
     unsigned long p2 = pulse_count_2;
     interrupts();
     
-    // Formato de salida: S1:1234,S2:5678\n
-    // Enviar ambos contadores de forma absoluta. Es más seguro que enviar incrementos, 
-    // porque si se pierde un mensaje por serial, en el siguiente no perdemos la cuenta total.
+    // Formato de salida: S1:1234,S2:5678,T:987654321\n
+    // Se incluye el timestamp micros() para que el receptor calcule deltas de tiempo sin jitter
     Serial.print("S1:");
     Serial.print(p1);
     Serial.print(",S2:");
-    Serial.println(p2);
+    Serial.print(p2);
+    Serial.print(",T:");
+    Serial.println(micros());
   }
 }

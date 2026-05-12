@@ -12,6 +12,7 @@ class ESP32Reader:
         # Guardamos la cantidad TOTAL de pulsos enviados por el ESP32
         self.pulses_1 = 0
         self.pulses_2 = 0
+        self.esp32_micros = 0
         
     def start(self):
         if self.running:
@@ -65,15 +66,18 @@ class ESP32Reader:
                 time.sleep(1)
 
     def _parse_line(self, line):
-        # Formato esperado: S1:1234,S2:5678
+        # Formato esperado: S1:1234,S2:5678,T:987654321
         try:
             parts = line.split(',')
-            if len(parts) == 2:
+            if len(parts) >= 2:
                 p1 = int(parts[0].split(':')[1])
                 p2 = int(parts[1].split(':')[1])
-                
                 self.pulses_1 = p1
                 self.pulses_2 = p2
+                
+                # Si trae el timestamp T, parsearlo
+                if len(parts) >= 3 and parts[2].startswith('T:'):
+                    self.esp32_micros = int(parts[2].split(':')[1])
         except Exception as e:
             pass # Ignorar líneas corruptas
 

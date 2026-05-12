@@ -744,6 +744,8 @@ async def hardware_loop():
     tiempo_tramo_s = 0.0
     pulses_1 = 0
     pulses_2 = 0
+    last_esp32_micros = 0
+    velocidad_kmh = 0.0
     tramo_mock = [{"inicio_m": 0, "fin_m": 12000, "media_kmh": 45.0}]
     import time
     last_test_time = time.time()
@@ -808,30 +810,45 @@ async def hardware_loop():
             pulses_2 = esp32_reader.pulses_2
 
         else:
-            # --- MODO SENSORES REALES ---
+            # --- MODO SENSORES REALES (ESP32) ---
             current_real_time = time.time()
             elapsed_real_s = current_real_time - last_test_time
             last_test_time = current_real_time
             
             new_pulses_1 = esp32_reader.pulses_1
             new_pulses_2 = esp32_reader.pulses_2
+            new_micros = esp32_reader.esp32_micros
             
+            # 1. Obtener delta del sensor activo
             if odo_source == "sensor2":
                 delta_p = new_pulses_2 - pulses_2
                 factor = (p_km_2 / 1000.0) if p_km_2 > 0 else 1.52
-            else:
+            else: # sensor1 por defecto
                 delta_p = new_pulses_1 - pulses_1
                 factor = (p_km_1 / 1000.0) if p_km_1 > 0 else 1.54
 
+            # 2. Convertir a metros incrementales
             delta_odo_m = delta_p / factor if factor > 0 else 0.0
             
-            if elapsed_real_s > 0:
-                velocidad_kmh = (delta_odo_m / elapsed_real_s) * 3.6
-            else:
+            # 3. Calcular velocidad física instantánea usando TBASE DE HARDWARE
+            # Esto elimina por completo el jitter generado por la Pi o el buffer USB Serial.
+            if new_micros > last_esp32_micros and last_esp32_micros > 0:
+                delta_t_esp32 = (new_micros - last_esp32_micros) / 1_000_000.0
+                # Protección frente a rollover de micros() (cada 70 min) o corrupción
+                if 0.01 < delta_t_esp32 < 5.0:
+                    inst_speed = (delta_odo_m / delta_t_esp32) * 3.6
+                    # Aplicamos Filtro Paso Bajo (EMA) para suavizar la visualización digital
+                    alpha = 0.3
+                    velocidad_kmh = (alpha * inst_speed) + ((1 - alpha) * velocidad_kmh)
+            elif new_micros == last_esp32_micros and elapsed_real_s > 2.0:
+                # Si han pasado más de 2 segundos reales sin un paquete nuevo del ESP32, asumimos STOP
                 velocidad_kmh = 0.0
             
+            # 4. Actualizar estado base para la próxima iteración
             pulses_1 = new_pulses_1
             pulses_2 = new_pulses_2
+            if new_micros > last_esp32_micros:
+                last_esp32_micros = new_micros
 
         # ACUMULADOR UNIFICADO
         current_dist_m += delta_odo_m
