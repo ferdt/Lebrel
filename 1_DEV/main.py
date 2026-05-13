@@ -142,7 +142,13 @@ def save_calibraciones(c):
     with open(CALIBRACIONES_FILE, "w") as f:
         json.dump(c, f, indent=2)
 
+_settings_cache = None
+
 def load_settings():
+    global _settings_cache
+    if _settings_cache is not None:
+        return _settings_cache
+        
     settings = default_settings.copy()
     if os.path.exists(SETTINGS_FILE):
         try:
@@ -151,9 +157,12 @@ def load_settings():
                 settings.update(loaded)
         except:
             pass
+    _settings_cache = settings
     return settings
 
 def save_settings(s):
+    global _settings_cache
+    _settings_cache = s # Actualizar caché en memoria instantáneamente
     try:
         with open(SETTINGS_FILE, "w") as f:
             json.dump(s, f, indent=2)
@@ -736,7 +745,7 @@ async def startup_event():
 
 async def hardware_loop():
     global test_dist_m, current_dist_m, test_pulses_1, test_pulses_2, test_dist_gps
-    print("🚀 Iniciando bucle de telemetría a 10Hz...", flush=True)
+    print("🚀 Iniciando bucle de telemetría a 50Hz...", flush=True)
     setup_hardware_readers()
     rally_logger.start_tramo("test")
     
@@ -751,6 +760,7 @@ async def hardware_loop():
     last_test_time = time.time()
 
     while True:
+        loop_start = time.time()
         # 1. Obtener Hora Actual del Sistema (segundos desde medianoche)
         now = datetime.now()
         settings = load_settings()
@@ -815,34 +825,63 @@ async def hardware_loop():
             elapsed_real_s = current_real_time - last_test_time
             last_test_time = current_real_time
             
-            new_pulses_1 = esp32_reader.pulses_1
-            new_pulses_2 = esp32_reader.pulses_2
-            new_micros = esp32_reader.esp32_micros
+            # Lectura atómica total que incluye los períodos calculados por el microcontrolador
+            new_pulses_1, new_pulses_2, new_micros, per_1, per_2, l1, l2 = esp32_reader.get_latest_data()
             
-            # 1. Obtener delta del sensor activo
+            # 1. Seleccionar datos del sensor activo
             if odo_source == "sensor2":
                 delta_p = new_pulses_2 - pulses_2
                 factor = (p_km_2 / 1000.0) if p_km_2 > 0 else 1.52
+                sensor_period = per_2
+                last_pulse_micros = l2
             else: # sensor1 por defecto
                 delta_p = new_pulses_1 - pulses_1
                 factor = (p_km_1 / 1000.0) if p_km_1 > 0 else 1.54
+                sensor_period = per_1
+                last_pulse_micros = l1
 
-            # 2. Convertir a metros incrementales
+            # 2. Convertir a metros incrementales para el total acumulado
+            # EL ODÓMETRO SIEMPRE SUMA LA DISTANCIA, INDEPENDIENTEMENTE DE LA VELOCIDAD
             delta_odo_m = delta_p / factor if factor > 0 else 0.0
             
-            # 3. Calcular velocidad física instantánea usando TBASE DE HARDWARE
-            # Esto elimina por completo el jitter generado por la Pi o el buffer USB Serial.
-            if new_micros > last_esp32_micros and last_esp32_micros > 0:
-                delta_t_esp32 = (new_micros - last_esp32_micros) / 1_000_000.0
-                # Protección frente a rollover de micros() (cada 70 min) o corrupción
-                if 0.01 < delta_t_esp32 < 5.0:
-                    inst_speed = (delta_odo_m / delta_t_esp32) * 3.6
-                    # Aplicamos Filtro Paso Bajo (EMA) para suavizar la visualización digital
-                    alpha = 0.3
-                    velocidad_kmh = (alpha * inst_speed) + ((1 - alpha) * velocidad_kmh)
-            elif new_micros == last_esp32_micros and elapsed_real_s > 2.0:
-                # Si han pasado más de 2 segundos reales sin un paquete nuevo del ESP32, asumimos STOP
-                velocidad_kmh = 0.0
+            # 3. CALCULAR VELOCIDAD FÍSICA REAL USANDO PERIODO ENTRE PULSOS (SIN ALIASING)
+            # Primero calculamos el tiempo inactivo exacto desde el último pulso físico
+            idle_s = 0.0
+            if last_pulse_micros > 0 and new_micros >= last_pulse_micros:
+                idle_s = (new_micros - last_pulse_micros) / 1000000.0
+            elif new_micros < last_pulse_micros: # Rollover protection
+                idle_s = 0.0
+                
+            # Si el microcontrolador reporta un período válido y no estamos en un timeout masivo
+            if sensor_period > 0 and factor > 0 and idle_s < 2.0:
+                # Hz = 1,000,000 us / Periodo_us
+                frecuencia_hz = 1000000.0 / float(sensor_period)
+                inst_speed = (frecuencia_hz / factor) * 3.6
+                
+                # Si el tiempo inactivo es mayor que el periodo reportado, el vehículo está frenando.
+                # Simulamos la caída de velocidad matemáticamente.
+                period_s = sensor_period / 1000000.0
+                if idle_s > period_s * 1.5:
+                    # El pulso debería haber llegado y no lo hizo. Decaemos la velocidad.
+                    decay_factor = period_s / idle_s
+                    inst_speed = inst_speed * decay_factor
+                
+                # Filtro ultra leve solo para vibración mecánica en baja frecuencia
+                alpha = 0.75
+                velocidad_kmh = (alpha * inst_speed) + ((1.0 - alpha) * velocidad_kmh)
+                
+            else:
+                # Si el periodo es 0 (vehículo detenido) o ha superado el timeout masivo de 2 segundos.
+                if delta_odo_m > 0 and elapsed_real_s > 0:
+                    # Fallback de seguridad a muy baja velocidad por si se genera un pulso aislado
+                    inst_speed = (delta_odo_m / elapsed_real_s) * 3.6
+                    velocidad_kmh = 0.5 * inst_speed + 0.5 * velocidad_kmh
+                elif idle_s > 2.0:
+                    # Freno absoluto si han pasado más de 2 segundos exactos sin pulsos
+                    velocidad_kmh = 0.0
+                else:
+                    # Decaimiento suave
+                    velocidad_kmh = 0.8 * velocidad_kmh
             
             # 4. Actualizar estado base para la próxima iteración
             pulses_1 = new_pulses_1
@@ -958,7 +997,10 @@ async def hardware_loop():
         }
         
         await manager.broadcast(telemetry)
-        await asyncio.sleep(0.1)
+        # Compensación dinámica de sueño para fijar la iteración a exactamente 50Hz (0.02s)
+        elapsed = time.time() - loop_start
+        sleep_time = max(0.001, 0.02 - elapsed)
+        await asyncio.sleep(sleep_time)
 
 if __name__ == "__main__":
     import uvicorn

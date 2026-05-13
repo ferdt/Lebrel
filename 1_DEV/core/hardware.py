@@ -13,6 +13,9 @@ class ESP32Reader:
         self.pulses_1 = 0
         self.pulses_2 = 0
         self.esp32_micros = 0
+        self.period_1 = 0 # Período en microsegundos del último pulso
+        self.period_2 = 0
+        self.lock = threading.Lock() # Candado para lectura/escritura atómica de múltiples hilos
         
     def start(self):
         if self.running:
@@ -65,19 +68,43 @@ class ESP32Reader:
                 self.serial = None
                 time.sleep(1)
 
+    def get_latest_data(self):
+        # Devolvemos los 7 valores atómicamente protegidos por el candado
+        with self.lock:
+            return self.pulses_1, self.pulses_2, self.esp32_micros, self.period_1, self.period_2, getattr(self, "last_micros_1", 0), getattr(self, "last_micros_2", 0)
+
     def _parse_line(self, line):
-        # Formato esperado: S1:1234,S2:5678,T:987654321
+        # Formato esperado ampliado: S1:123,S2:456,P1:20000,P2:0,L1:12345,L2:0,T:987654321
         try:
+            # Parseo robusto basado en clave-valor
+            parsed = {}
             parts = line.split(',')
-            if len(parts) >= 2:
-                p1 = int(parts[0].split(':')[1])
-                p2 = int(parts[1].split(':')[1])
-                self.pulses_1 = p1
-                self.pulses_2 = p2
+            for part in parts:
+                if ':' in part:
+                    kv = part.split(':', 1)
+                    parsed[kv[0]] = int(kv[1])
+            
+            # Extraemos los contadores obligatorios
+            if "S1" in parsed and "S2" in parsed:
+                p1 = parsed["S1"]
+                p2 = parsed["S2"]
                 
-                # Si trae el timestamp T, parsearlo
-                if len(parts) >= 3 and parts[2].startswith('T:'):
-                    self.esp32_micros = int(parts[2].split(':')[1])
+                # Extraemos los opcionales con fallback seguro
+                p_micros = parsed.get("T", self.esp32_micros)
+                per1 = parsed.get("P1", 0)
+                per2 = parsed.get("P2", 0)
+                l1 = parsed.get("L1", 0)
+                l2 = parsed.get("L2", 0)
+
+                # Asignación atómica absoluta garantizada
+                with self.lock:
+                    self.pulses_1 = p1
+                    self.pulses_2 = p2
+                    self.esp32_micros = p_micros
+                    self.period_1 = per1
+                    self.period_2 = per2
+                    self.last_micros_1 = l1
+                    self.last_micros_2 = l2
         except Exception as e:
             pass # Ignorar líneas corruptas
 
