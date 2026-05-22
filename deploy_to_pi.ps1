@@ -46,7 +46,7 @@ cmd.exe /c "tar.exe -c -f - -C $TABLITOS_LOCAL . | ssh $PI_USER@$PI_HOST `"tar -
 
 # 3. Arreglar retornos de carro (CRLF de Windows a LF de Linux) y Reiniciar el servicio
 Write-Host "3. Preparando scripts y reiniciando el servicio lebrel-backend en la Raspberry Pi..."
-ssh -t $PI_USER@$PI_HOST "find $PI_PATH -type f -name '*.sh' -exec sed -i 's/\r$//' {} +; chmod +x $PI_PATH/1_DEV/*.sh; sudo systemctl daemon-reload; sudo systemctl restart lebrel-backend.service"
+ssh -t $PI_USER@$PI_HOST "find $PI_PATH -type f -name '*.sh' -exec sed -i 's/\r$//' {} +; chmod +x $PI_PATH/1_DEV/*.sh; if [ ! -d $PI_PATH/1_DEV/venv ]; then cd $PI_PATH/1_DEV && ./install.sh; fi; sudo cp $PI_PATH/1_DEV/lebrel-backend.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable lebrel-backend.service; sudo systemctl restart lebrel-backend.service"
 
 Write-Host "=======================================================" -ForegroundColor Green
 Write-Host "✅ ¡Despliegue completado con éxito!" -ForegroundColor Green
