@@ -15,3 +15,5 @@ PENDIENTE:
 - Arreglar la media del odómetro parcial
 - Optimización de consumo de CPU en hardware_loop
 - Modo Nocturno Automático (por hora)
+- Botonera que se pueda cambiar el odómetro
+- Que los botones funcionen toda la caja no sólo el texto
