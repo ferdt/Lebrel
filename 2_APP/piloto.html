@@ -15,8 +15,78 @@
         .grid-dashboard {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
             width: 100%;
+        }
+
+        /* Error Bars */
+        .error-bars-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .error-bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 3px;
+        }
+
+        .error-bar-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .error-bar-label .short-label {
+            display: none;
+        }
+
+        .error-bar-bg {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            height: 14px;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .error-bar-center {
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: var(--text-secondary);
+            opacity: 0.5;
+            z-index: 2;
+        }
+
+        .error-bar-fill {
+            position: absolute;
+            z-index: 1;
+            transition: width 0.1s ease, height 0.1s ease;
+        }
+
+        .error-bar-fill.negative-fill {
+            right: 50%;
+            background: var(--accent-red);
+            width: 0%;
+            height: 100%;
+        }
+
+        .error-bar-fill.positive-fill {
+            left: 50%;
+            background: var(--accent-green);
+            width: 0%;
+            height: 100%;
         }
 
         /* 1. Sugerencia de conducción */
@@ -43,12 +113,12 @@
         .row-interval-speed {
             display: grid;
             grid-template-columns: 1.2fr 1fr;
-            gap: 12px;
+            gap: 8px;
         }
 
         .card-interval,
         .card-speed {
-            padding: 10px 10px;
+            padding: 6px 8px;
             border-radius: 10px;
         }
 
@@ -65,7 +135,7 @@
         .card-odo-total {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
             border-color: rgba(59, 130, 246, 0.3);
-            padding: 25px 15px;
+            padding: 12px 10px;
             border-radius: 10px;
         }
 
@@ -73,11 +143,11 @@
         .row-partial-reset {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 8px;
         }
 
         .row-partial-reset .card {
-            padding: 15px 10px;
+            padding: 8px 6px;
             border-radius: 10px;
         }
 
@@ -87,7 +157,7 @@
             flex-direction: row !important;
             justify-content: space-between !important;
             align-items: center;
-            padding: 20px 25px;
+            padding: 8px 12px;
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.02);
         }
@@ -133,32 +203,209 @@
             transform: scale(0.98);
         }
 
-        @media (min-width: 769px) {
+        /* Definir grid areas para todos los elementos */
+        .card-instruction {
+            grid-area: instruction;
+        }
+
+        .error-bars-container {
+            grid-area: error_bars;
+        }
+
+        .row-interval-speed {
+            grid-area: interval_speed;
+        }
+
+        .card-odo-total {
+            grid-area: odo_total;
+        }
+
+        .row-partial-reset {
+            grid-area: partial_reset;
+        }
+
+        .card-next-media {
+            grid-area: next_media;
+        }
+
+        .buttons-container {
+            grid-area: buttons;
+            margin-top: auto !important;
+        }
+
+        @media (min-width: 769px) and (orientation: portrait) {
             .grid-dashboard {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
                 max-width: 800px;
                 margin: 0 auto;
             }
+        }
 
-            .card-instruction {
-                grid-column: span 2;
+        /* Landscape optimization (Apaisado) */
+        @media (orientation: landscape) {
+            body {
+                overflow: hidden; /* Evitar scroll vertical */
+            }
+            .glass-container {
+                height: 100vh;
+                height: 100dvh;
+                padding-bottom: 5px;
+            }
+            .row-interval-speed { display: contents; }
+            .row-partial-reset { display: contents; }
+            
+            .card-interval { grid-area: interval; }
+            .card-speed { grid-area: speed; }
+            .card-media-reset { grid-area: media_reset; }
+            .card-odo-parcial { grid-area: odo_parcial; }
+            
+            .grid-dashboard {
+                display: grid;
+                grid-template-columns: auto 1fr 1.3fr 1fr;
+                grid-template-areas:
+                    "error_bars interval  instruction media_reset"
+                    "error_bars interval  speed       odo_parcial"
+                    "error_bars odo_total speed       odo_parcial"
+                    "error_bars odo_total next_media  buttons";
+                gap: 5px;
+                flex: 1;
+                max-width: 100%;
+                margin: 0;
             }
 
-            .row-interval-speed {
-                grid-column: span 2;
+            .error-bars-container {
+                flex-direction: row;
+                height: 100%;
+                width: auto;
+                min-width: 50px;
+                gap: 8px;
+                margin-bottom: 0;
+                padding: 4px 0;
+            }
+
+            .error-bar-wrapper {
+                flex-direction: column-reverse;
+                height: 100%;
+                width: 18px;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .error-bar-label {
+                font-size: 0.65rem;
+                font-weight: 800;
+                letter-spacing: 0px;
+                text-align: center;
+            }
+
+            .error-bar-label .full-label {
+                display: none;
+            }
+
+            .error-bar-label .short-label {
+                display: inline;
+            }
+
+            .error-bar-bg {
+                flex: 1;
+                width: 100%;
+                height: 100%;
+                flex-direction: column;
+            }
+
+            .error-bar-center {
+                left: 0;
+                top: 50%;
+                width: 100%;
+                height: 2px;
+            }
+
+            .error-bar-fill {
+                width: 100%;
+                height: 0%;
+            }
+
+            .error-bar-fill.negative-fill {
+                top: 50%;
+                right: auto;
+                background: var(--accent-red);
+            }
+
+            .error-bar-fill.positive-fill {
+                bottom: 50%;
+                left: auto;
+                background: var(--accent-green);
+            }
+
+            /* Ajustes de tamaño en landscape para que quepa todo */
+            header {
+                margin-bottom: 5px !important;
+                padding-bottom: 4px !important;
+            }
+
+            .card-instruction {
+                min-height: auto;
+                padding: 0px;
+            }
+
+            #val_instruccion {
+                font-size: clamp(1rem, 6dvh, 4rem) !important;
+            }
+
+            .card-interval,
+            .card-speed {
+                padding: 5px;
             }
 
             .card-odo-total {
-                grid-column: span 2;
+                padding: 5px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
             }
 
-            .row-partial-reset {
-                grid-column: span 2;
+            #val_distancia {
+                font-size: clamp(1.2rem, 8dvh, 4rem) !important;
+            }
+
+            #val_diferencia_ideal {
+                font-size: clamp(1.2rem, 8dvh, 4rem) !important;
+            }
+
+            #val_velocidad_actual {
+                font-size: clamp(1.2rem, 8dvh, 3.5rem) !important;
             }
 
             .card-next-media {
-                grid-column: span 2;
+                padding: 5px 8px;
+            }
+
+            .row-partial-reset .card {
+                padding: 5px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            #val_media_reset,
+            #val_odo_parcial {
+                font-size: clamp(1rem, 5dvh, 2.2rem) !important;
+            }
+
+            .buttons-container button {
+                padding: 8px !important;
+            }
+        }
+
+        /* Si es apaisado pero extremadamente alargado (más columnas) */
+        @media (orientation: landscape) and (min-aspect-ratio: 2/1) {
+            .grid-dashboard {
+                grid-template-columns: auto 1fr 1.2fr 1fr 1fr;
+                grid-template-areas:
+                    "error_bars interval  instruction odo_total   media_reset"
+                    "error_bars interval  instruction odo_total   odo_parcial"
+                    "error_bars speed     next_media  buttons     buttons";
             }
         }
     </style>
@@ -173,17 +420,29 @@
                 <div id="val_instruccion">--</div>
             </div>
 
-            <!-- PID Control Bar -->
-            <div class="pid-container"
-                style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 8px; height: 16px; position: relative; overflow: hidden; width: 100%; margin-top: -6px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center;">
-                <div id="pid-bar-center"
-                    style="position: absolute; left: 50%; width: 2px; height: 100%; background: var(--text-secondary); opacity: 0.5; z-index: 2;">
+            <!-- Error Bars (Interval & Speed to Ideal) -->
+            <div class="error-bars-container">
+                <div class="error-bar-wrapper">
+                    <span class="error-bar-label">
+                        <span class="full-label">Intervalo</span>
+                        <span class="short-label">Int.</span>
+                    </span>
+                    <div class="error-bar-bg">
+                        <div class="error-bar-center"></div>
+                        <div id="interval-error-left" class="error-bar-fill negative-fill"></div>
+                        <div id="interval-error-right" class="error-bar-fill positive-fill"></div>
+                    </div>
                 </div>
-                <div id="pid-bar-left"
-                    style="position: absolute; right: 50%; height: 100%; background: var(--accent-red); width: 0%; z-index: 1; transition: width 0.1s ease;">
-                </div>
-                <div id="pid-bar-right"
-                    style="position: absolute; left: 50%; height: 100%; background: var(--accent-green); width: 0%; z-index: 1; transition: width 0.1s ease;">
+                <div class="error-bar-wrapper">
+                    <span class="error-bar-label">
+                        <span class="full-label">Velocidad</span>
+                        <span class="short-label">Vel.</span>
+                    </span>
+                    <div class="error-bar-bg">
+                        <div class="error-bar-center"></div>
+                        <div id="speed-error-left" class="error-bar-fill negative-fill"></div>
+                        <div id="speed-error-right" class="error-bar-fill positive-fill"></div>
+                    </div>
                 </div>
             </div>
 
@@ -209,11 +468,11 @@
 
             <!-- 4. Odómetro parcial y velocidad media desde reset -->
             <div class="row-partial-reset">
-                <div class="card">
-                    <div class="label-small">Media Reset</div>
+                <div class="card card-media-reset">
+                    <div class="label-small">Media Parcial</div>
                     <div id="val_media_reset" class="value" style="font-size: 2.2rem;">0.0</div>
                 </div>
-                <div class="card">
+                <div class="card card-odo-parcial">
                     <div class="label-small">Parcial</div>
                     <div id="val_odo_parcial" class="value" style="font-size: 2.2rem;">0.000</div>
                 </div>
@@ -233,13 +492,13 @@
             </div>
 
             <!-- Ayudas sonoras y Botón de Reset Odo Parcial -->
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div class="buttons-container" style="display: flex; gap: 8px; margin-top: 6px;">
                 <button id="btn-sound-aids"
-                    style="flex: 1; padding: 15px; font-size: 0.9rem; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); border-radius: 8px; cursor: pointer;">
+                    style="flex: 1; padding: 10px; font-size: 0.9rem; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); border-radius: 8px; cursor: pointer;">
                     AYUDA SONORA: <span id="val-sound-aids">ON</span>
                 </button>
                 <button id="btn-reset-parcial"
-                    style="flex: 1; padding: 15px; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); color: var(--accent-red); border-radius: 8px; cursor: pointer;">
+                    style="flex: 1; padding: 10px; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); color: var(--accent-red); border-radius: 8px; cursor: pointer;">
                     RESET PARCIAL
                 </button>
             </div>

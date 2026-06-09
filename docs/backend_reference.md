@@ -62,29 +62,57 @@ Parámetros de configuración del sistema.
 - **POST `/ocr`**: Procesa una imagen base64 usando el motor **RapidOCR (AI)**. Devuelve el texto detectado y una imagen pre-procesada para validación.
 
 ---
+## 3. Telemetría y WebSocket (50Hz)
 
-## 3. Telemetría y WebSocket (10Hz)
-
-Canal: `/ws/telemetry`. Envía un flujo constante de datos.
+Canal: `/ws/telemetry`. Envía un flujo constante de datos en tiempo real a una frecuencia ultra-sensible de **50Hz** (cada 20ms) para garantizar una actualización fluida del odómetro y delta en las pantallas táctiles.
 
 ### 3.1 Comandos WebSocket Soportados (Salientes):
-- `ODO_RESET`: Pone el odómetro de prueba/test a 0.
-- `REF_EXT_ACTION`: Aplica el ajuste de referencias externas.
-- `PREPARE_HITOS:count`: Prepara los hitos en el backend a la espera de `REF_EXT_ACTION` para generarlos.
+- `ODO_RESET`: Pone a 0 el odómetro parcial/total y las variables simuladas o del GPS.
+- `MILESTONE`: Registra un evento de hito manual.
+- `DIST_ADJUST:delta`: Ajusta dinámicamente la distancia sumando o restando un delta en metros (ej. `DIST_ADJUST:10.0` o `DIST_ADJUST:-5.0`).
+- `PREPARE_HITOS:count`: Prepara en el backend la inserción de un número determinado de hitos.
+- `REF_EXT_ACTION`: Aplica el ajuste de referencias externas o genera los hitos previamente preparados.
 
 ### 3.2 Formato del Payload:
 
-| Variable | Unidad | Descripción |
-| :--- | :--- | :--- |
-| `distancia_m` | metros | Odo activo (GPS o Sensores). |
-| `velocidad_kmh` | km/h | Velocidad actual. |
-| `diferencia_ideal_s` | segundos | Delta de regularidad (Delta). |
-| `dist_gps_m` | metros | Odo puro de GPS (sin ratios). |
-| `pulses_1` | pulsos | Contador acumulado sensor 1. |
-| `system_time` | HH:MM:SS.f | Hora corregida con offset (Hora Rally). |
-| `gps_time` | HH:MM:SS.f | Hora pura del sistema o GPS. |
-| `time_offset_s` | segundos | Ajuste aplicado en el reloj de rally. |
-| `wall_time_s` | segundos | Tiempo exacto de pared del backend. |
+| Variable | Tipo | Unidad | Descripción |
+| :--- | :--- | :--- | :--- |
+| `tramo_nombre` | `string` | - | Nombre del tramo activo o de prueba. |
+| `distancia_m` | `float` | metros | Distancia calibrada y acumulada según la fuente activa. |
+| `dist_gps_m` | `float` | metros | Distancia cruda reportada por el receptor GPS (TCP o BLE). |
+| `gps_tcp_status` | `string` | - | Estado de conexión con el GPS por TCP (ej. "Connected"). |
+| `gps_ble_status` | `string` | - | Estado de conexión con el GPS por BLE. |
+| `pulses_1` | `int` | pulsos | Contador absoluto acumulado de pulsos del Sensor 1. |
+| `pulses_2` | `int` | pulsos | Contador absoluto acumulado de pulsos del Sensor 2. |
+| `rally_factor` | `float` | ratio | Factor multiplicativo para la distancia GPS. |
+| `pulses_km_1` | `int` | - | Parámetro de calibración (pulsos por km) para el Sensor 1. |
+| `tiempo_tramo_s` | `float` | segundos | Tiempo de carrera transcurrido desde el inicio del tramo. |
+| `velocidad_kmh` | `float` | km/h | Velocidad del vehículo, calculada mediante períodos hardware (sin aliasing). |
+| `velocidad_objetivo_kmh` | `float` | km/h | Velocidad media objetivo que el piloto debe mantener en el segmento actual. |
+| `diferencia_ideal_s` | `float` | segundos | Delta de regularidad (diferencia de tiempo con el ideal). |
+| `proxima_media_kmh` | `float` | km/h | Velocidad media objetivo del siguiente segmento. |
+| `distancia_cambio_m` | `float` | metros | Distancia en la que cambiará la velocidad media objetivo. |
+| `odo_source` | `string` | - | Fuente activa de odómetro (`sensor1`, `sensor2`, `gps_tcp`, `gps_ble`, `test`). |
+| `neutral_interval_s` | `float` | segundos | Margen neutro permitido para los cálculos de delta. |
+| `tramo_tabla` | `array` | - | Lista de segmentos del tramo cargado. |
+| `segment_idx` | `int` | - | Índice del segmento activo en el tramo. |
+| `hora_inicio_tramo` | `string` | HH:MM:SS.f | Hora oficial de inicio del tramo regular. |
+| `system_time` | `string` | HH:MM:SS.f | Hora oficial del rally corregida con el offset del usuario. |
+| `gps_time` | `string` | HH:MM:SS.f | Hora pura del reloj del sistema / GPS. |
+| `time_offset_s` | `float` | segundos | Offset de hora rally configurado. |
+| `wall_time_s` | `float` | segundos | Marca de tiempo maestra (segundos desde medianoche + offset). |
+| `tramo_id` | `string` | - | ID único del tramo activo. |
+
+### 3.3 Protocolo de Comunicación Serial ESP32
+
+El backend se conecta con el módulo de adquisición de rueda (ESP32) por puerto serie USB a **115200 baudios** con re-conexión automática en un hilo secundario (`ESP32Reader`). El microcontrolador envía los datos en ráfagas cada **10ms (100Hz)** en el siguiente formato robusto de clave-valor delimitado por comas:
+
+`S1:XXXX,S2:YYYY,P1:PPPP,P2:QQQQ,L1:LLLL,L2:MMMM,T:TTTT\n`
+
+* **`S1` / `S2`**: Cuenta absoluta y acumulada de pulsos validados en cada sensor de rueda.
+* **`P1` / `P2`**: Período en microsegundos entre los dos últimos pulsos físicos confirmados de cada sensor.
+* **`L1` / `L2`**: Timestamp físico (en microsegundos) registrado al ocurrir el último pulso validado.
+* **`T`**: Timestamp físico interno de reloj del ESP32 en microsegundos, empleado para sincronización y diagnóstico de latencia.
 
 ---
 

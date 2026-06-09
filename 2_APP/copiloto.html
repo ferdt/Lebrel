@@ -15,7 +15,7 @@
         .split-layout {
             display: grid;
             grid-template-columns: 350px 1fr;
-            gap: 12px;
+            gap: 8px;
             height: calc(100vh - 100px);
             overflow: hidden;
         }
@@ -24,7 +24,7 @@
         .compact-info {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -49,7 +49,7 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
             border-radius: 12px;
-            padding: 10px 15px;
+            padding: 6px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -94,12 +94,12 @@
         .btn-group-horizontal {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
         }
 
         .btn-group-horizontal button {
-            padding: 10px !important;
+            padding: 8px !important;
             font-size: 0.9rem !important;
         }
 
@@ -107,7 +107,7 @@
             margin-top: 0;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 768px) and (orientation: portrait) {
             .split-layout {
                 grid-template-columns: 1fr;
                 height: auto;
@@ -115,6 +115,62 @@
 
             .operations-panel {
                 margin-top: 15px;
+            }
+        }
+
+        /* Landscape Optimization (Evitar scroll vertical y usar más columnas) */
+        @media (orientation: landscape) {
+            body {
+                overflow: hidden;
+            }
+            .glass-container {
+                height: 100vh;
+                height: 100dvh;
+                padding-bottom: 5px;
+                display: flex;
+                flex-direction: column;
+            }
+            header {
+                margin-bottom: 5px !important;
+                padding-bottom: 4px !important;
+            }
+            .split-layout {
+                grid-template-columns: minmax(250px, 1fr) 1.5fr;
+                height: 100%;
+                flex: 1;
+                gap: 5px;
+            }
+            /* Reducir paddings para que quepa todo */
+            .compact-card {
+                padding: 4px 8px;
+            }
+            .compact-card.odo-card {
+                padding: 4px 8px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+            }
+            .compact-card.odo-card .value {
+                font-size: clamp(1.5rem, 10vmin, 5rem) !important;
+            }
+            .compact-card:not(.odo-card) .value {
+                font-size: clamp(1rem, 4vmin, 2rem) !important;
+            }
+            .botonera-mini-grid {
+                gap: 4px;
+            }
+            .botonera-mini-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .btn-mini {
+                padding: 8px 5px;
+            }
+            .btn-mini.action#btn-ref-ext-action {
+                grid-column: auto;
+                min-height: auto;
+            }
+            .operations-panel {
+                margin-top: auto;
             }
         }
     </style>
@@ -134,7 +190,7 @@
                 </div>
 
                 <div class="compact-card odo-card"
-                    style="border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.15); flex-direction: column; align-items: flex-start; padding: 15px;">
+                    style="border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.15); flex-direction: column; align-items: flex-start; padding: 8px 10px;">
                     <h4 style="margin-bottom: 5px; font-size: 0.9rem;">Odómetro</h4>
                     <div class="value"
                         style="font-size: clamp(4rem, 16vmin, 7.5rem); color: #facc15; font-weight: 900; display: flex; align-items: baseline; gap: 8px; line-height: 1;">

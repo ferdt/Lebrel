@@ -7,13 +7,20 @@
 ✅ Calcar tramo (Grabar recorrido para generar segmentos)
 ✅ Referencias externas
 ✅ Hitos
-✅ Tipografías monospaciadas para todos los displaus de odómetro y velocidad
+✅ Tipografías monospaciadas para todos los displays de odómetro y velocidad
 
 PENDIENTE:
 - OCR con RapidOCR
-- Ayudas sonoras al piloto
+- En la pantalla piloto, cambiar entre tiempo para ideal o distancia para ideal al tocar en la caja de intervalo
 - Arreglar la media del odómetro parcial
 - Optimización de consumo de CPU en hardware_loop
 - Modo Nocturno Automático (por hora)
 - Botonera que se pueda cambiar el odómetro
 - Que los botones funcionen toda la caja no sólo el texto
+- Head up display
+- Pitidos inicio de tramo
+- Añadir barra de tiempo/metros y velocidad
+- Odómetro negativo para salida lanzada
+- Botón de volver de las tablas o tras lanzar a lebrel las tablas, que vuelva a la página que estaba
+- Tiempo de proceso que muestra, que sea el total, no el de la última página
+- Aviso sonoro diciendo frena o acelera si pasan más de 4 segundos seguidos en rojo o en verde

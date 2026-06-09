@@ -36,7 +36,7 @@ body.dark-theme {
     -webkit-backdrop-filter: blur(12px);
     border: none;
     border-radius: 0;
-    padding: 8px 12px;
+    padding: 4px 8px;
     width: 100%;
     max-width: 100%;
     min-height: 100vh;
@@ -51,8 +51,8 @@ header {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 8px;
-    margin-bottom: 12px;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
 }
 
 header h1 {
@@ -126,7 +126,7 @@ header h1 {
 .dashboard {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
+    gap: 6px;
     flex: 1;
 }
 
@@ -139,7 +139,7 @@ header h1 {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
-    padding: 12px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -199,7 +199,7 @@ button {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
-    padding: 12px 24px;
+    padding: 8px 16px;
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
@@ -243,8 +243,8 @@ button.danger:hover {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 8px;
-    margin-bottom: 10px;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
     width: 100%;
 }
 
@@ -377,13 +377,13 @@ button.danger:hover {
 
 .tramo-table th {
     background: rgba(0, 0, 0, 0.2);
-    padding: 12px;
+    padding: 6px 8px;
     color: var(--text-secondary);
     border-bottom: 1px solid var(--glass-border);
 }
 
 .tramo-table td {
-    padding: 15px 12px;
+    padding: 6px 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -426,7 +426,7 @@ button.danger:hover {
 /* Global Responsive Adjustments */
 @media (max-width: 768px) {
     .glass-container {
-        padding: 15px;
+        padding: 6px 8px;
         border-radius: 12px;
     }
 

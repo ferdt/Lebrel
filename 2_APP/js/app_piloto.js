@@ -157,39 +157,91 @@ async function loadPIDSettings() {
 }
 loadPIDSettings();
 
-let prevError = 0;
-let errorIntegral = 0;
-let lastTime = 0;
+let lastIntervalDiff = 0;
+let currentSpeedKmh = 0;
+let targetSpeedKmh = 0;
 
-function computePID(diff, targetSpeedKmh) {
-    const targetSpeedMps = (targetSpeedKmh || 50) / 3.6;
-    const error = diff * targetSpeedMps;
-    const now = Date.now();
-    const dt = lastTime === 0 ? 0 : (now - lastTime) / 1000;
-    lastTime = now;
+function updateIntervalErrorBar(diff) {
+    lastIntervalDiff = diff;
+    const intervalErrLeft = document.getElementById('interval-error-left');
+    const intervalErrRight = document.getElementById('interval-error-right');
+    if (!intervalErrLeft || !intervalErrRight) return;
 
-    if (dt > 0) {
-        const derivative = (error - prevError) / dt;
-        
-        // Clamping anti-windup:
-        let trialOutput = pidSettings.kp * error + pidSettings.ki * errorIntegral + pidSettings.kd * derivative;
-        const isSaturated = trialOutput >= 1 || trialOutput <= -1;
-        const sameSign = Math.sign(trialOutput) === Math.sign(error);
-        
-        if (!isSaturated || !sameSign) {
-            errorIntegral += error * dt;
+    // Scale: 3.0 seconds error is 100%
+    const pct = Math.max(-100, Math.min(100, (diff / 3.0) * 100));
+    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+    if (isLandscape) {
+        if (pct > 0) {
+            intervalErrRight.style.height = pct + '%';
+            intervalErrRight.style.width = '';
+            intervalErrLeft.style.height = '0%';
+            intervalErrLeft.style.width = '';
+        } else {
+            intervalErrLeft.style.height = Math.abs(pct) + '%';
+            intervalErrLeft.style.width = '';
+            intervalErrRight.style.height = '0%';
+            intervalErrRight.style.width = '';
         }
-        
-        errorIntegral = Math.max(-2, Math.min(2, errorIntegral));
-        prevError = error;
-
-        let output = pidSettings.kp * error + pidSettings.ki * errorIntegral + pidSettings.kd * derivative;
-        output = Math.max(-1, Math.min(1, output));
-        return output;
+    } else {
+        if (pct > 0) {
+            intervalErrRight.style.width = pct + '%';
+            intervalErrRight.style.height = '';
+            intervalErrLeft.style.width = '0%';
+            intervalErrLeft.style.height = '';
+        } else {
+            intervalErrLeft.style.width = Math.abs(pct) + '%';
+            intervalErrLeft.style.height = '';
+            intervalErrRight.style.width = '0%';
+            intervalErrRight.style.height = '';
+        }
     }
-    prevError = error;
-    return 0;
 }
+
+function updateSpeedErrorBar() {
+    const speedErrLeft = document.getElementById('speed-error-left');
+    const speedErrRight = document.getElementById('speed-error-right');
+    if (!speedErrLeft || !speedErrRight) return;
+
+    // speed_diff = targetSpeedKmh - currentSpeedKmh
+    // speed_diff > 0 -> target speed is higher than actual -> we need to speed up/accelerate (green, right/up)
+    // speed_diff < 0 -> target speed is lower than actual -> we need to slow down/brake (red, left/down)
+    // Scale: 10 km/h is 100%
+    const diff = targetSpeedKmh - currentSpeedKmh;
+    const pct = Math.max(-100, Math.min(100, (diff / 10.0) * 100));
+
+    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+    if (isLandscape) {
+        if (pct > 0) {
+            speedErrRight.style.height = pct + '%';
+            speedErrRight.style.width = '';
+            speedErrLeft.style.height = '0%';
+            speedErrLeft.style.width = '';
+        } else {
+            speedErrLeft.style.height = Math.abs(pct) + '%';
+            speedErrLeft.style.width = '';
+            speedErrRight.style.height = '0%';
+            speedErrRight.style.width = '';
+        }
+    } else {
+        if (pct > 0) {
+            speedErrRight.style.width = pct + '%';
+            speedErrRight.style.height = '';
+            speedErrLeft.style.width = '0%';
+            speedErrLeft.style.height = '';
+        } else {
+            speedErrLeft.style.width = Math.abs(pct) + '%';
+            speedErrLeft.style.height = '';
+            speedErrRight.style.width = '0%';
+            speedErrRight.style.height = '';
+        }
+    }
+}
+
+// Listen for resize/orientation change to redraw bars correctly
+window.addEventListener('resize', () => {
+    updateIntervalErrorBar(lastIntervalDiff);
+    updateSpeedErrorBar();
+});
 const client = new TelemetryClient(`ws://${wsHost}/ws/telemetry`);
 
 client.onStatusChange((isConnected) => {
@@ -230,21 +282,8 @@ client.onMessage((data) => {
         ui.diferencia_ideal.innerHTML = `${mainPart}<span style="font-size: 0.6em; opacity: 0.7; font-weight: 300;">${hundredthPart}</span>`;
         ui.diferencia_ideal.className = 'value ' + (diff > threshold ? 'positive' : (diff < -threshold ? 'negative' : ''));
         
-        // Actualizar barra horizontal PID
-        const pidOutput = computePID(diff, data.velocidad_objetivo_kmh || 50);
-        const barLeft = document.getElementById('pid-bar-left');
-        const barRight = document.getElementById('pid-bar-right');
-        if (barLeft && barRight) {
-            if (pidOutput > 0) {
-                // Acelerar (verde hacia la derecha)
-                barRight.style.width = (pidOutput * 50) + '%';
-                barLeft.style.width = '0%';
-            } else {
-                // Frenar (rojo hacia la izquierda)
-                barLeft.style.width = (Math.abs(pidOutput) * 50) + '%';
-                barRight.style.width = '0%';
-            }
-        }
+        // Actualizar barra error Intervalo
+        updateIntervalErrorBar(diff);
         
         // 2. Actualizar Instrucción Gigante
         if (ui.instruccion) {
@@ -274,11 +313,15 @@ client.onMessage((data) => {
     }
     
     if (data.velocidad_kmh !== undefined && ui.velocidad_actual) {
+        currentSpeedKmh = data.velocidad_kmh;
         ui.velocidad_actual.textContent = data.velocidad_kmh.toFixed(1);
+        updateSpeedErrorBar();
     }
 
     if (data.velocidad_objetivo_kmh !== undefined && ui.velocidad_objetivo) {
+        targetSpeedKmh = data.velocidad_objetivo_kmh;
         ui.velocidad_objetivo.textContent = data.velocidad_objetivo_kmh.toFixed(1);
+        updateSpeedErrorBar();
     }
     
     if (data.system_time && ui.hora) ui.hora.textContent = data.system_time;
